@@ -132,6 +132,8 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   #run the counter-factual
   for(counterIndex in seq_along(counterfactual)){
     #generate draws with pars.list
+    print("cf: ")
+    print(counterfactual)
     if(!is.null(counterfactual[[counterIndex]])){
       counter <- squire.page::generate_draws(out = update_counterfactual(out, counterfactual[[counterIndex]]),
                                              pars.list = pars.list, draws = draws)
@@ -258,10 +260,12 @@ update_counterfactual <- function(out, counterfactual){
     counterfactual$dose_ratio
 
   # Update vaccine duration
-
-  out$parameters$dur_V <- counterfactual$dur_V
-  out$odin_parameters$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
-  fit$pmcmc_results$inputs$model_params[4:5] <- 2*1/counterfactual$dur_V
+  if(~.isnull(counterfactual$dur_V)){
+    out$parameters$dur_V <- counterfactual$dur_V
+    out$odin_parameters$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
+    fit$pmcmc_results$inputs$model_params[4:5] <- 2*1/counterfactual$dur_V
+  }
+  
 
   #also remove healthcare if requested
   if(!is.null(counterfactual$no_healthcare)){
@@ -311,7 +315,7 @@ add_extra_data <- function(data,n) {
 
 
 ##Vaccine administration starts n days earlier
-early_n <- function(n,iso3c,dur_V=NA) {
+early_n <- function(n,iso3c,dur_V=NULL) {
   fit <- readRDS(paste0(fit_loc, "/", iso3c, ".Rds"))
   if(any(fit$interventions$max_vaccine > 0)){
       interventions <- list(
@@ -319,7 +323,7 @@ early_n <- function(n,iso3c,dur_V=NA) {
         date_vaccine_efficacy = shift_days(fit$interventions$date_vaccine_efficacy,n),
         max_vaccine = add_extra_data(fit$interventions$max_vaccine,n),
         dose_ratio = add_extra_data(fit$interventions$dose_ratio,n),
-        dur_V = if(!is.na(dur_V)){dur_V} else{fit$parameters$dur_V}
+        dur_V = if(!is.null(dur_V)){dur_V} else{fit$parameters$dur_V}
       )
       return(interventions)
     }
@@ -330,13 +334,13 @@ early_n <- function(n,iso3c,dur_V=NA) {
 
 counterfactuals <- lapply(iso3cs,function(iso3c) {
   c0 <- list(max_vaccine = c(0,0),
-                         date_vaccine_change = as.Date(Sys.Date()) - 1,
-                         dose_ratio = 0,
-                         date_vaccine_efficacy = as.Date(Sys.Date()) - 1,
-                         dur_V = 446)
+             date_vaccine_change = as.Date(Sys.Date()) - 1,
+             dose_ratio = 0,
+             date_vaccine_efficacy = as.Date(Sys.Date()) - 1,
+             dur_V = 446)
   days <- expand.grid(2^(1:1),c(446,1000))
   days_earlier <- apply(days, 1, function(day_dur){
-    early_n(day_dur[1],iso3c,dur_V=day_dur[[2]])
+    return(early_n(day_dur[1],iso3c,dur_V=day_dur[[2]]))
     })
   names(days_earlier) <- apply(days,1,function(day_dur){
     as.name(paste0("d",day_dur[[2]],"-",day_dur[[1]],"-days-earlier"))
