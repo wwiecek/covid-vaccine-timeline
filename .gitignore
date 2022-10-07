@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+archive
+draft
+*.sqlite
+.Renviron
+.lintr
+orderly_envir.yml
+.Rdata
+runner
+backup
+remote
