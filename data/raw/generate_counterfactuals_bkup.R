@@ -515,6 +515,8 @@ names(counterfactuals) <- iso3cs
 rm(covax_data)
 rm(who_data)
 
+print(str(counterfactuals))
+
 names(iso3cs) <- iso3cs
 #simplify submission (hold over from using cluster)
 submission_lists <- map(
@@ -528,25 +530,25 @@ submission_lists <- map(
 #to hold individual plots
 dir.create(temp_plots)
 
-#this will take a long time, originally run on a cluster, too memory intensive to be run in parrallel
-walk(submission_lists, function(sub_list){
-  out <- readRDS(paste0(fit_loc, "/", as.character(sub_list$iso3c), ".Rds"))
+# #this will take a long time, originally run on a cluster, too memory intensive to be run in parrallel
+# walk(submission_lists, function(sub_list){
+#   out <- readRDS(paste0(fit_loc, "/", as.character(sub_list$iso3c), ".Rds"))
 
-  df <- suppressMessages(
-    deaths_averted(out, draws = NULL,
-                   counterfactual = sub_list$counterfactual,
-                   reduce_age = TRUE,
-                   direct = sub_list$excess,
-                   plot_name = paste0(temp_plots, "/", sub_list$iso3c, ".pdf"),
-                   excess = sub_list$excess)
-  )
-  #save each counterfactual seperately files
-  split(df, df$counterfactual) %>%
-    purrr::walk(function(x){
-      saveRDS(x %>%
-                dplyr::select(!counterfactual), paste0(output, "/", unique(x$counterfactual), "_", sub_list$iso3c, ".Rds"))
-    })
-})
+#   df <- suppressMessages(
+#     deaths_averted(out, draws = NULL,
+#                    counterfactual = sub_list$counterfactual,
+#                    reduce_age = TRUE,
+#                    direct = sub_list$excess,
+#                    plot_name = paste0(temp_plots, "/", sub_list$iso3c, ".pdf"),
+#                    excess = sub_list$excess)
+#   )
+#   #save each counterfactual seperately files
+#   split(df, df$counterfactual) %>%
+#     purrr::walk(function(x){
+#       saveRDS(x %>%
+#                 dplyr::select(!counterfactual), paste0(output, "/", unique(x$counterfactual), "_", sub_list$iso3c, ".Rds"))
+#     })
+# })
 
 #combine outputs into final objects
 qpdf::pdf_combine(list.files(temp_plots, full.names = TRUE), plot_output)

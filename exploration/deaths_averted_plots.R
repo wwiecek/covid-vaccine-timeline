@@ -1,7 +1,5 @@
-
-# if(!is.na(seed)){
-#   set.seed(seed)
-# }
+require(ggplot2)
+require(ggpubr)
 
 cfs <- apply(expand.grid(2^(1:6),c(446,1000)),1,function(n){return(paste0("d",n[2],"-",n[1],"-days-earlier"))})
 
@@ -27,8 +25,6 @@ colour_direct <- "#98df8a"
 colour_total <- "#17becf"
 colour_baseline <- "black"
 colour_counterfactual <- "#d62728"
-
-print(str(table1_df_ind$days))
 
 ### Plot deaths averted
 da_plot <- ggplot(table1_df_ind,aes(x=reorder(counterfactual,days),y=averted_deaths_avg,fill=efficacy_length))+
@@ -57,10 +53,10 @@ ts_plots <- lapply(cfs,function(cf){
   deaths_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
         geom_line(aes(y = deaths_avg, colour = "counterfactual")) +
         geom_line(aes(y = baseline_deaths_avg, colour="baseline")) +
-        scale_colour_manual(labels=c('counterfactual','baseline'),values=c(colour_counterfactual,colour_baseline))
+        scale_colour_manual(labels=c('baseline','counterfactual'),values=c(colour_baseline,colour_counterfactual))
         labs(x = "Date", y = "Daily Deaths",title=cf) +
         theme_pubr() +
-        theme(legend.position="right")
+        theme(legend.position = "right")
   fn = paste0(cf,"_tsplot.pdf")
   ggsave(fn,deaths_timeseries_plot,device='pdf')
   })

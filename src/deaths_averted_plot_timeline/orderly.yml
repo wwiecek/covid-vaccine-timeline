@@ -97,6 +97,8 @@ packages:
   - readr
   - stringr
   - countrycode
+  - ggplot2
+  - ggpubr
 
 
 # Source files, in addition to the script.  Typically these will
@@ -148,13 +150,18 @@ depends:
   gather_simulations_time:
     id: latest(parameter:excess == excess)
     use:
-      1-day-earlier.Rds: 1-day-earlier.Rds
-      2-days-earlier.Rds: 2-days-earlier.Rds
-      4-days-earlier.Rds: 4-days-earlier.Rds
-      8-days-earlier.Rds: 8-days-earlier.Rds
-      16-days-earlier.Rds: 16-days-earlier.Rds
-      32-days-earlier.Rds: 32-days-earlier.Rds
-      64-days-earlier.Rds: 64-days-earlier.Rds
+      d446-2-days-earlier.Rds: d446-2-days-earlier.Rds
+      d446-4-days-earlier.Rds: d446-4-days-earlier.Rds
+      d446-8-days-earlier.Rds : d446-8-days-earlier.Rds
+      d446-16-days-earlier.Rds : d446-16-days-earlier.Rds
+      d446-32-days-earlier.Rds : d446-32-days-earlier.Rds
+      d446-64-days-earlier.Rds : d446-64-days-earlier.Rds
+      d1000-2-days-earlier.Rds: d1000-2-days-earlier.Rds
+      d1000-4-days-earlier.Rds: d1000-4-days-earlier.Rds
+      d1000-8-days-earlier.Rds: d1000-8-days-earlier.Rds
+      d1000-16-days-earlier.Rds: d1000-16-days-earlier.Rds
+      d1000-32-days-earlier.Rds: d1000-32-days-earlier.Rds
+      d1000-64-days-earlier.Rds: d1000-64-days-earlier.Rds
       No Vaccines.Rds: No Vaccines.Rds
       Baseline.Rds: Baseline.Rds
       counterfactuals.Rds: counterfactuals.Rds
