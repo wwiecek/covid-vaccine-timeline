@@ -1,3 +1,12 @@
+
+## Runs predefined counterfactual simulations
+## If you want to vary the counterfactuals, see the function
+## early_n (which sets the days earlier that vaccination starts)
+## and the variable counterfactuals
+
+
+require(purrr)
+
 # if(!is.na(seed) & seed != "NA"){
 #   set.seed(seed)
 # }
@@ -18,6 +27,9 @@ if(excess_mortality){
   plot_output <- file.path("data", "reported_deaths", "fitting_plots.pdf")
   temp_plots <- file.path("data", "reported_deaths", "temp")
 }
+
+
+# Choose which countries to simulate
 
 countries_of_interest <- c('USA')
 
@@ -311,14 +323,24 @@ add_extra_data <- function(data,n) {
 
 
 ##Vaccine administration starts n days earlier
+##and second doses also start n days earlier
 early_n <- function(n,iso3c,dur_V=NULL) {
   fit <- readRDS(paste0(fit_loc, "/", iso3c, ".Rds"))
   if(any(fit$interventions$max_vaccine > 0)){
       interventions <- list(
+        # This sets the dates on which the doses in max_vaccine are administered
         date_vaccine_change = shift_days(fit$interventions$date_vaccine_change,n),
+
+        # This sets the dates on which the second doses are administered according to dose_ratio
         date_vaccine_efficacy = shift_days(fit$interventions$date_vaccine_efficacy,n),
+
+        # This is the number of new first doses administered on the corresponding date
         max_vaccine = add_extra_data(fit$interventions$max_vaccine,n),
+
+        # This sets the number of second doses via defining the first:second dose ratio
         dose_ratio = add_extra_data(fit$interventions$dose_ratio,n),
+
+        # This sets the average number of days for which the vaccine is efficacious, default 446
         dur_V = if(!is.null(dur_V)){dur_V} else{fit$parameters$dur_V}
       )
       return(interventions)
@@ -329,6 +351,9 @@ early_n <- function(n,iso3c,dur_V=NULL) {
 }
 
 counterfactuals <- lapply(iso3cs,function(iso3c) {
+
+  # No vaccine counterfactual
+
   c0 <- list(max_vaccine = c(0,0),
              date_vaccine_change = as.Date(Sys.Date()) - 1,
              dose_ratio = 0,

@@ -1,6 +1,6 @@
 ---
-title: "Creating the Report"
-author: "Greg Barnsley"
+title: "Simulating and Plotting Counterfactuals"
+author: "David Johnston"
 date: "`r format(Sys.time(), '%d %B, %Y, %H:%M')`"
 knit: (function(inputFile, encoding) { 
       rmarkdown::render(inputFile,
@@ -52,202 +52,57 @@ install.packages("qpdf") #version 1.1
 All packages used in this repository and the versions used to generate the data.
 Feel free to skip if you already have these.
 
-## Parameter Choices
+## Running the simulation
+
+The following simulates the baseline pandemic in the United States, as well as a
+collection of predefined counterfactuals. If you are looking to alter the counterfactuals
+simulated, you can edit this file.
 
 ```{r, echo=TRUE, eval=FALSE}
+source("data/raw/generate_counterfactuals.R")
+```
+
+## Quickly generating plots
+
+If you alter the simulated counterfactuals, this requires significant updates to the orderly workflow.
+To quickly generate some plots from the simulated data without going through orderly, you can use the
+scripts in the exploration file.
+
+```{r, echo=TRUE, eval=FALSE}
+setwd("{PATH}/covid-vaccine-impact-orderly/exploration")
+source("gather_simulations.R")
+source("deaths_averted_plots.R")
+```
+
+## Running orderly reports
+
+### Set the directory
+
+```{r, echo=TRUE, eval=FALSE}
+setwd("{PATH}/covid-vaccine-impact-orderly
 orderly_loc <- here::here()
 ```
 
-## Get Model Fits
+### Get Model Fits
 
 The model fits used to generated the data in this repository are stored in the 
 *data* directory. The following tasks gather the simulated counterfactuals from
-this directory as well as a world map and dataset from Our World In Data used.
+this directory.
 
 ```{r, echo=TRUE, eval=FALSE}
-gather_data_id <- orderly::orderly_run("gather_data",
-                                           parameters = list(
-                                             orderly_loc = orderly_loc
-                                           ), echo = FALSE)
-orderly::orderly_commit(gather_data_id)
-gather_simulations_id <- orderly::orderly_run("gather_simulations",
+gather_simulations__time_id <- orderly::orderly_run("gather_simulations_time",
                                            parameters = list(
                                              orderly_loc = orderly_loc,
                                              excess = TRUE
                                            ), echo = FALSE)
-orderly::orderly_commit(gather_simulations_id)
-gather_simulations_id <- orderly::orderly_run("gather_simulations",
-                                           parameters = list(
-                                             orderly_loc = orderly_loc,
-                                             excess = FALSE
-                                           ), echo = FALSE)
-orderly::orderly_commit(gather_simulations_id)
+orderly::orderly_commit(gather_simulations_time_id)
 ```
 
-## Create interactive world map
+### Create the plots
 
 ```{r, echo=TRUE, eval=FALSE}
-interactive_map_id <- orderly::orderly_run("interactive_map",
-                                           echo = FALSE)
-orderly::orderly_commit(interactive_map_id)
-#copy files across to github pages directory
-destination <- file.path(here::here(), "docs")
-origin <- file.path(here::here(), "archive", "interactive_map", 
-                    interactive_map_id, "web_page")
-for(file in list.files(origin)){
-  file.copy(file.path(origin, file), file.path(destination, file), overwrite = TRUE)
-}
+d_a_plot_id <- orderly::orderly_run("deaths_averted_plot_timeline",
+                                      parameters=list(excess=TRUE))
+orderly::orderly_commit(d_a_plot_id)
 ```
 
-This task generates the interactive leaflet map. The one used on the github 
-pages for this repository is copied across from the *web_page* sub directory.
-
-## Generate Table for Report
-
-```{r, echo=TRUE, eval=FALSE}
-deaths_averted_table_id <- orderly::orderly_run("deaths_averted_table",
-                                           parameters = list(
-                                             excess = TRUE,
-                                             seed = 1001000011
-                                           ), echo = FALSE)
-orderly::orderly_commit(deaths_averted_table_id)
-
-#extra task to correctly calculate percentage deaths averted for COVAX and WHO
-COVAX_WHO_percentages_id <- orderly::orderly_run("COVAX_WHO_percentages",
-                                           parameters = list(
-                                             seed = 10010
-                                           ), echo = FALSE)
-orderly::orderly_commit(COVAX_WHO_percentages_id)
-```
-
-This generates a Rds of a table of the counter factual deaths averted.
-
-## Generate Figures for Report
-
-```{r, echo=TRUE, eval=FALSE}
-example_deaths_averted_plots_id <- orderly::orderly_run("example_deaths_averted_plots",
-                                           parameters = list(
-                                             seed = 1000100
-                                           ), echo = FALSE)
-orderly::orderly_commit(example_deaths_averted_plots_id)
-
-dot_plots_id <- orderly::orderly_run("dot_plots",
-                                           parameters = list(
-                                             excess = TRUE
-                                           ), echo = FALSE)
-orderly::orderly_commit(dot_plots_id)
-
-global_deaths_averted_plot_id <- orderly::orderly_run("global_deaths_averted_plot",
-                                           parameters = list(
-                                             seed = 1000100
-                                           ), echo = FALSE)
-orderly::orderly_commit(global_deaths_averted_plot_id)
-
-map_plot_id <- orderly::orderly_run("map_plot",parameters = list(
-                                             excess = TRUE
-                                           ), echo = FALSE)
-orderly::orderly_commit(map_plot_id)
-```
-
-These tasks all generate *ggplot* objects so that they are easier to modify when
-producing the report.
-
-# Outputs
-
-## Compile Plots to Images
-
-```{r, echo=TRUE, eval=FALSE}
-compile_plots_id <- orderly::orderly_run("compile_plots",
-                                         echo = FALSE)
-orderly::orderly_commit(compile_plots_id)
-```
-
-Originally a report this now just puts the plots into pngs. All in one task so
-that it is simple to modify dimensions etc.
-
-## Numbers for Report
-
-```{r, echo=TRUE, eval=FALSE}
-#a dummy task to get around that orderly tasks can't depend on the same type of
-#task twice
-reported_data_for_comparison_id <- orderly::orderly_run("reported_data_for_comparison")
-orderly::orderly_commit(reported_data_for_comparison_id)
-
-generate_numbers_id <- orderly::orderly_run("generate_numbers",
-                                         parameters = list(
-                                             seed = 8006646
-                                           ),
-                                         echo = FALSE)
-orderly::orderly_commit(generate_numbers_id)
-```
-
-Generate any other values needed for the report.
-
-# Supplementry Plots
-
-## Reported data plots
-
-```{r, echo=TRUE, eval=FALSE}
-deaths_averted_table_id <- orderly::orderly_run("deaths_averted_table",
-                                           parameters = list(
-                                             excess = FALSE,
-                                             seed = 100101011
-                                           ), echo = FALSE)
-orderly::orderly_commit(deaths_averted_table_id)
-```
-
-Generate deaths averted table.
-
-```{r, echo=TRUE, eval=FALSE}
-delta_toy_example_id <- orderly::orderly_run("delta_toy_example",
-                                             parameters = list(seed = 10001),
-                                             echo = FALSE)
-orderly::orderly_commit(delta_toy_example_id)
-
-delta_toy_example_india_id <- orderly::orderly_run("delta_toy_example_india",
-                                             parameters = list(seed = 1012),
-                                             echo = FALSE)
-orderly::orderly_commit(delta_toy_example_india_id)
-
-ifr_toy_example_id <- orderly::orderly_run("ifr_toy_example",
-                                             parameters = list(seed = 99),
-                                             echo = FALSE)
-orderly::orderly_commit(ifr_toy_example_id)
-```
-
-Produce model fits for some simulated data to explore the relationship between
-immune escape and deaths averted.
-
-```{r, echo=TRUE, eval=FALSE}
-compare_excess_reported_id <- orderly::orderly_run("compare_excess_reported",
-                                           parameters = list(
-                                             seed = 991001
-                                           ), echo = FALSE)
-orderly::orderly_commit(compare_excess_reported_id)
-```
-
-Comparison of deaths averted in excess-mortality fitting and reported deaths.
-
-```{r, echo=TRUE, eval=FALSE}
-deaths_averted_hospital_id <- orderly::orderly_run("deaths_averted_hospital",
-                                           parameters = list(
-                                             seed = 1000100
-                                           ), echo = FALSE)
-orderly::orderly_commit(deaths_averted_hospital_id)
-
-deaths_averted_hospital_numbers_id <- orderly::orderly_run("deaths_averted_hospital_numbers",
-                                           parameters = list(
-                                             seed = 160100
-                                           ), echo = FALSE)
-orderly::orderly_commit(deaths_averted_hospital_numbers_id)
-```
-
-A plot looking at deaths averted by reduction in hospital and ICU burden.
-
-```{r, echo=TRUE, eval=FALSE}
-compile_plots_si_id <- orderly::orderly_run("compile_plots_si",
-                                         echo = FALSE)
-orderly::orderly_commit(compile_plots_si_id)
-```
-
-Compile some of the figures and tables for the SI.

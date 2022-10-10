@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# covid-vaccine-impact-orderly
+# covid-vaccine-timelines
 
 This is an [orderly](https://github.com/vimc/orderly) project. The
 directories are:
@@ -33,28 +33,23 @@ directories are:
     -   `generate_counterfactuals.R`: R code used to generate the
         simulations from the model fits
 
-The purpose of this repository is to estimate the number of deaths
-averted by COVID-19 vaccinations to date. This utilises the
+`exploration`: Scripts to organise data and visualise the output of counterfactuals that aren't
+integrated into orderly tasks
+
+The purpose of this repository is to estimate the number of deaths that
+could have been averted by COVID-19 vaccinations if they had begun at earlier dates. This utilises the
 [nimue](https://github.com/mrc-ide/nimue) fits generated in
 [global-lmic-reports-orderly](https://github.com/mrc-ide/global-lmic-reports-orderly),
 which are also used to produce the reports
-[here](https://mrc-ide.github.io/global-lmic-reports/).
+[here](https://mrc-ide.github.io/global-lmic-reports/). It is based on the simulations of
+deaths averted by COVID-19 vaccines found [here](https://github.com/mrc-ide/covid-vaccine-impact-orderly)
 
 ## Installation
 
-    git clone https://github.com/mrc-ide/covid-vaccine-impact-orderly.git
-    cd covid-vaccine-impact-orderly
+    git clone https://github.com/davidoj/covid-vaccine-timeline
+    cd covid-vaccine-timeline
     open covid-vaccine-impact-orderly.Rproj
 
 ## Usage
 
-A vignette that briefly runs through the tasks used in this repo can be
-found
-[here](https://mrc-ide.github.io/covid-vaccine-impact-orderly/create_report.html),
-and also in the `vignettes` folder.
-
-## Interactive Map
-
-This repo also generates an interactive map of the estimated deaths
-averted. This can be found
-[here](https://mrc-ide.github.io/covid-vaccine-impact-orderly/web-map.html).
+A vignette that briefly runs through generating counterfactual simulations and producing some rough plots can be found in the `vignettes` folder.
