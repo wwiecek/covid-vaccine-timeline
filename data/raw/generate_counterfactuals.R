@@ -1,8 +1,8 @@
 
 ## Runs predefined counterfactual simulations
 ## If you want to vary the counterfactuals, see the function
-## early_n (which sets the days earlier that vaccination starts)
-## and the variable counterfactuals
+## `early_n` (which sets the days earlier that vaccination starts)
+## and the variable `counterfactuals`
 
 
 require(purrr)
@@ -15,6 +15,7 @@ require(purrr)
 excess_mortality <- TRUE
 if(excess_mortality){
   fit_loc <- file.path("data", "excess_mortality", "model_fits")
+  cf_params <- file.path("data","excess_mortality","counterfactual_params")
   output <- file.path("data", "excess_mortality", "counterfactual_data")
   cf_output <- file.path("data", "excess_mortality", "counterfactuals.Rds")
   plot_output <- file.path("data", "excess_mortality", "fitting_plots.pdf")
@@ -31,7 +32,7 @@ if(excess_mortality){
 
 # Choose which countries to simulate
 
-countries_of_interest <- c('USA')
+countries_of_interest <- c('USA','GBR')
 
 iso3cs <- gsub(".Rds", "", list.files(fit_loc))
 iso3cs <- iso3cs[iso3cs %in% countries_of_interest]
