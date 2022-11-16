@@ -3,7 +3,7 @@ require(purrr)
 require(tibble)
 require(dplyr)
 
-root_dir <- file.path(".")
+root_dir <- file.path("..")
 
 excess <- TRUE
 

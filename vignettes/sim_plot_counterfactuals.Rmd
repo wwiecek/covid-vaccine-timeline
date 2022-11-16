@@ -70,8 +70,10 @@ To quickly generate some plots from the simulated data without going through ord
 scripts in the exploration file.
 
 ```{r, echo=TRUE, eval=FALSE}
-source("exploration/gather_simulations.R")
-source("exploration/deaths_averted_plots.R")
+root_path <- getwd()
+setwd(sprintf("%s/exploration", root_path))
+source("gather_simulations.R")
+source("deaths_averted_plots.R")
 ```
 
 ## Running orderly reports
@@ -79,6 +81,7 @@ source("exploration/deaths_averted_plots.R")
 ### Set the directory
 
 ```{r, echo=TRUE, eval=FALSE}
+setwd(root_path)
 orderly_loc <- here::here()
 ```
 
