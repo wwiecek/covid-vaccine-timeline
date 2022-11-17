@@ -6,16 +6,19 @@
 
 
 require(purrr)
+require(dplyr)
 
 # if(!is.na(seed) & seed != "NA"){
 #   set.seed(seed)
 # }
 
+cf_params <- file.path("data","raw","counterfactual_timelines")
+
+
 #which type of fit
 excess_mortality <- TRUE
 if(excess_mortality){
   fit_loc <- file.path("data", "excess_mortality", "model_fits")
-  cf_params <- file.path("data","excess_mortality","counterfactual_params")
   output <- file.path("data", "excess_mortality", "counterfactual_data")
   cf_output <- file.path("data", "excess_mortality", "counterfactuals.Rds")
   plot_output <- file.path("data", "excess_mortality", "fitting_plots.pdf")
@@ -36,6 +39,10 @@ countries_of_interest <- c('USA','GBR')
 
 iso3cs <- gsub(".Rds", "", list.files(fit_loc))
 iso3cs <- iso3cs[iso3cs %in% countries_of_interest]
+
+# Counterfactual scenarios
+
+cfs <- gsub(".csv", "", list.files(cf_params))
 
 #load counterfactual simulation functions
 #' Generate Deaths Averted
@@ -250,6 +257,21 @@ remove_healthcare <- function(out){
   return(out)
 }
 update_counterfactual <- function(out, counterfactual){
+
+  # For some reason, max_vaccine needs to be longer than everything else
+
+  # if (length(counterfactual$max_vaccine) == length(counterfactual$date_vaccine_change)) {
+  #   counterfactual$max_vaccine <- append(0,counterfactual$max_vaccine)
+  # }
+
+  print(length(counterfactual$max_vaccine))
+  print(length(counterfactual$date_vaccine_change))
+  print(length(counterfactual$dose_ratio))
+  print(length(counterfactual$date_vaccine_efficacy))
+
+
+
+
   out$pmcmc_results$inputs$interventions$date_vaccine_change <-
     counterfactual$date_vaccine_change
   out$pmcmc_results$inputs$interventions$date_vaccine_efficacy <-
@@ -261,6 +283,7 @@ update_counterfactual <- function(out, counterfactual){
 
   #don't need to update the max vaccine as it uses intervention data
 
+
   out$interventions$date_vaccine_change <-
     counterfactual$date_vaccine_change
   out$interventions$date_vaccine_efficacy <-
@@ -271,9 +294,12 @@ update_counterfactual <- function(out, counterfactual){
     counterfactual$dose_ratio
 
   # Update vaccine duration
-  out$parameters$dur_V <- counterfactual$dur_V
-  out$odin_parameters$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
-  out$pmcmc_results$inputs$model_params$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
+  if (!is.null(counterfactual$dur_V)){
+    out$parameters$dur_V <- counterfactual$dur_V
+    out$odin_parameters$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
+    out$pmcmc_results$inputs$model_params$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V  
+  }
+  
   
 
   #also remove healthcare if requested
@@ -322,6 +348,32 @@ add_extra_data <- function(data,n) {
   data <- append(data,rep(tail(data,1),n))
 }
 
+# Load counterfactuals
+# TODO: this needs to be changed when we are handling third doses
+
+load_counterfactuals <- function(cf, iso3c_in) {
+  fit <- readRDS(paste0(fit_loc, "/", iso3c_in, ".Rds"))
+  max_date <- max(fit$interventions$date_vaccine_change)
+  cf_data <- read.csv(paste0(cf_params,"/",cf,".csv")) %>%
+    filter(iso3c == iso3c_in) %>%
+    mutate(second_dose_ratio = replace(cumsum(second_doses)/cumsum(first_doses),1,0))
+  cfs <- cf_data %>% 
+    filter(date <= as.character(max_date)) %>%
+    rename(
+        max_vaccine = first_doses,
+        dose_ratio = second_dose_ratio,
+        date_vaccine_efficacy = date
+      ) %>%
+    mutate (
+      date_vaccine_change = date_vaccine_efficacy
+      ) %>%
+    select(max_vaccine,dose_ratio,date_vaccine_efficacy,date_vaccine_change) 
+  cfs = as.list(cfs)
+  # For some unknown reason, this needs to be longer
+  cfs$max_vaccine <- append(0,cfs$max_vaccine)
+  return(cfs)
+}
+
 
 ##Vaccine administration starts n days earlier
 ##and second doses also start n days earlier
@@ -360,15 +412,17 @@ counterfactuals <- lapply(iso3cs,function(iso3c) {
              dose_ratio = 0,
              date_vaccine_efficacy = as.Date(Sys.Date()) - 1,
              dur_V = 446)
-  days <- expand.grid(2^(1:6),c(446,1000))
-  days_earlier <- apply(days, 1, function(day_dur){
-    return(early_n(day_dur[1],iso3c,dur_V=day_dur[[2]]))
+  cf_scenarios <- lapply(cfs, function(cf){
+    return(load_counterfactuals(cf,iso3c))
     })
-  names(days_earlier) <- apply(days,1,function(day_dur){
-    paste0("d",day_dur[[2]],"-",day_dur[[1]],"-days-earlier")
-  })
-  cf_list <- append(list(`No Vaccines`=c0),days_earlier)
-  return(cf_list)
+  # cf_scenarios <- lapply(cfs, function(cf){
+  #   return(early_n(5,iso3c))
+  #   })
+  names(cf_scenarios) <- cfs
+  cf_list <- append(list(`No Vaccines`=c0),cf_scenarios)
+  # return(cf_list)
+
+  return(cf_scenarios)
   })
 names(counterfactuals) <- iso3cs
 
