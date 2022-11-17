@@ -1,5 +1,6 @@
 .Rproj.user
 .Rhistory
+.Rapp.history
 .RData
 .Ruserdata
 archive
@@ -12,3 +13,4 @@ orderly_envir.yml
 runner
 backup
 remote
+.DS_Store
