@@ -3,8 +3,8 @@ require(purrr)
 require(tibble)
 require(dplyr)
 
-root_dir <- file.path("..")
-
+root_dir <- file.path(".")
+save_dir <- file.path('exploration')
 excess <- TRUE
 
 if(excess){
@@ -26,7 +26,7 @@ print(cfs)
 walk(cfs, function(cf){
   files_to_merge <- files[str_split_fixed(files, "_", 2)[,1] == cf]
   map_dfr(file.path(cf_loc, "counterfactual_data", files_to_merge), ~readRDS(.x)) %>%
-    saveRDS(paste0(cf, ".Rds"))
+    saveRDS(file.path(save_dir,paste0(cf, ".Rds")))
 })
 #setup the counterfactual file
 #need total vaccines and full dose coverage for baseline and then full dose coverage for WHO and COVAX
@@ -69,7 +69,7 @@ map_dfr(iso3cs, function(iso3c){
   mutate(
     `No Vaccines` = 0,
   ) %>%
-  saveRDS("counterfactuals.Rds")
+  saveRDS(file.path(save_dir,"counterfactuals.Rds"))
 #get the number of excess deaths
 if(excess){
   map_dfr(iso3cs, function(iso3c){
@@ -88,6 +88,6 @@ if(excess){
     ) %>%
     ungroup() %>%
     select(obsDate, deaths) %>%
-    saveRDS("excess_deaths.Rds")
+    saveRDS(file.path(save_dir,"excess_deaths.Rds"))
 
 }

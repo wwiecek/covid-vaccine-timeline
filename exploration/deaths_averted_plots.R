@@ -11,7 +11,7 @@ require(countrycode)
 
 
 # cfs <- apply(expand.grid(2^(1:6),c(446,1000)),1,function(n){return(paste0("d",n[2],"-",n[1],"-days-earlier"))})
-cfs <- c('baseline-raw')
+cfs <- c('owid-raw')
 
 
 
