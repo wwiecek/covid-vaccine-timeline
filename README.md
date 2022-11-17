@@ -67,4 +67,4 @@ Each counterfactual scenario has its own file so that adding counterfactual scen
     - `second_doses`: Number of second doses administered
     - `third_doses`: Number of third (booster) doses administered
 
-See `baseline.csv` for a file of the required format with the real vaccination campaign data derived from the set provided by [Our World in Data](https://github.com/owid/covid-19-data/tree/master/public/data/vaccinations).
+See `owid-raw.csv` for a file of the required format with the real vaccination campaign data derived from the set provided by [Our World in Data](https://github.com/owid/covid-19-data/tree/master/public/data/vaccinations).
