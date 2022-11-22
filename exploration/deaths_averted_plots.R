@@ -11,7 +11,7 @@ require(countrycode)
 
 
 # cfs <- apply(expand.grid(2^(1:6),c(446,1000)),1,function(n){return(paste0("d",n[2],"-",n[1],"-days-earlier"))})
-cfs <- c('owid-raw')
+cfs <- c('owid-raw','owid-none')
 
 
 
@@ -68,8 +68,8 @@ table2_df_ind <- loadCounterfactualData(cfs,
 
 ts_plots <- lapply(cfs,function(cf){
   deaths_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
+        geom_line(aes(y = baseline_deaths_avg, colour="baseline")) +
         geom_line(aes(y = deaths_avg, colour = "counterfactual")) +
-        # geom_line(aes(y = baseline_deaths_avg, colour="baseline")) +
         facet_wrap(~iso3c,nrow=2) +
         scale_colour_manual(labels=c('baseline','counterfactual'),values=c(colour_baseline,colour_counterfactual))
         labs(x = "Date", y = "Daily Deaths",title=cf) +
@@ -82,8 +82,8 @@ ts_plots <- lapply(cfs,function(cf){
 
 cum_ts_plots <- lapply(cfs,function(cf){
   cum_deaths_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
+        geom_line(aes(y = baseline_cumulative_deaths, colour="baseline")) +
         geom_line(aes(y = cumulative_deaths, colour = "counterfactual")) +
-        # geom_line(aes(y = baseline_cumulative_deaths, colour="baseline")) +
         facet_wrap(~iso3c,nrow=2) +
         scale_colour_manual(labels=c('baseline','counterfactual'),values=c(colour_baseline,colour_counterfactual))
         labs(x = "Date", y = "Daily Deaths",title=cf) +

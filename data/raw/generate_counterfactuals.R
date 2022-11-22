@@ -264,11 +264,13 @@ update_counterfactual <- function(out, counterfactual){
   #   counterfactual$max_vaccine <- append(0,counterfactual$max_vaccine)
   # }
 
-  print(length(counterfactual$max_vaccine))
-  print(length(counterfactual$date_vaccine_change))
-  print(length(counterfactual$dose_ratio))
-  print(length(counterfactual$date_vaccine_efficacy))
+  print(str(counterfactual$max_vaccine))
+  print(str(counterfactual$date_vaccine_change))
+  print(str(counterfactual$dose_ratio))
+  print(str(counterfactual$date_vaccine_efficacy))
 
+  print(str(out$pmcmc_results$inputs$interventions$dose_ratio))
+  print(str(out$pmcmc_results$inputs$interventions$date_vaccine_efficacy))
 
 
 
@@ -356,13 +358,16 @@ load_counterfactuals <- function(cf, iso3c_in) {
   max_date <- max(fit$interventions$date_vaccine_change)
   cf_data <- read.csv(paste0(cf_params,"/",cf,".csv")) %>%
     filter(iso3c == iso3c_in) %>%
-    mutate(second_dose_ratio = replace(cumsum(second_doses)/cumsum(first_doses),1,0))
+    mutate(second_dose_ratio = replace(cumsum(second_doses)/(cumsum(first_doses)+0.01),1,0))
   cfs <- cf_data %>% 
     filter(date <= as.character(max_date)) %>%
     rename(
         max_vaccine = first_doses,
         dose_ratio = second_dose_ratio,
         date_vaccine_efficacy = date
+      ) %>%
+    mutate (
+      date_vaccine_efficacy = as.Date(date_vaccine_efficacy,'%Y-%m-%d')
       ) %>%
     mutate (
       date_vaccine_change = date_vaccine_efficacy
