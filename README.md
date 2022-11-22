@@ -1,6 +1,3 @@
-
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
 # covid-vaccine-timelines
 
 This is an [orderly](https://github.com/vimc/orderly) project. The
