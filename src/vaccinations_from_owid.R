@@ -11,7 +11,7 @@ replace_na <- function(vec) {
 
 vaccinations <- read.csv('data/raw/owid_vaccinations.csv') %>%
 	 mutate(total_boosters = replace_na(total_boosters)) %>% 
-	 mutate(first_doses = replace_na(daily_vaccinations)) %>%
+	 mutate(first_doses = replace_na(daily_people_vaccinated)) %>%
 	 group_by(iso_code) %>%
 	 mutate(second_doses = pad_diff(rollmean(people_fully_vaccinated,k=5,fill=0))) %>%
 	 mutate(third_doses = pad_diff(rollmean(total_boosters,k=5,fill=0))) %>%
@@ -22,4 +22,4 @@ vaccinations <- read.csv('data/raw/owid_vaccinations.csv') %>%
 	 filter(iso3c %in% c("USA","GBR")) %>%
 	 select(country, iso3c, date, first_doses, second_doses, third_doses)
 
-write.csv(vaccinations,'data/raw/counterfactual_timelines/baseline.csv')
+write.csv(vaccinations,'data/raw/counterfactual_timelines/owid-raw.csv')
