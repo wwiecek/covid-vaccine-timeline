@@ -63,19 +63,6 @@ simulated, you can edit this file.
 source("data/raw/generate_counterfactuals.R")
 ```
 
-## Quickly generating plots
-
-If you alter the simulated counterfactuals, this requires significant updates to the orderly workflow.
-To quickly generate some plots from the simulated data without going through orderly, you can use the
-scripts in the exploration file.
-
-```{r, echo=TRUE, eval=FALSE}
-root_path <- getwd()
-setwd(sprintf("%s/exploration", root_path))
-source("gather_simulations.R")
-source("deaths_averted_plots.R")
-```
-
 ## Running orderly reports
 
 ### Set the directory
