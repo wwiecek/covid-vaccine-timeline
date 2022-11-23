@@ -1,14 +1,7 @@
 if(excess){
   orderly_loc <- file.path(orderly_loc, "data", "excess_mortality")
-  empty_files <- c("Baseline-Direct & No Healthcare Surging", "Baseline-Direct",
-                   "Baseline-No Healthcare Surging", "COVAX", "No Vaccines-No Healthcare Surging",
-                   "WHO")
 } else {
   orderly_loc <- file.path(orderly_loc, "data", "reported_deaths")
-  empty_files <- c("Baseline-Direct & No Healthcare Surging", "Baseline-Direct",
-                   "Baseline-No Healthcare Surging", "COVAX", "No Vaccines-No Healthcare Surging",
-                   "WHO","1-days-earlier", "2-days-earlier",  "4-days-earlier",  "8-days-earlier",
-                  "16-days-earlier", "32-days-earlier", "64-days-earlier", "excess_deaths")
 }
 #now copy over fitting plots
 file.copy(
@@ -26,7 +19,6 @@ walk(cfs, function(cf){
   map_dfr(file.path(orderly_loc, "counterfactual_data", files_to_merge), ~readRDS(.x)) %>%
     saveRDS(paste0(cf, ".Rds"))
 })
-walk(empty_files, ~saveRDS(NULL, paste0(.x, ".Rds")))
 #setup the counterfactual file
 #need total vaccines and full dose coverage for baseline and then full dose coverage for WHO and COVAX
 counterfactuals <- readRDS(file.path(orderly_loc, "counterfactuals.Rds"))
@@ -44,27 +36,6 @@ map_dfr(iso3cs, function(iso3c){
     `Baseline` = second_doses
   )
 }, .id = "iso3c") %>%
-  left_join(
-    map_dfr(counterfactuals, function(counterfactual){
-      if(is.null(counterfactual$COVAX)){
-        COVAX <- as.numeric(NA)
-      } else {
-        COVAX <- sum(counterfactual$COVAX$max_vaccine) *
-          tail(counterfactual$COVAX$dose_ratio, 1)
-      }
-      if(is.null(counterfactual$WHO)){
-        WHO <- as.numeric(NA)
-      } else {
-        WHO <- sum(counterfactual$WHO$max_vaccine) *
-          tail(counterfactual$WHO$dose_ratio, 1)
-      }
-      tibble(
-        COVAX = COVAX,
-        WHO = WHO
-      )
-    }, .id = "iso3c"),
-    by = "iso3c"
-  ) %>%
   mutate(
     `No Vaccines` = 0,
   ) %>%
