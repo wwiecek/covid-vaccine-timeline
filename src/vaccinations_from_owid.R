@@ -20,6 +20,7 @@ vaccinations <- read.csv('data/raw/owid_vaccinations.csv') %>%
 	 rename(country = location) %>%
 	 rename(iso3c = iso_code) %>%
 	 filter(iso3c %in% c("USA","GBR")) %>%
+	 filter(date <= as.Date('2022-10-01')) %>%
 	 select(country, iso3c, date, first_doses, second_doses, third_doses)
 
 write.csv(vaccinations,'data/raw/counterfactual_timelines/owid-raw.csv')

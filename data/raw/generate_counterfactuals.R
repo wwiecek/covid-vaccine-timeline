@@ -356,7 +356,6 @@ add_extra_data <- function(data,n) {
 load_counterfactuals <- function(cf, iso3c_in) {
   fit <- readRDS(paste0(fit_loc, "/", iso3c_in, ".Rds"))
   max_date <- max(fit$interventions$date_vaccine_change)
-  print(cf)
   cf_data <- read.csv(paste0(cf_params,"/",cf,".csv")) %>%
     filter(iso3c == iso3c_in) %>%
     mutate(second_dose_ratio = replace(cumsum(second_doses)/(cumsum(first_doses)+0.01),1,0))
