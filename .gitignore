@@ -13,4 +13,4 @@ orderly_envir.yml
 runner
 backup
 remote
-.DS_Store
+*.DS_Store

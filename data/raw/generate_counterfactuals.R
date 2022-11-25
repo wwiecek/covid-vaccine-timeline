@@ -264,11 +264,13 @@ update_counterfactual <- function(out, counterfactual){
   #   counterfactual$max_vaccine <- append(0,counterfactual$max_vaccine)
   # }
 
-  print(length(counterfactual$max_vaccine))
-  print(length(counterfactual$date_vaccine_change))
-  print(length(counterfactual$dose_ratio))
-  print(length(counterfactual$date_vaccine_efficacy))
+  print(str(counterfactual$max_vaccine))
+  print(str(counterfactual$date_vaccine_change))
+  print(str(counterfactual$dose_ratio))
+  print(str(counterfactual$date_vaccine_efficacy))
 
+  print(str(out$pmcmc_results$inputs$interventions$dose_ratio))
+  print(str(out$pmcmc_results$inputs$interventions$date_vaccine_efficacy))
 
 
 
@@ -335,34 +337,25 @@ dp_plot_2 <- function (res, excess) {
   }
 }
 
-#calculate the counterfactuals
-
-shift_days <- function(days,n) {
-  dates <- seq(min(days)-n,max(days),1)
-  return(dates)
-}
-
-# TODO: actually source the extra data properly
-
-add_extra_data <- function(data,n) {
-  data <- append(data,rep(tail(data,1),n))
-}
 
 # Load counterfactuals
-# TODO: this needs to be changed when we are handling third doses
+# TODO: this needs to be changed when we start handling third doses
 
 load_counterfactuals <- function(cf, iso3c_in) {
   fit <- readRDS(paste0(fit_loc, "/", iso3c_in, ".Rds"))
   max_date <- max(fit$interventions$date_vaccine_change)
   cf_data <- read.csv(paste0(cf_params,"/",cf,".csv")) %>%
     filter(iso3c == iso3c_in) %>%
-    mutate(second_dose_ratio = replace(cumsum(second_doses)/cumsum(first_doses),1,0))
+    mutate(second_dose_ratio = replace(cumsum(second_doses)/max(cumsum(first_doses),1),1,0))
   cfs <- cf_data %>% 
     filter(date <= as.character(max_date)) %>%
     rename(
         max_vaccine = first_doses,
         dose_ratio = second_dose_ratio,
         date_vaccine_efficacy = date
+      ) %>%
+    mutate (
+      date_vaccine_efficacy = as.Date(date_vaccine_efficacy,'%Y-%m-%d')
       ) %>%
     mutate (
       date_vaccine_change = date_vaccine_efficacy
@@ -372,35 +365,6 @@ load_counterfactuals <- function(cf, iso3c_in) {
   # For some unknown reason, this needs to be longer
   cfs$max_vaccine <- append(0,cfs$max_vaccine)
   return(cfs)
-}
-
-
-##Vaccine administration starts n days earlier
-##and second doses also start n days earlier
-early_n <- function(n,iso3c,dur_V=NULL) {
-  fit <- readRDS(paste0(fit_loc, "/", iso3c, ".Rds"))
-  if(any(fit$interventions$max_vaccine > 0)){
-      interventions <- list(
-        # This sets the dates on which the doses in max_vaccine are administered
-        date_vaccine_change = shift_days(fit$interventions$date_vaccine_change,n),
-
-        # This sets the dates on which the second doses are administered according to dose_ratio
-        date_vaccine_efficacy = shift_days(fit$interventions$date_vaccine_efficacy,n),
-
-        # This is the number of new first doses administered on the corresponding date
-        max_vaccine = add_extra_data(fit$interventions$max_vaccine,n),
-
-        # This sets the number of second doses via defining the first:second dose ratio
-        dose_ratio = add_extra_data(fit$interventions$dose_ratio,n),
-
-        # This sets the average number of days for which the vaccine is efficacious, default 446
-        dur_V = if(!is.null(dur_V)){dur_V} else{fit$parameters$dur_V}
-      )
-      return(interventions)
-    }
-  else{
-      return(NULL)
-    } 
 }
 
 counterfactuals <- lapply(iso3cs,function(iso3c) {

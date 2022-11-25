@@ -43,55 +43,21 @@ script: script.R
 #             - report.html
 #             - figures/fig1.png
 #             - figures/fig2.png
+#
+# New counterfactual inputs must be specified here
+
 artefacts:
   - data:
       description: Information about the counterfactual vaccine timelines
       filenames: counterfactuals.Rds
   - data:
-      description: Baseline data simulation
+      description: Baseline pandemic simulation with factual vaccine timelines
       filenames: Baseline.Rds
   - data:
-      description: Counterfactual simulation with 2 day earlier vaccines, normal efficacy duration
-      filenames: d446-2-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 2 days earlier vaccines, extended efficacy
-      filenames: d1000-2-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 4 days earlier vaccines, normal efficacy duration
-      filenames: d446-4-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 4 days earlier vaccines, extended efficacy
-      filenames: d1000-4-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 8 days earlier vaccines, normal efficacy duration
-      filenames: d446-8-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 8 days earlier vaccines, extended efficacy
-      filenames: d1000-8-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 16 days earlier vaccines, normal efficacy duration
-      filenames: d446-16-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 16 days earlier vaccines, extended efficacy
-      filenames: d1000-16-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 32 days earlier vaccines, normal efficacy duration
-      filenames: d446-32-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 32 days earlier vaccines, extended efficacy
-      filenames: d1000-32-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 64 days earlier vaccines, normal efficacy duration
-      filenames: d446-64-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with 64 days earlier vaccines, extended efficacy
-      filenames: d1000-64-days-earlier.Rds
-  - data:
-      description: Counterfactual simulation with no vaccines
-      filenames: No Vaccines.Rds
-  - data:
-      description: Worldwide excess deaths
-      filenames: excess_deaths.Rds
+      description: Pandemic simulations with counterfactual vaccine timelines
+      filenames:
+        - owid-raw.Rds
+        - no-vaccines.Rds
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than
 # "description" (which can be as long as you want).  Must be a string.

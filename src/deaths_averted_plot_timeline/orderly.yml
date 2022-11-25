@@ -43,11 +43,26 @@ script: script.R
 #             - report.html
 #             - figures/fig1.png
 #             - figures/fig2.png
+#
+# When adding new counterfactual scenarios, add output filenames here
+
 artefacts:
   - staticgraph:
-      description: A graph of deaths averted by vaccinations
+      description: A graph of deaths averted by vaccinations under all counterfactual scenarios
       filenames:
         - deaths_averted_plot.pdf
+  - staticgraph:
+      description: Graphs of daily deaths under the baseline and counterfactual scenarios
+      filenames:
+        - owid-raw_tsplot.pdf
+        - no-vaccines_tsplot.pdf
+  - staticgraph:
+      description: Graphs of cumulative deaths under the baseline and counterfactual scenarios
+      filenames:
+        - owid-raw_cum_tsplot.pdf
+        - no-vaccines_cum_tsplot.pdf
+
+
 
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than
@@ -146,23 +161,16 @@ sources:
 #         use:
 #           other-data.csv: data.csv
 #
+# When new counterfactual scenarios are added
+# add them as dependencies here
+
+
 depends:
   gather_simulations_time:
     id: latest(parameter:excess == excess)
     use:
-      d446-2-days-earlier.Rds: d446-2-days-earlier.Rds
-      d446-4-days-earlier.Rds: d446-4-days-earlier.Rds
-      d446-8-days-earlier.Rds : d446-8-days-earlier.Rds
-      d446-16-days-earlier.Rds : d446-16-days-earlier.Rds
-      d446-32-days-earlier.Rds : d446-32-days-earlier.Rds
-      d446-64-days-earlier.Rds : d446-64-days-earlier.Rds
-      d1000-2-days-earlier.Rds: d1000-2-days-earlier.Rds
-      d1000-4-days-earlier.Rds: d1000-4-days-earlier.Rds
-      d1000-8-days-earlier.Rds: d1000-8-days-earlier.Rds
-      d1000-16-days-earlier.Rds: d1000-16-days-earlier.Rds
-      d1000-32-days-earlier.Rds: d1000-32-days-earlier.Rds
-      d1000-64-days-earlier.Rds: d1000-64-days-earlier.Rds
-      No Vaccines.Rds: No Vaccines.Rds
+      owid-raw.Rds: owid-raw.Rds
+      no-vaccines.Rds: no-vaccines.Rds
       Baseline.Rds: Baseline.Rds
       counterfactuals.Rds: counterfactuals.Rds
 
