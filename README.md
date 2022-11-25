@@ -57,7 +57,7 @@ To add a counterfactual scenario, you have to add a vaccination timeseries to th
  - `src/gather_simulations_time/orderly.yml`: add the required output filenames to the `artefacts` section
  - `src/deaths_averted_plot_timeline/orderly.yml`: add the required output filenames to the `artefacts` section
  and the required input files to the `depends` section
- - `src/deaths_averted_plot_timeline/orderly.yml`: add the required counterfactual names (input files with `.Rmd` stripped) to the cfs vector
+ - `src/deaths_averted_plot_timeline/script.R`: add the required counterfactual names (input files with `.Rmd` stripped) to the cfs vector
 
 ### Counterfacutal vaccine timeline format
 
