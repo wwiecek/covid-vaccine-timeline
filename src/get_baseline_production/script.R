@@ -31,6 +31,8 @@ baseline_vaccine_production = bind_rows(usa_available_vaccines_series, uk_data) 
 
 saveRDS(baseline_vaccine_production, "baseline_vaccine_production.Rds")
 
+# Plot how distributed amount of vaccines compared to administered changes over time
+# for the US data
 distributed_vs_administered = ggplot(data = usa_available_vaccines_series) +
   geom_line(aes(x = date, y = cumulative_available_vaccines, color = "Distributed")) +
   geom_line(aes(x = date, y = cumulative_administered_vaccines, color = "Administered")) +

@@ -93,6 +93,8 @@ counterfactual_production = map_dfr(
 
 saveRDS(counterfactual_production, "counterfactual_production.Rds")
 
+# For each country create a plot comparing total available vaccines in the
+# baseline and counterfactual scenarios
 for (country_iso in unique(baseline_prod$iso3c)) {
   plot = ggplot() +
     geom_line(data = baseline_prod %>% filter(iso3c == country_iso),
