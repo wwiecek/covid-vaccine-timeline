@@ -34,7 +34,7 @@ saveRDS(baseline_vaccine_production, "baseline_vaccine_production.Rds")
 distributed_vs_administered = ggplot(data = usa_available_vaccines_series) +
   geom_line(aes(x = date, y = cumulative_available_vaccines, color = "Distributed")) +
   geom_line(aes(x = date, y = cumulative_administered_vaccines, color = "Administered")) +
-  ylab('vaccines distributed / available') +
+  ylab("vaccines distributed / available") +
   scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
 
 ggsave("CDC_distributed_vs_administered.pdf", distributed_vs_administered, device = "pdf")

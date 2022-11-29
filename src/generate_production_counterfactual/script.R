@@ -92,3 +92,16 @@ counterfactual_production = map_dfr(
 )
 
 saveRDS(counterfactual_production, "counterfactual_production.Rds")
+
+for (country_iso in unique(baseline_prod$iso3c)) {
+  plot = ggplot() +
+    geom_line(data = baseline_prod %>% filter(iso3c == country_iso),
+              aes(x = date, y = cumulative_available_vaccines, color = "Baseline")) +
+    geom_line(data = counterfactual_production %>% filter(iso3c == country_iso),
+              aes(x = date, y = cumulative_available_vaccines, color = "Counterfactual")) +
+    ylab("Number of vaccines available") +
+    scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+    labs(color=country_iso)
+
+  ggsave(paste0(country_iso, "_production.pdf"), plot, device = "pdf")
+}

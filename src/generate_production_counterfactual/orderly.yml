@@ -49,7 +49,11 @@ artefacts:
         - counterfactual production time series with vaccines available sooner
       filenames:
         - counterfactual_production.Rds
-
+  - staticgraph:
+      description: country plots of baseline vs counterfactual production
+      filenames:
+        - GBR_production.pdf
+        - USA_production.pdf
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than
 # "description" (which can be as long as you want).  Must be a string.
@@ -97,6 +101,8 @@ parameters:
 packages:
   - purrr
   - dplyr
+  - ggplot2
+  - scales
 
 # Source files, in addition to the script.  Typically these will
 # contain function definitions.  These will be sourced after loading
