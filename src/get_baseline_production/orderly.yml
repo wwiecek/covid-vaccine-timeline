@@ -47,6 +47,9 @@ artefacts:
   - data:
       filenames: baseline_vaccine_production.Rds
       description: time series for vaccine production as it actually happened
+  - staticgraph:
+      filenames: CDC_distributed_vs_administered.pdf
+      description: comparing amount of distributed and administered vaccines according to CDC
 
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than
@@ -86,7 +89,8 @@ artefacts:
 #
 packages:
   - dplyr
-
+  - ggplot2
+  - scales
 # Source files, in addition to the script.  Typically these will
 # contain function definitions.  These will be sourced after loading
 # any packages, and before running your script.  Use this in
