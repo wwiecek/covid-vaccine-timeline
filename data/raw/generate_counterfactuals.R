@@ -264,16 +264,6 @@ update_counterfactual <- function(out, counterfactual){
   #   counterfactual$max_vaccine <- append(0,counterfactual$max_vaccine)
   # }
 
-  print(str(counterfactual$max_vaccine))
-  print(str(counterfactual$date_vaccine_change))
-  print(str(counterfactual$dose_ratio))
-  print(str(counterfactual$date_vaccine_efficacy))
-
-  print(str(out$pmcmc_results$inputs$interventions$dose_ratio))
-  print(str(out$pmcmc_results$inputs$interventions$date_vaccine_efficacy))
-
-
-
   out$pmcmc_results$inputs$interventions$date_vaccine_change <-
     counterfactual$date_vaccine_change
   out$pmcmc_results$inputs$interventions$date_vaccine_efficacy <-
@@ -379,12 +369,8 @@ counterfactuals <- lapply(iso3cs,function(iso3c) {
   cf_scenarios <- lapply(cfs, function(cf){
     return(load_counterfactuals(cf,iso3c))
     })
-  # cf_scenarios <- lapply(cfs, function(cf){
-  #   return(early_n(5,iso3c))
-  #   })
   names(cf_scenarios) <- cfs
   cf_list <- append(list(`No Vaccines`=c0),cf_scenarios)
-  # return(cf_list)
 
   return(cf_scenarios)
   })
