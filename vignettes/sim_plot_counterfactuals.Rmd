@@ -53,16 +53,6 @@ knitr::opts_knit$set(root.dir = here::here())
 All packages used in this repository and the versions used to generate the data.
 Feel free to skip if you already have these.
 
-## Running the simulation
-
-The following simulates the baseline pandemic in the United States, as well as a
-collection of predefined counterfactuals. If you are looking to alter the counterfactuals
-simulated, you can edit this file.
-
-```{r, echo=TRUE, eval=FALSE}
-source("data/raw/generate_counterfactuals.R")
-```
-
 ## Running orderly reports
 
 ### Set the directory
@@ -72,21 +62,22 @@ setwd(root_path)
 orderly_loc <- here::here()
 ```
 
-### Get Model Fits
+### Run the simulations
 
-The model fits used to generated the data in this repository are stored in the 
-*data* directory. The following tasks gather the simulated counterfactuals from
-this directory.
+The following simulates the baseline pandemic in the United States and the United Kingdom, as well as a
+collection of predefined counterfactuals. If you are looking to alter the counterfactuals
+simulated, you can edit this file.
 
 ```{r, echo=TRUE, eval=FALSE}
-gather_simulations_time_id <- orderly::orderly_run("gather_simulations_time",
-  parameters = list(
-    orderly_loc = orderly_loc,
-    excess = TRUE
-  ), echo = FALSE
+generate_counterfactuals_id <- orderly::orderly_run("generate_counterfactuals",
+                                                   parameters = list(
+                                                       orderly_loc = orderly_loc,
+                                                       excess = TRUE
+                                                   ), echo = FALSE
 )
-orderly::orderly_commit(gather_simulations_time_id)
+orderly::orderly_commit(generate_counterfactuals_id)
 ```
+
 
 ### Create the plots
 

@@ -27,8 +27,6 @@ directories are:
     -   `worldsf.Rds`: World map sf used in the plotting, downloaded
         20-04-2022 from
         <https://datahub.io/core/geo-countries/r/countries.geojson>
-    -   `generate_counterfactuals.R`: R code used to generate the
-        simulations from the model fits
     -   `counterfactual_timelines`: folder for the set of counterfactual timelines proposed by scenario analysis
 
 
