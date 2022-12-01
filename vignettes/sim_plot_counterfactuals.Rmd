@@ -59,7 +59,6 @@ Feel free to skip if you already have these.
 
 ```{r, echo=TRUE, eval=FALSE}
 setwd(root_path)
-orderly_loc <- here::here()
 ```
 
 ### Run the simulations
@@ -71,7 +70,6 @@ simulated, you can edit this file.
 ```{r, echo=TRUE, eval=FALSE}
 generate_counterfactuals_id <- orderly::orderly_run("generate_counterfactuals",
                                                    parameters = list(
-                                                       orderly_loc = orderly_loc,
                                                        excess = TRUE
                                                    ), echo = FALSE
 )

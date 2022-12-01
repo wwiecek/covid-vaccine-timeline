@@ -88,7 +88,6 @@ artefacts:
 parameters:
   excess:
     default: TRUE
-  orderly_loc: ~
 
 # Similar to "data" but sets of temporary views before the data are
 # extracted.  Can be embedded SQL strings or filenames to actual
