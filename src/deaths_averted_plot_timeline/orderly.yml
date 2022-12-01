@@ -123,6 +123,7 @@ packages:
 # otherwise you will have to add them to "resources" (see below)
 #
 sources:
+  - R/loadCounterfactualData.R
 
 # Resources that the script needs to run; this is an array of strings
 # representing filenames *relative to, and below, this directory*.
@@ -166,11 +167,9 @@ sources:
 
 
 depends:
-  gather_simulations_time:
+  generate_counterfactuals:
     id: latest(parameter:excess == excess)
     use:
-      owid-raw.Rds: owid-raw.Rds
-      no-vaccines.Rds: no-vaccines.Rds
-      Baseline.Rds: Baseline.Rds
-      counterfactuals.Rds: counterfactuals.Rds
-
+      Baseline.Rds: counterfactual_data/Baseline.Rds
+      counterfactual_simulation.Rds: counterfactual_data/counterfactual_simulation.Rds
+      

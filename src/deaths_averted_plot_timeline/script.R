@@ -5,7 +5,7 @@ cfs <- c('owid-raw','no-vaccines')
 
 ###Load data:
 
-table1_df_ind <- loadCounterfactualData(cfs,
+table1_df_ind <- loadCounterfactualDataSingle(cfs,
     group_by = "iso3c") %>%
   select(!country)
 
@@ -22,7 +22,7 @@ da_plot <- ggplot(table1_df_ind,aes(x=counterfactual,y=averted_deaths_avg))+
 
 ggsave("deaths_averted_plot.pdf",da_plot,device='pdf')
 
-table2_df_ind <- loadCounterfactualData(cfs,
+table2_df_ind <- loadCounterfactualDataSingle(cfs,
                                  group_by = c("iso3c","date")) %>%
     mutate(
         cumulative_deaths = ave(deaths_avg,counterfactual,iso3c,FUN=cumsum)
