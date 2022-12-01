@@ -412,9 +412,6 @@ saveRDS(df_cf,paste0(output,'/counterfactual_simulation.Rds'))
 #combine outputs into final objects
 qpdf::pdf_combine(list.files(temp_plots, full.names = TRUE), plot_output)
 
-#save counterfactuals for use in orderly task
-saveRDS(counterfactuals, cf_output)
-
 #save raw excess mortality
 if(excess){
   map_dfr(iso3cs, function(iso3c){

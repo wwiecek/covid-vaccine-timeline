@@ -47,9 +47,6 @@ script: script.R
 
 artefacts:
   - data:
-      description: Information about the counterfactual vaccine timelines
-      filenames: counterfactuals.Rds
-  - data:
       description: Baseline pandemic simulation with factual vaccine timelines
       filenames: counterfactual_data/Baseline.Rds
   - data:
