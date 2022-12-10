@@ -42,7 +42,7 @@ iso3cs <- iso3cs[iso3cs %in% countries_of_interest]
 
 # Counterfactual scenarios
 
-cfs <- gsub(".csv", "", list.files(cf_params))
+cfs <- gsub(".Rds", "", list.files(cf_params))
 
 #load counterfactual simulation functions
 #' Generate Deaths Averted
@@ -289,10 +289,10 @@ update_counterfactual <- function(out, counterfactual){
   if (!is.null(counterfactual$dur_V)){
     out$parameters$dur_V <- counterfactual$dur_V
     out$odin_parameters$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
-    out$pmcmc_results$inputs$model_params$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V  
+    out$pmcmc_results$inputs$model_params$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
   }
-  
-  
+
+
 
   #also remove healthcare if requested
   if(!is.null(counterfactual$no_healthcare)){
@@ -334,10 +334,10 @@ dp_plot_2 <- function (res, excess) {
 load_counterfactuals <- function(cf, iso3c_in) {
   fit <- readRDS(paste0(fit_loc, "/", iso3c_in, ".Rds"))
   max_date <- max(fit$interventions$date_vaccine_change)
-  cf_data <- read.csv(paste0(cf_params,"/",cf,".csv")) %>%
+  cf_data <- readRDS(paste0(cf_params,"/",cf,".Rds")) %>%
     filter(iso3c == iso3c_in) %>%
     mutate(second_dose_ratio = replace(cumsum(second_doses)/max(cumsum(first_doses),1),1,0))
-  cfs <- cf_data %>% 
+  cfs <- cf_data %>%
     filter(date <= as.character(max_date)) %>%
     rename(
         max_vaccine = first_doses,
@@ -350,7 +350,7 @@ load_counterfactuals <- function(cf, iso3c_in) {
     mutate (
       date_vaccine_change = date_vaccine_efficacy
       ) %>%
-    select(max_vaccine,dose_ratio,date_vaccine_efficacy,date_vaccine_change) 
+    select(max_vaccine,dose_ratio,date_vaccine_efficacy,date_vaccine_change)
   cfs = as.list(cfs)
   # For some unknown reason, this needs to be longer
   cfs$max_vaccine <- append(0,cfs$max_vaccine)
