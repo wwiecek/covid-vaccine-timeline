@@ -31,6 +31,9 @@ interpolate = function(vec, shift_n) {
 
       # interpolate from the two corresponding surrounding values
       interpolated_value = vec[bottom_index] * from_bottom + vec[top_index] * from_top
+      if (vec[bottom_index] == Inf | vec[top_index] == Inf) {
+        interpolated_value = Inf
+      }
 
       new_vector[index] = interpolated_value
     }
