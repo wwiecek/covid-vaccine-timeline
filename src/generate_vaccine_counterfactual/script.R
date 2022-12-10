@@ -3,6 +3,11 @@
 # setwd(file.path(root, "src/generate_vaccine_counterfactual"))
 # setwd(root) # Use to get back to root
 
+#' Generate a counterfactual vaccination scenario
+#' @param base_series the base real world vaccination series
+#' @param prod_series tracks how many vaccines are available, which constrains
+#' vaccination
+#' @param shift_days how many days into the past should it move vaccination
 gen_cfact_with_prod = function(base_series, prod_series, shift_days) {
   dose2_delay = 21 # how many days after first shot can a person get second
   dose2_max_share = 0.5 # 2nd doses can only take up to this share
@@ -58,6 +63,8 @@ gen_cfact_with_prod = function(base_series, prod_series, shift_days) {
   return(cfact_df)
 }
 
+# Plot counterfactual vs baseline administration of 1st and 2nd doses
+# Plot how the vaccination evolves with the production cap
 plot_cfact = function(cfact, baseline, production) {
   dir.create("counterfactual_plots")
   countries = unique(cfact$iso3c)
