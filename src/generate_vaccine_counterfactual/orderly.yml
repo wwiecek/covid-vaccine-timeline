@@ -50,6 +50,11 @@ artefacts:
         - counterfactual_timelines/no_vaccines.Rds
         - counterfactual_timelines/owid_raw.Rds
         - counterfactual_timelines/counterfactual_vaccination.Rds
+  - staticgraph:
+      description: Comparing counterfactual with baseline vaccination
+      filenames:
+        - counterfactual_plots/GBR.pdf
+        - counterfactual_plots/USA.pdf
 
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than
@@ -90,7 +95,11 @@ parameters:
 # reports.
 #
 packages:
+  - purrr
   - dplyr
+  - ggplot2
+  - ggpubr
+  - scales
 
 # Source files, in addition to the script.  Typically these will
 # contain function definitions.  These will be sourced after loading

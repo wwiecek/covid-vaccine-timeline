@@ -58,6 +58,69 @@ gen_cfact_with_prod = function(base_series, prod_series, shift_days) {
   return(cfact_df)
 }
 
+plot_cfact = function(cfact, baseline, production) {
+  dir.create("counterfactual_plots")
+  countries = unique(cfact$iso3c)
+
+  walk(countries, function(country_iso) {
+    country_cfact = cfact %>% filter(iso3c == country_iso)
+    country_base = baseline %>% filter(iso3c == country_iso)
+    country_prod = production %>% filter(iso3c == country_iso)
+
+    plot_dose1 = ggplot() +
+      geom_line(data = country_base,
+                aes(x = as.Date(date), y = first_doses, color = "Baseline")) +
+      geom_line(data = country_cfact,
+                aes(x = as.Date(date), y = first_doses, color = "Counterfactual")) +
+      xlab("Date") +
+      ylab("First doses administered") +
+      scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+      labs(color=country_iso)
+
+    plot_dose2 = ggplot() +
+      geom_line(data = country_base,
+                aes(x = as.Date(date), y = second_doses, color = "Baseline")) +
+      geom_line(data = country_cfact,
+                aes(x = as.Date(date), y = second_doses, color = "Counterfactual")) +
+      xlab("Date") +
+      ylab("Second doses administered") +
+      scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+      labs(color=country_iso)
+
+    country_cfact = country_cfact %>%
+      mutate(total_vacc = cumsum(first_doses + second_doses + third_doses))
+
+    plot_prod_vs_vacc = ggplot() +
+      geom_line(data = country_prod,
+                aes(x = as.Date(date),
+                    y = cumulative_available_vaccines,
+                    color = "Production")) +
+      geom_line(data = country_cfact,
+                aes(x = as.Date(date), y = total_vacc, color = "Vaccination")) +
+      xlab("Date") +
+      ylab("Cumulative total vaccines") +
+      scale_y_continuous(labels = unit_format(unit = "B", scale = 1e-9)) +
+      labs(color=country_iso)
+
+    combined_plot =
+      ggarrange(plot_dose1,
+                plot_dose2,
+                plot_prod_vs_vacc,
+                nrow = 2,
+                ncol = 2)
+    shift = cfact$shifted_by[1]
+    combined_plot = annotate_figure(combined_plot, top = text_grob(
+      paste0("Counterfactual with vaccines shifted by ", shift, " days."),
+      color = "black",
+      size = 16
+    ))
+
+    ggsave(paste0("counterfactual_plots/", country_iso, ".pdf"),
+           plot = combined_plot,
+           device = "pdf")
+  })
+}
+
 # read in real world vaccination series
 base_vaccination = read.csv("owid-raw.csv") %>%
   # Cutoff later data that looks unreasonable (negative number and zeros)
@@ -76,7 +139,9 @@ cfact_with_prod = map_dfr(countries_of_interest, function(country_iso) {
   country_prod = counterfactual_production %>% filter(iso3c == country_iso)
   return(gen_cfact_with_prod(country_vacc, country_prod, shift_by))
 })
+cfact_with_prod = cfact_with_prod %>% mutate(shifted_by = shift_by)
 saveRDS(cfact_with_prod, "counterfactual_timelines/counterfactual_vaccination.Rds")
+plot_cfact(cfact_with_prod, base_vaccination, counterfactual_production)
 
 # create a counterfactual with no vaccines
 cfact_no_vaccines = base_vaccination %>%
