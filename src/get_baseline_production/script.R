@@ -21,7 +21,7 @@ usa_available_vaccines_series = usa_distributed_vaccines_by_state %>%
 # mock UK data for now, with same length as US data
 uk_data = data.frame(
   date = seq(as.Date("2020-12-13"), as.Date("2022-06-16"), by="days"),
-  cumulative_available_vaccines = 0,
+  cumulative_available_vaccines = Inf,
   country = "United Kingdom",
   iso3c = "GBR"
 )
