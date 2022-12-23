@@ -46,14 +46,14 @@ script: script.R
 artefacts:
   - data:
       description:
-        - counterfactual production time series with vaccines available sooner
+        - production time series
       filenames:
         - counterfactual_production.Rds
   - staticgraph:
-      description: country plots of baseline vs counterfactual production
+      description: production of vaccines in 2020
       filenames:
-        - GBR_production.pdf
-        - USA_production.pdf
+        - vaccine_production.pdf
+
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than
 # "description" (which can be as long as you want).  Must be a string.
@@ -77,15 +77,7 @@ artefacts:
 # would declare a parameter called 'a' with a default value of 1, and
 # a parameter of b with no default.
 #
-parameters:
-  # how many days earlier does vaccine manufacturing start
-  shift_by:
-    default: 60
-  # real production data from days before this date are used for interpolation
-  # of the counterfactual data
-  interpolation_source_end:
-    default: 2022-01-01
-
+# parameters:
 
 # Similar to "data" but sets of temporary views before the data are
 # extracted.  Can be embedded SQL strings or filenames to actual
@@ -134,11 +126,7 @@ packages:
 # pull in artefacts from previous reports.  You can depend in multiple
 # reports.  The format looks like this:
 #
-depends:
-  get_baseline_production:
-    id: latest
-    use:
-      baseline_vaccine_production.Rds: baseline_vaccine_production.Rds
+# depends:
 
 # For example, to depend on the latest version of report
 # 'other-report', pulling in 'data.csv' as 'other-data.csv' you might
