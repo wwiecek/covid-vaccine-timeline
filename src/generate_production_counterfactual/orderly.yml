@@ -52,7 +52,7 @@ artefacts:
   - staticgraph:
       description: production of vaccines in 2020
       filenames:
-        - vaccine_production.pdf
+        - vaccine_production.png
 
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than

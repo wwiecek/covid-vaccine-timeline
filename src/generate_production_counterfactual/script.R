@@ -3,7 +3,7 @@
 # setwd(file.path(root, "src/generate_production_counterfactual"))
 # setwd(root) # Use to get back to root
 
-
+# create a daily vaccine production series for a manufacturer
 get_daily_production = function(prod_data) {
   final_date = as.Date("2020-12-31")
 
@@ -97,9 +97,7 @@ combined_plot =
             nrow = 2,
             ncol = 2)
 combined_plot
-ggsave("vaccine_production.pdf",
-       plot = combined_plot,
-       device = "pdf")
+ggsave("vaccine_production.png", plot = combined_plot)
 
 unconstrained_period = data.frame(
   date = seq(as.Date("2021-01-01"), as.Date("2022-12-31"), by = 1),
