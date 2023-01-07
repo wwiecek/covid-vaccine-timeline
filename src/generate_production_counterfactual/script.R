@@ -3,110 +3,113 @@
 # setwd(file.path(root, "src/generate_production_counterfactual"))
 # setwd(root) # Use to get back to root
 
+# create a daily vaccine production series for a manufacturer
+get_daily_production = function(prod_data) {
+  final_date = as.Date("2020-12-31")
 
-#' Takes a numerical vector and stretches it by linearly interpolating from
-#' surrounding data.
-#' @param vec Vector to stretch
-#' @param shift_n By how many elements to stretch
-interpolate = function(vec, shift_n) {
-  old_vector_length = length(vec)
-  new_vector_length = old_vector_length + shift_n
-  # fitting the new number of points on the x axis in regular intervals
-  # we get a sequence of points for which we can then calculate y values
-  x_positions = seq(1, old_vector_length, length.out = new_vector_length)
+  len_1st_scale = as.numeric(
+    difftime(prod_data$scale_up, prod_data$scale_up_start, unit="days"))
+  len_constant = as.numeric(
+    difftime(prod_data$increase_scale, prod_data$scale_up, unit="days"))
+  len_2nd_scale = as.numeric(
+    difftime(prod_data$full_scale_up, prod_data$increase_scale, unit="days"))
+  len_final = as.numeric(
+    difftime(final_date, prod_data$full_scale_up, unit="days"))
 
-  new_vector = numeric(new_vector_length)
+  # let x be the partial scale up daily rate, then total produced is
+  # len_1st_scale*x/2 + len_constant*x + len_2nd_scale*x +
+  # len_2nd_scale*(full_scale_daily_rate - x)/2 + len_final * full_scale_daily
+  partial_scale_daily = round((
+    prod_data$total_made_2020 - len_final * prod_data$full_scale_daily -
+      len_2nd_scale * prod_data$full_scale_daily / 2
+  ) / (
+    len_1st_scale/2 + len_constant + len_2nd_scale - len_2nd_scale/2
+  ))
 
-  for (index in 1:new_vector_length) {
-    x_position = x_positions[index]
+  dates = seq(prod_data$scale_up_start, final_date, by = 1)
+  daily_production = round(c(
+    0,
+    seq(0, partial_scale_daily, length.out = len_1st_scale),
+    rep(partial_scale_daily, times = len_constant),
+    seq(partial_scale_daily, prod_data$full_scale_daily, length.out = len_2nd_scale),
+    rep(prod_data$full_scale_daily, times = len_final)
+  ))
 
-    # first and last value is the same as in old vector
-    if (index == 1 | index == new_vector_length) {
-      new_vector[index] = vec[x_position]
-    } else {
-      bottom_index = floor(x_position)
-      top_index = bottom_index + 1
-      from_top = x_position %% 1
-      from_bottom = 1 - from_top
-
-      # interpolate from the two corresponding surrounding values
-      interpolated_value = vec[bottom_index] * from_bottom + vec[top_index] * from_top
-      if (vec[bottom_index] == Inf | vec[top_index] == Inf) {
-        interpolated_value = Inf
-      }
-
-      new_vector[index] = interpolated_value
-    }
-  }
-
-  return(new_vector)
-}
-
-#' Prepends manufacturing time series by interpolated production values
-#' @param production_data True baseline production data for a country
-#' @param shift_n How many days into the past should it shift the production
-#' @param interpolation_end_date Last day from baseline data to use for interpolation
-#' @return Elongated production data with early data stretched / interpolated
-generate_counterfactual_series = function(production_data,
-                                          shift_n,
-                                          interpolation_end_date) {
-  before_source_end = production_data %>% filter (date <= interpolation_end_date)
-  after_source_end = production_data %>% filter (date > interpolation_end_date)
-
-  production_before_source_end = before_source_end$cumulative_available_vaccines
-  production_after_source_end = after_source_end$cumulative_available_vaccines
-
-  interpolated_production = interpolate(production_before_source_end, shift_n)
-
-  baseline_start_date = production_data$date[1]
-  pre_pad_df = data.frame(
-    date = seq(baseline_start_date - shift_n, baseline_start_date - 1, by = "days"),
-    cumulative_available_vaccines = 0,
-    country = production_data$country[1],
-    iso3c = production_data$iso3c[1]
+  final_df = data.frame(
+    date = dates,
+    daily_production = daily_production
   )
 
-  elongated_production_data = bind_rows(pre_pad_df, production_data)
-
-  elongated_production_data$cumulative_available_vaccines =
-    c(interpolated_production, production_after_source_end)
-
-  return(elongated_production_data)
+  return(final_df)
 }
 
-### RUN
-# the parameter enters as string, change to Date
-interpolation_source_end = as.Date(interpolation_source_end)
-
-baseline_prod = readRDS("baseline_vaccine_production.Rds")
-
-countries = unique(baseline_prod$country)
-
-baseline_data_by_country = map(countries, function (country_name) {
-  country_production_data = baseline_prod %>% filter(country == country_name)
-  return (country_production_data)
-})
-
-counterfactual_production = map_dfr(
-  baseline_data_by_country,
-  generate_counterfactual_series,
-  shift_by,
-  interpolation_source_end
+production = data.frame(
+  vaccine = c("Pfizer", "Moderna"),
+  scale_up_start = as.Date(c("2020-03-17", "2020-03-23")),
+  scale_up = as.Date(c("2020-07-31", "2020-07-31")),
+  increase_scale = as.Date(c("2020-11-27", "2020-12-04")),
+  full_scale_up = as.Date(c("2020-12-11", "2020-12-18")), #days of approval
+  full_scale_daily = c(1000000, 500000),
+  total_made_2020 = c(50000000, 20000000)
 )
 
+pfizer_prod = production %>% filter(vaccine == "Pfizer")
+moderna_prod = production %>% filter(vaccine == "Moderna")
+
+pfizer_daily = get_daily_production(pfizer_prod)
+moderna_daily = get_daily_production(moderna_prod)
+
+total_production = pfizer_daily %>%
+  full_join(moderna_daily, by = c("date"), suffix = c("_pfi", "_mod")) %>%
+  replace(is.na(.), 0) %>%
+  mutate(daily_vaccines = daily_production_pfi + daily_production_mod) %>%
+  mutate(cumulative_available_vaccines = cumsum(daily_vaccines))
+
+plot1 = ggplot() +
+  geom_line(data = total_production,
+            aes(x = date, y = cumulative_available_vaccines)) +
+  ylab("Cumulative number of vaccines available") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot2 = ggplot() +
+  geom_line(data = total_production,
+            aes(x = date, y = daily_vaccines)) +
+  ylab("Daily vaccines produced") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot3 = ggplot() +
+  geom_line(data = moderna_daily,
+            aes(x = date, y = daily_production)) +
+  ylab("Daily vaccines produced Moderna") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot4 = ggplot() +
+  geom_line(data = pfizer_daily,
+            aes(x = date, y = daily_production)) +
+  ylab("Daily vaccines produced Pfizer") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+combined_plot =
+  ggarrange(plot3,
+            plot4,
+            plot2,
+            plot1,
+            nrow = 2,
+            ncol = 2)
+combined_plot
+ggsave("vaccine_production.png", plot = combined_plot)
+
+unconstrained_period = data.frame(
+  date = seq(as.Date("2021-01-01"), as.Date("2022-12-31"), by = 1),
+  cumulative_available_vaccines = Inf
+)
+full_production = bind_rows(total_production, unconstrained_period) %>%
+  select(date, cumulative_available_vaccines)
+
+us_prod = full_production %>%
+  mutate(country = "United States", iso3c = "USA")
+uk_prod = full_production %>%
+  mutate(country = "United Kingdom", iso3c = "GBR")
+counterfactual_production = bind_rows(us_prod, uk_prod)
+
 saveRDS(counterfactual_production, "counterfactual_production.Rds")
-
-# For each country create a plot comparing total available vaccines in the
-# baseline and counterfactual scenarios
-for (country_iso in unique(baseline_prod$iso3c)) {
-  plot = ggplot() +
-    geom_line(data = baseline_prod %>% filter(iso3c == country_iso),
-              aes(x = date, y = cumulative_available_vaccines, color = "Baseline")) +
-    geom_line(data = counterfactual_production %>% filter(iso3c == country_iso),
-              aes(x = date, y = cumulative_available_vaccines, color = "Counterfactual")) +
-    ylab("Number of vaccines available") +
-    scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
-    labs(color=country_iso)
-
-  ggsave(paste0(country_iso, "_production.pdf"), plot, device = "pdf")
-}

@@ -53,8 +53,13 @@ artefacts:
   - staticgraph:
       description: Comparing counterfactual with baseline vaccination
       filenames:
-        - counterfactual_plots/GBR.pdf
-        - counterfactual_plots/USA.pdf
+        - counterfactual_plots/GBR.png
+        - counterfactual_plots/USA.png
+  - staticgraph:
+      description: Examining how much is the production binding
+      filenames:
+        - shifts_plots/GBR.png
+        - shifts_plots/USA.png
 
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than
