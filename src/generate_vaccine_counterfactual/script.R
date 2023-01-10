@@ -137,7 +137,7 @@ base_vaccination = read.csv("owid-raw.csv") %>%
 counterfactual_production = readRDS("counterfactual_production.Rds")
 
 dir.create("counterfactual_timelines")
-
+print('success')
 countries_of_interest = c("USA", "GBR")
 
 # create the counterfactual shifted series
@@ -184,7 +184,7 @@ walk(countries_of_interest, function(country_iso) {
     ylab("Vaccines administered") +
     scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
     labs(color=country_iso)
-  print(plot)
+  # print(plot)
 })
 
 

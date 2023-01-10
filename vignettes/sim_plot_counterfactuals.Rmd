@@ -68,6 +68,32 @@ collection of predefined counterfactuals. If you are looking to alter the counte
 simulated, you can edit this file.
 
 ```{r, echo=TRUE, eval=FALSE}
+get_baseline_production_id <- orderly::orderly_run("get_baseline_production",
+                                                   echo = FALSE 
+)
+orderly::orderly_commit(get_baseline_production_id)
+```
+
+```{r, echo=TRUE, eval=FALSE}
+generate_production_counterfactual_id <- orderly::orderly_run("generate_production_counterfactual",
+                                                          parameters = list(
+                                                              shift_by = 60,
+                                                              interpolation_source_end = '2022-01-01'
+                                                          ), echo = FALSE 
+)
+orderly::orderly_commit(generate_production_counterfactual_id)
+```
+
+```{r, echo=TRUE, eval=FALSE}
+generate_vaccine_counterfactual_id <- orderly::orderly_run("generate_vaccine_counterfactual",
+                                                          parameters = list(
+                                                              shift_by = 60
+                                                          ), echo = FALSE
+)
+orderly::orderly_commit(generate_vaccine_counterfactual_id)
+```
+
+```{r, echo=TRUE, eval=FALSE}
 generate_counterfactuals_id <- orderly::orderly_run("generate_counterfactuals",
                                                    parameters = list(
                                                        excess = TRUE

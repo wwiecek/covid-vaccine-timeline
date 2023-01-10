@@ -53,7 +53,11 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
     dplyr::group_by_at(unique(c(group_by, "replicate", "iso3c"))) %>%
     dplyr::summarise(
       baseline_infections = sum(.data$infections),
-      baseline_deaths = sum(.data$deaths)
+      baseline_deaths = sum(.data$deaths),
+      baseline_vaccinated = sum(.data$vaccinated),
+      baseline_recovered = sum(.data$R),
+      baseline_N = mean(.data$N),
+      baseline_percent_susceptible = ((baseline_N - baseline_recovered) * (1 - baseline_vaccinated/baseline_N))/N
     )) %>%
     dplyr::filter(!.data$iso3c %in% exclude_iso3cs)
 
@@ -79,7 +83,11 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
     dplyr::group_by_at(unique(c(group_by, "replicate", "iso3c","counterfactual"))) %>%
     dplyr::summarise(
       infections = sum(.data$infections),
-      deaths = sum(.data$deaths)
+      deaths = sum(.data$deaths),
+      vaccinated = sum(.data$vaccinated),
+      recovered = sum(.data$R),
+      N  = mean(.data$N),
+      percent_susceptible = ((N - recovered) * (1 - vaccinated/N))/N
     )) %>%
     dplyr::filter(!.data$iso3c %in% exclude_iso3cs)
 
@@ -116,7 +124,11 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
       sample_length <- nrow(meta_data)
       sample_names <- c(group_by, "counterfactual",
                         "deaths", "infections",
+                        "vaccinated",
+                        "percent_susceptible",
                         "baseline_deaths", "baseline_infections",
+                        "baseline_vaccinated",
+                        "baseline_percent_susceptible",
                         "averted_deaths", "averted_infections"
       )
       samples <- counterfactual_data[1,] %>%
@@ -134,8 +146,10 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
                                        ) %>% #sum over the given groupings
                                        dplyr::summarise(
                                          dplyr::across(
-                                           c(.data$deaths, .data$infections,
+                                           c(.data$deaths, .data$infections, .data$vaccinated,
+                                             .data$percent_susceptible,
                                              .data$baseline_deaths, .data$baseline_infections,
+                                             .data$baseline_vaccinated, .data$baseline_percent_susceptible,
                                              .data$averted_deaths, .data$averted_infections),
                                            ~sum(.x, na.rm = TRUE)
                                          )
@@ -155,8 +169,10 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
         #sum across replicates
         dplyr::summarise(
           dplyr::across(
-            c(.data$deaths, .data$infections,
+            c(.data$deaths, .data$infections, .data$vaccinated,
+              .data$percent_susceptible,
               .data$baseline_deaths, .data$baseline_infections,
+              .data$baseline_vaccinated, .data$baseline_percent_susceptible,
               .data$averted_deaths, .data$averted_infections),
             ~sum(.x, na.rm = TRUE)
           ),
@@ -173,7 +189,7 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
   counterfactual_data %>%
     dplyr::summarise(
       dplyr::across(
-        .cols = dplyr::ends_with(c("deaths", "infections")),
+        .cols = dplyr::ends_with(c("deaths", "infections", "vaccinated", "susceptible")),
         .fns = list(
           avg = ~median(.x, na.rm = TRUE),
           `025` = ~quantile(.x, probs = 0.025, na.rm = TRUE),
