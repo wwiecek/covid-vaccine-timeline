@@ -34,6 +34,7 @@ gen_cfact_with_prod = function(base_series, prod_series, shift_days) {
     share_vaccinated = cumulative_vac / total_vaccinations
     distribution_cap =
       distribution_rates[which.min(abs(distribution_rates$share_vacc - share_vaccinated)),]$both_doses
+    distribution_cap = max(1, distribution_cap)
 
     available_vac = floor(min(doses_cap, distribution_cap) / 2)
 
