@@ -254,32 +254,3 @@ saveRDS(cfact_no_vaccines, "counterfactual_timelines/no_vaccines.Rds")
 # save the base real scenario from OWID
 saveRDS(base_vaccination, "counterfactual_timelines/owid_raw.Rds")
 
-
-### Check whether with unlimited production and no shift the counterfactual
-# with calculated second doses looks like the real vaccination
-unlimited_production = counterfactual_production %>%
-  mutate(cumulative_available_vaccines = Inf)
-shift_by = 0
-cfact_0 = map_dfr(countries_of_interest, function(country_iso) {
-  country_vacc = base_vaccination %>% filter(iso3c == country_iso)
-  country_prod = unlimited_production %>% filter(iso3c == country_iso)
-  return(gen_cfact_with_prod(country_vacc, country_prod, shift_by))
-})
-walk(countries_of_interest, function(country_iso) {
-  plot = ggplot() +
-    geom_line(data = base_vaccination %>% filter(iso3c == country_iso),
-              aes(x = as.Date(date), y = second_doses, color = "Second real")) +
-    geom_line(data = base_vaccination %>% filter(iso3c == country_iso),
-              aes(x = as.Date(date), y = first_doses, color = "First real")) +
-    geom_line(data = cfact_0 %>% filter(iso3c == country_iso),
-              aes(x = as.Date(date), y = second_doses, color = "Second calculated")) +
-    geom_line(data = cfact_0 %>% filter(iso3c == country_iso),
-              aes(x = as.Date(date), y = first_doses, color = "First calculated")) +
-    xlab("Date") +
-    ylab("Vaccines administered") +
-    scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
-    labs(color=country_iso)
-  print(plot)
-})
-
-
