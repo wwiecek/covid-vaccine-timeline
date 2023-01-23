@@ -5,7 +5,13 @@
 
 # Counterfactual selection, manually specified
 
-cfs <- c('owid_raw','no_vaccines', 'counterfactual_vaccination')
+cfs = c(
+  "owid_raw",
+  "no_vaccines",
+  "30_days_sooner",
+  "60_days_sooner",
+  "90_days_sooner"
+)
 
 ###Load data:
 
@@ -38,8 +44,8 @@ ts_plots <- lapply(cfs,function(cf){
   deaths_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
         geom_line(aes(y = baseline_deaths_avg, colour="baseline")) +
         geom_line(aes(y = deaths_avg, colour = "counterfactual")) +
-        facet_wrap(~iso3c,nrow=2) +
-        scale_colour_manual(labels=c('baseline','counterfactual'),values=c(colour_baseline,colour_counterfactual))
+        facet_wrap(~iso3c,ncol=2) +
+        scale_colour_manual(labels=c('baseline','counterfactual'),values=c(colour_baseline,colour_counterfactual)) +
         labs(x = "Date", y = "Daily Deaths",title=cf) +
         theme_pubr() +
         theme(legend.position = "right")
@@ -47,8 +53,42 @@ ts_plots <- lapply(cfs,function(cf){
   fn <- paste0(cf,"_tsplot.pdf")
 
   ggsave(fn,deaths_timeseries_plot,device='pdf')
+})
 
-  })
+cfact_labels = c(
+  "Our World in Data",
+  "No vaccines",
+  "Vaccines 30 days sooner",
+  "Vaccines 60 days sooner",
+  "Vaccines 90 days sooner"
+)
+
+zoomed_table2 = table2_df_ind %>%
+  filter(date > as.Date("2020-09-01")) %>%
+  mutate(counterfactual_label = mapvalues(
+    counterfactual,
+    from = cfs,
+    to = cfact_labels
+  )) %>%
+  mutate(counterfactual_label = factor(counterfactual_label,
+                                       cfact_labels))
+
+single_timeseries_plot <- ggplot(zoomed_table2, aes(x = date)) +
+  geom_line(aes(y = baseline_deaths_avg, colour = "baseline")) +
+  geom_line(aes(y = deaths_avg, colour = "counterfactual")) +
+  geom_ribbon(
+    aes(ymin = deaths_025, ymax = deaths_975),
+    alpha = 0.3,
+    fill = colour_counterfactual
+  ) +
+  facet_grid(counterfactual_label ~ country) +
+  scale_colour_manual(
+    labels = c('baseline', 'counterfactual'),
+    values = c(colour_baseline, colour_counterfactual)
+  ) +
+  labs(x = "Date", y = "Daily Deaths")
+
+ggsave("all_tsplot.pdf", single_timeseries_plot, device="pdf")
 
 cum_ts_plots <- lapply(cfs,function(cf){
   cum_deaths_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
@@ -65,6 +105,8 @@ cum_ts_plots <- lapply(cfs,function(cf){
   ggsave(fn,cum_deaths_timeseries_plot,device='pdf')
 
   })
+
+
 
 # source
 # https://data.worldbank.org/indicator/SP.POP.TOTL

@@ -52,6 +52,10 @@ artefacts:
       filenames:
         - deaths_averted_plot.pdf
   - staticgraph:
+      description: A graph of daily deaths under all counterfactual scenarios
+      filenames:
+        - all_tsplot.pdf
+  - staticgraph:
       description: Graphs of daily deaths under the baseline and counterfactual scenarios
       filenames:
         - owid_raw_tsplot.pdf
@@ -119,6 +123,7 @@ packages:
   - ggplot2
   - ggpubr
   - tables
+  - plyr
 
 
 # Source files, in addition to the script.  Typically these will
