@@ -112,6 +112,5 @@ colLabels(table) = colLabels(table)[-c(1,4),]
 
 colLabels(table)[2,] = c("Change in deaths", "Change in deaths per 10,000")
 
-toHTML(table)
 counterfactuals_table = toLatex(table)
-cat(counterfactuals_table$text, "counterfactuals_table.tex")
+cat(counterfactuals_table$text, file="counterfactuals_table.tex")

@@ -54,13 +54,13 @@ artefacts:
   - staticgraph:
       description: Graphs of daily deaths under the baseline and counterfactual scenarios
       filenames:
-        - owid-raw_tsplot.pdf
-        - no-vaccines_tsplot.pdf
+        - owid_raw_tsplot.pdf
+        - no_vaccines_tsplot.pdf
   - staticgraph:
       description: Graphs of cumulative deaths under the baseline and counterfactual scenarios
       filenames:
-        - owid-raw_cum_tsplot.pdf
-        - no-vaccines_cum_tsplot.pdf
+        - owid_raw_cum_tsplot.pdf
+        - no_vaccines_cum_tsplot.pdf
   - report:
       description: Table of changes in deaths for different counterfactual scenarios
       filenames:
