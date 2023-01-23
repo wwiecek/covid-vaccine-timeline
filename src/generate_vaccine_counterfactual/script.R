@@ -227,6 +227,11 @@ counterfactuals = map_dfr(shifts, function(shift_by) {
     return(gen_cfact_with_prod(country_vacc, country_prod, shift_by))
   })
   cfact_with_prod = cfact_with_prod %>% mutate(shifted_by = shift_by)
+
+  if (shift_by != 0) {
+    saveRDS(cfact_with_prod, paste0("counterfactual_timelines/", shift_by, "_days_sooner.Rds"))
+  }
+
   return(cfact_with_prod)
 })
 
@@ -237,8 +242,6 @@ cfact_with_prod = map_dfr(countries_of_interest, function(country_iso) {
   country_prod = counterfactual_production %>% filter(iso3c == country_iso)
   return(gen_cfact_with_prod(country_vacc, country_prod, shift_by))
 })
-cfact_with_prod = cfact_with_prod %>% mutate(shifted_by = shift_by)
-saveRDS(cfact_with_prod, "counterfactual_timelines/counterfactual_vaccination.Rds")
 plot_cfact(cfact_with_prod, base_vaccination, counterfactual_production)
 
 plot_together(base_vaccination, counterfactual_production)

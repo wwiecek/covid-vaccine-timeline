@@ -49,7 +49,9 @@ artefacts:
       filenames:
         - counterfactual_timelines/no_vaccines.Rds
         - counterfactual_timelines/owid_raw.Rds
-        - counterfactual_timelines/counterfactual_vaccination.Rds
+        - counterfactual_timelines/30_days_sooner.Rds
+        - counterfactual_timelines/60_days_sooner.Rds
+        - counterfactual_timelines/90_days_sooner.Rds
   - staticgraph:
       description: Comparing counterfactual with baseline vaccination
       filenames:
