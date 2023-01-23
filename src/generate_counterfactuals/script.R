@@ -1,8 +1,13 @@
-
 ## Runs predefined counterfactual simulations
 ## If you want to vary the counterfactuals, see the function
 ## `early_n` (which sets the days earlier that vaccination starts)
 ## and the variable `counterfactuals`
+
+# # Use to switch into this file's directory for development
+# root = here::here()
+# setwd(file.path(root, "src/generate_counterfactuals"))
+# setwd(root) # Use to get back to root
+
 
 # if(!is.na(seed) & seed != "NA"){
 #   set.seed(seed)

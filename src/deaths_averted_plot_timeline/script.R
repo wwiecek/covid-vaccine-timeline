@@ -1,12 +1,15 @@
+# # Use to switch into this file's directory for development
+# root = here::here()
+# setwd(file.path(root, "src/deaths_averted_plot_timeline"))
+# setwd(root) # Use to get back to root
 
 # Counterfactual selection, manually specified
 
-cfs <- c('owid-raw','no-vaccines')
+cfs <- c('owid_raw','no_vaccines', 'counterfactual_vaccination')
 
 ###Load data:
 
-table1_df_ind <- loadCounterfactualDataSingle(cfs,
-    group_by = "iso3c") %>%
+table1_df_ind <- loadCounterfactualDataSingle(group_by = "iso3c") %>%
   select(!country)
 
 #colours
@@ -22,8 +25,7 @@ da_plot <- ggplot(table1_df_ind,aes(x=counterfactual,y=averted_deaths_avg))+
 
 ggsave("deaths_averted_plot.pdf",da_plot,device='pdf')
 
-table2_df_ind <- loadCounterfactualDataSingle(cfs,
-                                 group_by = c("iso3c","date")) %>%
+table2_df_ind <- loadCounterfactualDataSingle(group_by = c("iso3c","date")) %>%
     mutate(
         cumulative_deaths = ave(deaths_avg,counterfactual,iso3c,FUN=cumsum)
       ) %>%
@@ -63,3 +65,53 @@ cum_ts_plots <- lapply(cfs,function(cf){
   ggsave(fn,cum_deaths_timeseries_plot,device='pdf')
 
   })
+
+# source
+# https://data.worldbank.org/indicator/SP.POP.TOTL
+population = data.frame(
+  iso3c = c("GBR", "USA"),
+  pop10k = c(67081000, 331501080) / 10000
+)
+
+table1_df = table1_df_ind %>%
+  left_join(population, by = "iso3c") %>%
+  mutate(averted_deaths_perpop_avg = averted_deaths_avg / pop10k,
+         averted_deaths_perpop_025 = averted_deaths_025 / pop10k,
+         averted_deaths_perpop_975 = averted_deaths_975 / pop10k)
+
+digits = 0
+
+differences_table = table1_df %>%
+  mutate(delta_deaths = paste0(
+    format(round(averted_deaths_avg, digits), big.mark=",", trim = TRUE),
+    " [",
+    format(round(averted_deaths_025, digits), big.mark=",", trim = TRUE),
+    "; ",
+    format(round(averted_deaths_975, digits), big.mark=",", trim = TRUE),
+    "]"
+  ), delta_deaths_perpop = paste0(
+    format(round(averted_deaths_perpop_avg, digits), big.mark=",", trim = TRUE),
+    " [",
+    format(round(averted_deaths_perpop_025, digits), big.mark=",", trim = TRUE),
+    "; ",
+    format(round(averted_deaths_perpop_975, digits), big.mark=",", trim = TRUE),
+    "]"
+  ),
+  counterfactual = as.factor(counterfactual),
+  iso3c = as.factor(iso3c)) %>%
+  select(
+    iso3c,
+    counterfactual,
+    delta_deaths,
+    delta_deaths_perpop,
+  )
+
+table = tabular((iso3c) ~ counterfactual * (delta_deaths + delta_deaths_perpop) * (identity),
+                data = differences_table)
+colLabels(table) = colLabels(table)[-c(1,4),]
+
+colLabels(table)[2,] = c("Change in deaths", "Change in deaths per 10,000")
+
+toHTML(table)
+counterfactuals_table = toLatex(table)
+cat(counterfactuals_table$text, "counterfactuals_table.tex")

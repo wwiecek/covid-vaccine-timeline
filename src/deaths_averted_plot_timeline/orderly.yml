@@ -61,6 +61,10 @@ artefacts:
       filenames:
         - owid-raw_cum_tsplot.pdf
         - no-vaccines_cum_tsplot.pdf
+  - report:
+      description: Table of changes in deaths for different counterfactual scenarios
+      filenames:
+        - counterfactuals_table.tex
 
 
 
@@ -114,6 +118,7 @@ packages:
   - countrycode
   - ggplot2
   - ggpubr
+  - tables
 
 
 # Source files, in addition to the script.  Typically these will
@@ -172,4 +177,4 @@ depends:
     use:
       Baseline.Rds: counterfactual_data/Baseline.Rds
       counterfactual_simulation.Rds: counterfactual_data/counterfactual_simulation.Rds
-      
+
