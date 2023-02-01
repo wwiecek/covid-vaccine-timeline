@@ -64,22 +64,47 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     stop('"Baseline" is a reserved name for a counterfactual, please choose another name')
   }
 
+  rt_opt <- "rt_optimised" %in% class(out)
+
   # get the real data
-  data <- out$inputs$data
-  country <- out$parameters$country
-  # iso3c <- squire::population$iso3c[squire::population$country == country][1]
-  if(is.null(suppressWarnings(data$date_end))){
-    date_0 <- max(data$date)
+  if(rt_opt){
+    data <- out$inputs$data
   } else {
-    date_0 <- max(data$date_end)
+    # return NULL if nothing
+    if(!("pmcmc_results" %in% names(out))) {
+      return(NULL)
+    }
+    data <- out$pmcmc_results$inputs$data
   }
 
-  date_start <- min(data$date_start)
+  country <- out$parameters$country
+  # iso3c <- squire::population$iso3c[squire::population$country == country][1]
 
-  t_end <- as.integer(max(counterfactual$counterfactual_vaccination$date) - out$inputs$start_date)
+  if(rt_opt){
+    # Date of simulation start
+    date_0 <- min(data$date_start)
 
-  #Set up the baseline results
-  baseline <- squire.page::generate_draws(out, t_end)#, date_0, project_forwards=FALSE)
+    # Max time index (not a date)
+    t_end <- as.integer(max(counterfactual$counterfactual_vaccination$date) - out$inputs$start_date)
+
+    # Output compartments
+    compartments <- c("deaths", "infections", "vaccinated_second_dose",
+      "vaccinated_second_waned", "N", "R")
+
+    # Baseline simulation
+    baseline <- squire.page::generate_draws(out, t_end)
+
+  } else {
+    # Date of simulation end
+    # Yes, this is the opposite of the rt_opt setting, I don't know why
+    date_0 <- max(data$week_end)
+    compartments <- c("deaths", "infections", "vaccinated_", 
+      "N", "R")
+
+    # Draw parameters
+    pars.list <- squire.page::generate_parameters(out, draws)
+    baseline <- squire.page::generate_draws(out, pars.list, draws)
+  }
 
   #create the fitting plot if needed
   if(!is.null(plot_name)){
@@ -116,17 +141,19 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   }
 
   # format the counter factual run
-  baseline_deaths <- squire.page::nimue_format(baseline, c("deaths", "infections", "vaccinated_second_dose",
-  "vaccinated_second_waned", "N", "R"), date_0 = date_start,
-                                               reduce_age = reduce_age) %>%
+
+  baseline_deaths <- squire.page::nimue_format(baseline, compartments, date_0 = date_0, 
+      reduce_age = reduce_age) %>%
     dplyr::distinct() %>%
     tidyr::pivot_wider(names_from = .data$compartment, values_from = .data$y) %>%
     na.omit() %>%
     dplyr::mutate(counterfactual = "Baseline")
 
-  # We need to add this class so that the nimue_format utility knows it's a booster sim
-  attr(baseline_deaths, "class") <- c("lmic_booster_nimue_simulation",class(baseline_deaths))
-
+  if(rt_opt){
+    # We need to add this class attribute so that the nimue_format utility knows it's a sim with booster
+    attr(baseline_deaths, "class") <- c("lmic_booster_nimue_simulation",class(baseline_deaths))
+  }
+                                              
   if(!reduce_age){
     baseline_deaths <- dplyr::mutate(baseline_deaths, age_group = as.character(.data$age_group))
   }
@@ -150,12 +177,16 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   for(counterIndex in seq_along(counterfactual)){
     #generate draws with pars.list
     if(!is.null(counterfactual[[counterIndex]])){
-      counter <- squire.page::generate_draws(out = update_counterfactual(out, counterfactual[[counterIndex]]), t_end)
+      if(rt_opt){
+          counter <- squire.page::generate_draws(out = update_counterfactual(out, counterfactual[[counterIndex]]), t_end, rt_opt)
+        } else {
+          counter <- squire.page::generate_draws(out = update_counterfactual(out, counterfactual[[counterIndex]], rt_opt), 
+                                             pars.list = pars.list, draws = draws)
+        }
       #format the counter factual run
-      counter_df <- squire.page::nimue_format(counter, c("deaths", "infections", "vaccinated_second_dose",
-        "vaccinated_second_waned", "N", "R"),
-                                              date_0 = date_start,
-                                              reduce_age = reduce_age) %>%
+      counter_df <- squire.page::nimue_format(counter, compartments,
+          date_0 = date_0,
+          reduce_age = reduce_age) %>%
         dplyr::distinct() %>%
         tidyr::pivot_wider(names_from = .data$compartment, values_from = .data$y) %>%
         na.omit() %>%
@@ -184,25 +215,60 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     baseline_deaths
   )
 
-  deaths_df <- dplyr::arrange(deaths_df, counterfactual, 
-    N, R, replicate, vaccinated_second_dose, vaccinated_second_waned, date)
-
+  if(rt_opt) {
+    deaths_df <- dplyr::arrange(deaths_df, counterfactual, 
+    N, R, replicate, vaccinated_second_dose, vaccinated_second_waned, date)  
+  } else {
+    deaths_df <- dplyr::arrange(deaths_df, counterfactual, 
+    N, R, replicate, vaccinated, date)  
+  }
+  
   # and add country info
   deaths_df$country <- country
   deaths_df$iso3c <- iso3c
   return(deaths_df)
 }
 
-update_counterfactual <- function(out, counterfactual){
 
-  tt_primary_doses <- as.integer(counterfactual$date - out$inputs$start_date)
+update_counterfactual <- function(out, counterfactual, rt_opt){
 
   # replace the vaccination data with the counterfactual data
 
-  out$parameters$primary_doses <- c(0,counterfactual$first_doses)
-  out$parameters$tt_primary_doses <- c(0,tt_primary_doses)
-  out$parameters$booster_doses <- 0#c(0,counterfactual$third_doses)
-  out$parameters$tt_booster_doses <- 0#c(0,tt_primary_doses)
+
+  if(rt_opt){
+    tt_primary_doses <- as.integer(counterfactual$date - out$inputs$start_date)
+    out$parameters$primary_doses <- c(0,counterfactual$first_doses)
+    out$parameters$tt_primary_doses <- c(0,tt_primary_doses)
+    out$parameters$booster_doses <- 0
+    out$parameters$tt_booster_doses <- 0
+  } else {
+    out$pmcmc_results$inputs$interventions$date_vaccine_change <-
+      counterfactual$date_vaccine_change
+    out$pmcmc_results$inputs$interventions$date_vaccine_efficacy <-
+      counterfactual$date_vaccine_efficacy
+    out$pmcmc_results$inputs$interventions$max_vaccine <-
+      counterfactual$max_vaccine
+    out$pmcmc_results$inputs$interventions$dose_ratio <-
+      counterfactual$dose_ratio
+
+    #don't need to update the max vaccine as it uses intervention data
+
+    out$interventions$date_vaccine_change <-
+      counterfactual$date_vaccine_change
+    out$interventions$date_vaccine_efficacy <-
+      counterfactual$date_vaccine_efficacy
+    out$interventions$max_vaccine <-
+      counterfactual$max_vaccine
+    out$interventions$dose_ratio <-
+      counterfactual$dose_ratio
+
+    # Update vaccine duration
+    if (!is.null(counterfactual$dur_V)){
+      out$parameters$dur_V <- counterfactual$dur_V
+      out$odin_parameters$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
+      out$pmcmc_results$inputs$model_params$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
+    }
+  }
 
   return(out)
 }
@@ -212,6 +278,7 @@ dp_plot_2 <- function (res, excess) {
   date_0 <- squire.page:::get_data_end_date.excess_nimue_simulation(res)
   data <- res$pmcmc_results$inputs$data
   #data$date <- squire.page:::get_dates_greater.excess_nimue_simulation(res)
+
   data$adjusted_deaths <- data$deaths/as.numeric(data$date_end -
                                                    data$date_start)
   suppressWarnings(dp <- plot(res, "deaths", date_0 = date_0,
