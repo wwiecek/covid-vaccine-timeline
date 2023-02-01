@@ -1,7 +1,7 @@
 
 # Counterfactual selection, manually specified
 
-cfs <- c('owid_raw','no_vaccines','counterfactual_vaccination')
+cfs <- c('no_vaccines','counterfactual_vaccination')
 
 ###Load data:
 
@@ -77,6 +77,23 @@ ts_plots <- lapply(cfs,function(cf){
   fn <- paste0(cf,"_infection_tsplot.pdf")
 
   ggsave(fn,infections_timeseries_plot,device='pdf')
+
+  baseline_infections_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
+        geom_line(aes(y = baseline_infections_avg, colour="baseline")) +
+        geom_line(aes(y = infections_avg, colour = "counterfactual")) +
+        geom_line(aes(y = percent_susceptible*300, colour = "counterfactual percent susceptible")) +
+        geom_line(aes(y = baseline_percent_susceptible*300, colour = "baseline percent susceptible")) +
+        facet_wrap(~iso3c,nrow=2)
+        # scale_colour_manual(labels=c('baseline','counterfactual','vaccinated','baseline_vaccinated'),
+        #   values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated))
+        labs(x = "Date", y = "Daily Deaths",title=cf) +
+        theme_pubr() +
+        theme(legend.position = "right")
+
+  fn <- paste0(cf,"_infection_tsplot.pdf")
+
+  ggsave(fn,infections_timeseries_plot,device='pdf')
+
 
   })
 
