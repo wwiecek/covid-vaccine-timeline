@@ -47,69 +47,51 @@ table2_df_ind <- loadCounterfactualDataSingle(cfs,
         )
 
 ts_plots <- lapply(cfs,function(cf){
-      deaths_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
-            geom_line(aes(y = baseline_deaths_avg, colour="baseline")) +
-            geom_line(aes(y = deaths_avg, colour = "counterfactual")) +
-            geom_line(aes(y = percent_susceptible, colour = "counterfactual percent susceptible")) +
-            geom_line(aes(y = baseline_percent_susceptible, colour = "baseline percent susceptible")) +
-            facet_wrap(~iso3c,nrow=2)
-            scale_colour_manual(labels=c('baseline','counterfactual','percent susceptible','baseline percent susceptible'),
-              values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated, colour_waned))
-            labs(x = "Date", y = "Daily Deaths",title=cf) +
-            theme_pubr() +
-            theme(legend.position = "right")
+    deaths_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
+        geom_line(aes(y = baseline_deaths_avg, colour="baseline")) +
+        geom_line(aes(y = deaths_avg, colour = "counterfactual")) +
+        geom_line(aes(y = percent_susceptible, colour = "counterfactual percent susceptible")) +
+        geom_line(aes(y = baseline_percent_susceptible, colour = "baseline percent susceptible")) +
+        facet_wrap(~iso3c,nrow=2)
+        scale_colour_manual(labels=c('baseline','counterfactual','percent susceptible','baseline percent susceptible'),
+          values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated, colour_waned))
+        labs(x = "Date", y = "Daily Deaths",title=cf) +
+        theme_pubr() +
+        theme(legend.position = "right")
 
-      fn <- paste0(cf,"_tsplot.pdf")
+    fn <- paste0(cf,"_tsplot.pdf")
 
-      ggsave(fn,deaths_timeseries_plot,device='pdf')
+    ggsave(fn,deaths_timeseries_plot,device='pdf')
 
-      infections_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
-            geom_line(aes(y = baseline_infections_avg, colour="baseline")) +
-            geom_line(aes(y = infections_avg, colour = "counterfactual")) +
-            geom_line(aes(y = percent_susceptible*300, colour = "counterfactual percent susceptible")) +
-            geom_line(aes(y = baseline_percent_susceptible*300, colour = "baseline percent susceptible")) +
-            facet_wrap(~iso3c,nrow=2)
-            scale_colour_manual(labels=c('baseline','counterfactual','vaccinated','baseline_vaccinated'),
-              values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated))
-            labs(x = "Date", y = "Daily Deaths",title=cf) +
-            theme_pubr() +
-            theme(legend.position = "right")
-
-      fn <- paste0(cf,"_infection_tsplot.pdf")
-
-      ggsave(fn,infections_timeseries_plot,device='pdf')
-
-  baseline_infections_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
+    infections_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
         geom_line(aes(y = baseline_infections_avg, colour="baseline")) +
         geom_line(aes(y = infections_avg, colour = "counterfactual")) +
         geom_line(aes(y = percent_susceptible*300, colour = "counterfactual percent susceptible")) +
         geom_line(aes(y = baseline_percent_susceptible*300, colour = "baseline percent susceptible")) +
         facet_wrap(~iso3c,nrow=2)
-        # scale_colour_manual(labels=c('baseline','counterfactual','vaccinated','baseline_vaccinated'),
-        #   values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated))
+        scale_colour_manual(labels=c('baseline','counterfactual','vaccinated','baseline_vaccinated'),
+          values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated))
         labs(x = "Date", y = "Daily Deaths",title=cf) +
         theme_pubr() +
         theme(legend.position = "right")
 
-  fn <- paste0(cf,"_infection_tsplot.pdf")
+    fn <- paste0(cf,"_infection_tsplot.pdf")
 
-  ggsave(fn,infections_timeseries_plot,device='pdf')
+    ggsave(fn,infections_timeseries_plot,device='pdf')
 
 
-  })
+    log_infections_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
+        geom_line(aes(y = log(infections_avg)/max(log(infections_avg)), colour="log infections")) +
+        geom_line(aes(y = percent_susceptible/3000, colour = "counterfactual percent susceptible")) +
+        facet_wrap(~iso3c,nrow=2)
+        scale_colour_manual(labels=c('baseline','counterfactual','vaccinated','baseline_vaccinated'),
+          values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated))
+        labs(x = "Date", y = "Percent",title=cf) +
+        theme_pubr() +
+        theme(legend.position = "right")
 
-      log_infections_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
-            geom_line(aes(y = log(infections_avg)/max(log(infections_avg)), colour="log infections")) +
-            geom_line(aes(y = percent_susceptible/3000, colour = "counterfactual percent susceptible")) +
-            facet_wrap(~iso3c,nrow=2)
-            scale_colour_manual(labels=c('baseline','counterfactual','vaccinated','baseline_vaccinated'),
-              values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated))
-            labs(x = "Date", y = "Percent",title=cf) +
-            theme_pubr() +
-            theme(legend.position = "right")
-
-      fn <- paste0(cf,"_log_infection_tsplot.pdf")
-      ggsave(fn,log_infections_timeseries_plot,device='pdf')
+    fn <- paste0(cf,"_log_infection_tsplot.pdf")
+    ggsave(fn,log_infections_timeseries_plot,device='pdf')
 
     log_baseline_infections_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
             geom_line(aes(y = log(baseline_infections_avg)/max(log(infections_avg)), colour="log baseline infections")) +
@@ -125,7 +107,6 @@ ts_plots <- lapply(cfs,function(cf){
       ggsave(fn,log_baseline_infections_timeseries_plot,device='pdf')
 
     })
->>>>>>> Stashed changes
 
 cum_ts_plots <- lapply(cfs,function(cf){
   cum_deaths_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +

@@ -108,7 +108,7 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
 
   #create the fitting plot if needed
   if(!is.null(plot_name)){
-    fit_1 <- dp_plot_2(baseline, excess) + ggplot2::labs(
+    fit_1 <- dp_plot_2(baseline, excess, rt_opt) + ggplot2::labs(
       title = country
     )
     fit_2 <- squire.page::cdp_plot(baseline) +
@@ -274,9 +274,15 @@ update_counterfactual <- function(out, counterfactual, rt_opt){
 }
 
 #updated version of dp plot to make it similar to cdp_plot
-dp_plot_2 <- function (res, excess) {
+dp_plot_2 <- function (res, excess, rt_opt) {
   date_0 <- squire.page:::get_data_end_date.excess_nimue_simulation(res)
   data <- res$pmcmc_results$inputs$data
+
+  if(!rt_opt){
+    data$date_end <- data$week_end
+    data$date_start <- data$week_start
+  }
+
   #data$date <- squire.page:::get_dates_greater.excess_nimue_simulation(res)
 
   data$adjusted_deaths <- data$deaths/as.numeric(data$date_end -
