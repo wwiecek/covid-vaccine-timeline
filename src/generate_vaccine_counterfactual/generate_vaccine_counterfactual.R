@@ -186,7 +186,7 @@ plot_cumulative = function (counterfactuals) {
               aes(x = as.Date(date),
                   y = total_vacc,
                   color = as.character(shifted_by))) +
-    facet_wrap(~country, nrow = 2, scales = "free_y") +
+    facet_wrap(~country, ncol = 2, scales = "free_y") +
     scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
     labs(x = "Date",
          y = "Cumulative vaccinations",
