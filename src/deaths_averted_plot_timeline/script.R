@@ -123,7 +123,15 @@ table1_df = table1_df_ind %>%
 
 digits = 0
 
+cfacts_for_table = c("30_days_sooner",
+                     "60_days_sooner",
+                     "90_days_sooner")
+labels_for_table = c("Vaccines 30 days sooner",
+                     "Vaccines 60 days sooner",
+                     "Vaccines 90 days sooner")
+
 differences_table = table1_df %>%
+  filter(counterfactual %in% cfacts_for_table) %>%
   mutate(delta_deaths = paste0(
     format(round(averted_deaths_avg, digits), big.mark=",", trim = TRUE),
     " [",
@@ -139,16 +147,22 @@ differences_table = table1_df %>%
     format(round(averted_deaths_perpop_975, digits), big.mark=",", trim = TRUE),
     "]"
   ),
-  counterfactual = as.factor(counterfactual),
+  counterfactual_label = mapvalues(
+    counterfactual,
+    from = cfacts_for_table,
+    to = labels_for_table
+  ),
   iso3c = as.factor(iso3c)) %>%
+  mutate(counterfactual_label = factor(counterfactual_label,
+                                       labels_for_table)) %>%
   select(
     iso3c,
-    counterfactual,
+    counterfactual_label,
     delta_deaths,
     delta_deaths_perpop,
   )
 
-table = tabular((iso3c) ~ counterfactual * (delta_deaths + delta_deaths_perpop) * (identity),
+table = tabular((iso3c) ~ counterfactual_label * (delta_deaths + delta_deaths_perpop) * (identity),
                 data = differences_table)
 colLabels(table) = colLabels(table)[-c(1,4),]
 
