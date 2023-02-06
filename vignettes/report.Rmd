@@ -1,0 +1,85 @@
+---
+title: "Plots"
+knit: (function(inputFile, encoding) { 
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(here::here(), "docs", "plots_report")) })
+output: 
+  pdf_document:
+    keep_tex: true
+header-includes:
+  - |
+    ```{=latex}
+    \usepackage{fvextra}
+    \usepackage{adjustbox}
+    \usepackage{tabularx}
+    \usepackage{graphicx}
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
+      showspaces = false,
+      showtabs = false,
+      breaklines,
+      commandchars=\\\{\}
+    }
+    ```
+---
+
+```{r packages, eval=FALSE, include=FALSE}
+install.packages("orderly")
+install.packages("knitr")
+install.packages("here")
+
+library(orderly)
+library(knitr)
+library(here)
+```
+
+```{r setup, include=FALSE}
+root_path = here::here()
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(out.height = "\\textheight",  out.width = "\\textwidth")
+knitr::opts_chunk$set(fig.height = 9, fig.width = 7)
+knitr::opts_knit$set(root.dir = root_path)
+setwd(root_path)
+```
+
+
+```{r generate_production_counterfactual}
+stage = "generate_production_counterfactual"
+id = orderly::orderly_latest(stage)
+prod_cfact_path = paste0(root_path, "/archive/", stage, "/", id)
+
+stage = "generate_vaccine_counterfactual"
+id = orderly::orderly_latest(stage)
+vacc_cfact_path = paste0(root_path, "/archive/", stage, "/", id)
+
+stage = "generate_counterfactuals"
+id = orderly::orderly_latest(stage)
+cfacts_path = paste0(root_path, "/archive/", stage, "/", id)
+
+stage = "deaths_averted_plot_timeline"
+id = orderly::orderly_latest(stage)
+deaths_av_path = paste0(root_path, "/archive/", stage, "/", id)
+```
+
+```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("DJ4 Cumulative vaccine counterfactuals")}
+knitr::include_graphics(paste0(vacc_cfact_path, "/cumulative_counterfactuals.png"))
+```
+
+### DJ5 Table
+\input{`r paste0(deaths_av_path, "/counterfactuals_table.tex")`}
+
+```{r daily-deaths, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario")}
+knitr::include_graphics(paste0(deaths_av_path, "/all_tsplot.png"))
+```
+
+```{r prod-assumptions, fig.align="center", fig.cap=c("DJ9 Vaccine production assumptions")}
+knitr::include_graphics(paste0(prod_cfact_path, "/vaccine_production.png"))
+```
+
+```{r GBR-prod-cap, fig.align="center", fig.cap=c("DJ10 UK limits from production")}
+knitr::include_graphics(paste0(vacc_cfact_path, "/shifts_plots/GBR.png"))
+```
+```{r USA-prod-cap, fig.align="center", fig.cap=c("DJ10 USA limits from production")}
+knitr::include_graphics(paste0(vacc_cfact_path, "/shifts_plots/USA.png"))
+```
+
