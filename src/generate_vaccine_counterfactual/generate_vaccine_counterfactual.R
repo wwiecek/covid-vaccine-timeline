@@ -190,7 +190,8 @@ plot_cumulative = function (counterfactuals) {
     scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
     labs(x = "Date",
          y = "Cumulative vaccinations",
-         color = "Vaccinations start sooner by:")
+         color = "Vaccinations start sooner by:") +
+    theme(aspect.ratio = 1)
 
   ggsave("cumulative_counterfactuals.png", plot=plot)
 }
