@@ -177,32 +177,22 @@ plot_together = function(baseline, production) {
 }
 
 plot_cumulative = function (counterfactuals) {
-  countries_of_interest = unique(counterfactuals$iso3c)
-  country_plots = map(countries_of_interest, function(country_iso) {
-    country_data = counterfactuals %>% filter(iso3c == country_iso) %>%
-      group_by(shifted_by) %>%
+  data = counterfactuals %>%
+      group_by(shifted_by, country) %>%
       mutate(total_vacc = cumsum(first_doses + second_doses + third_doses))
 
-    plot = ggplot() +
-      geom_line(data = country_data,
-                aes(x = as.Date(date),
-                    y = total_vacc,
-                    color = as.character(shifted_by))) +
-      xlab("Date") +
-      ylab("Cumulative total vaccines") +
-      scale_y_continuous(labels = unit_format(unit = "B", scale = 1e-9)) +
-      labs(color=paste0(country_iso, " shifted by"))
+  plot = ggplot() +
+    geom_line(data = data,
+              aes(x = as.Date(date),
+                  y = total_vacc,
+                  color = as.character(shifted_by))) +
+    facet_wrap(~country, nrow = 2, scales = "free_y") +
+    scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+    labs(x = "Date",
+         y = "Cumulative vaccinations",
+         color = "Vaccinations start sooner by:")
 
-    return(plot)
-  })
-
-  combined_plot =
-    ggarrange(plotlist = country_plots,
-              nrow = 1,
-              ncol = 2)
-
-  ggsave(paste0("cumulative_counterfactuals.png"),
-         plot = combined_plot)
+  ggsave("cumulative_counterfactuals.png", plot=plot)
 }
 
 # read in real world vaccination series
