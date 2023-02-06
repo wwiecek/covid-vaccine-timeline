@@ -122,24 +122,22 @@ table1_df = table1_df_ind %>%
          averted_deaths_perpop_025 = averted_deaths_025 / pop10k,
          averted_deaths_perpop_975 = averted_deaths_975 / pop10k)
 
-digits = 0
-
 
 differences_table = table1_df %>%
   filter(counterfactual %in% cfacts_to_display) %>%
   mutate(delta_deaths = paste0(
-    format(round(averted_deaths_avg, digits), big.mark=",", trim = TRUE),
+    format(round(averted_deaths_avg, 0), big.mark=",", trim = TRUE),
     " [",
-    format(round(averted_deaths_025, digits), big.mark=",", trim = TRUE),
+    format(round(averted_deaths_025, 0), big.mark=",", trim = TRUE),
     "; ",
-    format(round(averted_deaths_975, digits), big.mark=",", trim = TRUE),
+    format(round(averted_deaths_975, 0), big.mark=",", trim = TRUE),
     "]"
   ), delta_deaths_perpop = paste0(
-    format(round(averted_deaths_perpop_avg, digits), big.mark=",", trim = TRUE),
+    format(round(averted_deaths_perpop_avg, 2), big.mark=",", trim = TRUE),
     " [",
-    format(round(averted_deaths_perpop_025, digits), big.mark=",", trim = TRUE),
+    format(round(averted_deaths_perpop_025, 2), big.mark=",", trim = TRUE),
     "; ",
-    format(round(averted_deaths_perpop_975, digits), big.mark=",", trim = TRUE),
+    format(round(averted_deaths_perpop_975, 2), big.mark=",", trim = TRUE),
     "]"
   ),
   counterfactual_label = mapvalues(
