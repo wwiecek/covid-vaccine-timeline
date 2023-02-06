@@ -112,6 +112,7 @@ parameters:
 # reports.
 #
 packages:
+  - plyr
   - dplyr
   - gridExtra
   - squire.page
@@ -123,7 +124,6 @@ packages:
   - ggplot2
   - ggpubr
   - tables
-  - plyr
 
 
 # Source files, in addition to the script.  Typically these will
