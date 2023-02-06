@@ -131,7 +131,7 @@ plot_cfact = function(cfact, baseline, production) {
       size = 16
     ))
 
-    ggsave(paste0("counterfactual_plots/", country_iso, ".png"),
+    ggsave(paste0("counterfactual_plots/", country_iso, "_", shift, ".png"),
            plot = combined_plot)
   })
 }
@@ -232,17 +232,12 @@ counterfactuals = map_dfr(shifts, function(shift_by) {
     saveRDS(cfact_with_prod, paste0("counterfactual_timelines/", shift_by, "_days_sooner.Rds"))
   }
 
+  plot_cfact(cfact_with_prod, base_vaccination, counterfactual_production)
+
   return(cfact_with_prod)
 })
 
 plot_cumulative(counterfactuals)
-
-cfact_with_prod = map_dfr(countries_of_interest, function(country_iso) {
-  country_vacc = base_vaccination %>% filter(iso3c == country_iso)
-  country_prod = counterfactual_production %>% filter(iso3c == country_iso)
-  return(gen_cfact_with_prod(country_vacc, country_prod, shift_by))
-})
-plot_cfact(cfact_with_prod, base_vaccination, counterfactual_production)
 
 plot_together(base_vaccination, counterfactual_production)
 

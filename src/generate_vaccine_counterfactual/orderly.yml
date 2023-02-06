@@ -55,8 +55,14 @@ artefacts:
   - staticgraph:
       description: Comparing counterfactual with baseline vaccination
       filenames:
-        - counterfactual_plots/GBR.png
-        - counterfactual_plots/USA.png
+        - counterfactual_plots/GBR_0.png
+        - counterfactual_plots/USA_0.png
+        - counterfactual_plots/GBR_30.png
+        - counterfactual_plots/USA_30.png
+        - counterfactual_plots/GBR_60.png
+        - counterfactual_plots/USA_60.png
+        - counterfactual_plots/GBR_90.png
+        - counterfactual_plots/USA_90.png
   - staticgraph:
       description: Examining how much is the production binding
       filenames:
@@ -90,9 +96,6 @@ artefacts:
 # would declare a parameter called 'a' with a default value of 1, and
 # a parameter of b with no default.
 #
-parameters:
-  shift_by:
-    default: 60
 
 # Similar to "data" but sets of temporary views before the data are
 # extracted.  Can be embedded SQL strings or filenames to actual
