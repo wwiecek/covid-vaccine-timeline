@@ -55,23 +55,24 @@ ts_plots <- lapply(cfs,function(cf){
   ggsave(fn,deaths_timeseries_plot,device='pdf')
 })
 
-cfact_labels = c(
-  "Our World in Data",
-  "No vaccines",
-  "Vaccines 30 days sooner",
-  "Vaccines 60 days sooner",
-  "Vaccines 90 days sooner"
-)
+
+cfacts_to_display = c("30_days_sooner",
+                     "60_days_sooner",
+                     "90_days_sooner")
+labels_to_display = c("Vaccines 30 days sooner",
+                     "Vaccines 60 days sooner",
+                     "Vaccines 90 days sooner")
 
 zoomed_table2 = table2_df_ind %>%
   filter(date > as.Date("2020-09-01")) %>%
+  filter(counterfactual %in% cfacts_to_display) %>%
   mutate(counterfactual_label = mapvalues(
     counterfactual,
-    from = cfs,
-    to = cfact_labels
+    from = cfacts_to_display,
+    to = labels_to_display
   )) %>%
   mutate(counterfactual_label = factor(counterfactual_label,
-                                       cfact_labels))
+                                       labels_to_display))
 
 single_timeseries_plot <- ggplot(zoomed_table2, aes(x = date)) +
   geom_line(aes(y = baseline_deaths_avg, colour = "baseline")) +
@@ -88,7 +89,7 @@ single_timeseries_plot <- ggplot(zoomed_table2, aes(x = date)) +
   ) +
   labs(x = "Date", y = "Daily Deaths")
 
-ggsave("all_tsplot.pdf", single_timeseries_plot, device="pdf")
+ggsave("all_tsplot.png", single_timeseries_plot)
 
 cum_ts_plots <- lapply(cfs,function(cf){
   cum_deaths_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
@@ -123,15 +124,9 @@ table1_df = table1_df_ind %>%
 
 digits = 0
 
-cfacts_for_table = c("30_days_sooner",
-                     "60_days_sooner",
-                     "90_days_sooner")
-labels_for_table = c("Vaccines 30 days sooner",
-                     "Vaccines 60 days sooner",
-                     "Vaccines 90 days sooner")
 
 differences_table = table1_df %>%
-  filter(counterfactual %in% cfacts_for_table) %>%
+  filter(counterfactual %in% cfacts_to_display) %>%
   mutate(delta_deaths = paste0(
     format(round(averted_deaths_avg, digits), big.mark=",", trim = TRUE),
     " [",
@@ -149,12 +144,12 @@ differences_table = table1_df %>%
   ),
   counterfactual_label = mapvalues(
     counterfactual,
-    from = cfacts_for_table,
-    to = labels_for_table
+    from = cfacts_to_display,
+    to = labels_to_display
   ),
   iso3c = as.factor(iso3c)) %>%
   mutate(counterfactual_label = factor(counterfactual_label,
-                                       labels_for_table)) %>%
+                                       labels_to_display)) %>%
   select(
     iso3c,
     counterfactual_label,

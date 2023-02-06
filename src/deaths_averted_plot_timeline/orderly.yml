@@ -54,7 +54,7 @@ artefacts:
   - staticgraph:
       description: A graph of daily deaths under all counterfactual scenarios
       filenames:
-        - all_tsplot.pdf
+        - all_tsplot.png
   - staticgraph:
       description: Graphs of daily deaths under the baseline and counterfactual scenarios
       filenames:
