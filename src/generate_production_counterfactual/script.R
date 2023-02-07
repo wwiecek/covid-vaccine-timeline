@@ -96,7 +96,6 @@ combined_plot =
             plot1,
             nrow = 2,
             ncol = 2)
-combined_plot
 ggsave("vaccine_production.png", plot = combined_plot)
 
 unconstrained_period = data.frame(
