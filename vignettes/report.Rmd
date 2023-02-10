@@ -10,49 +10,53 @@ output:
 header-includes:
   - |
     ```{=latex}
+    \usepackage{fvextra}	
+    \usepackage{adjustbox}	
+    \usepackage{tabularx}	
+    \usepackage{graphicx}
     ```
 ---
 
-```{r packages, eval=FALSE, include=FALSE}
-install.packages("orderly")
-install.packages("knitr")
-install.packages("here")
-install.packages("dplyr")
-install.packages("ggplot2")
+```{r install-packages, eval = FALSE, include = FALSE}
+install.packages("orderly", repos = "http://cran.us.r-project.org")
+install.packages("knitr", repos = "http://cran.us.r-project.org")
+install.packages("here", repos = "http://cran.us.r-project.org")
+install.packages("dplyr", repos = "http://cran.us.r-project.org")
+install.packages("ggplot2", repos = "http://cran.us.r-project.org")
+install.packages("scales", repos = "http://cran.us.r-project.org")
+```
 
+```{r load-packages, include=FALSE}
 library(orderly)
-library(knitr)
 library(here)
 library(dplyr)
 library(ggplot2)
+library(scales)
 ```
 
 ```{r setup, include=FALSE}
-root_path = here::here()
 knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
-knitr::opts_knit$set(root.dir = root_path)
-setwd(root_path)
 ```
-
 
 ```{r get-paths}
 stage = "generate_production_counterfactual"
 id = orderly::orderly_latest(stage)
-prod_cfact_path = paste0(root_path, "/archive/", stage, "/", id)
+prod_cfact_path = paste0("../archive/", stage, "/", id)
 
 stage = "generate_vaccine_counterfactual"
 id = orderly::orderly_latest(stage)
-vacc_cfact_path = paste0(root_path, "/archive/", stage, "/", id)
+vacc_cfact_path = paste0("../archive/", stage, "/", id)
 
 stage = "generate_counterfactuals"
 id = orderly::orderly_latest(stage)
-cfacts_path = paste0(root_path, "/archive/", stage, "/", id)
+cfacts_path = paste0("../archive/", stage, "/", id)
 
 stage = "deaths_averted_plot_timeline"
 id = orderly::orderly_latest(stage)
-deaths_av_path = paste0(root_path, "/archive/", stage, "/", id)
+deaths_av_path = paste0("../archive/", stage, "/", id)
 ```
 
+### DJ4
 ```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("DJ4 Cumulative vaccine counterfactuals")}
 baseline = readRDS(paste0(vacc_cfact_path, "/counterfactual_timelines/owid_raw.Rds"))
 sooner_30 = readRDS(paste0(vacc_cfact_path, "/counterfactual_timelines/30_days_sooner.Rds"))
@@ -87,10 +91,36 @@ knitr::include_graphics(paste0(deaths_av_path, "/all_tsplot.png"))
 knitr::include_graphics(paste0(prod_cfact_path, "/vaccine_production.png"))
 ```
 
-```{r GBR-prod-cap, fig.align="center", fig.cap=c("DJ10 UK limits from production")}
-knitr::include_graphics(paste0(vacc_cfact_path, "/shifts_plots/GBR.png"))
-```
-```{r USA-prod-cap, fig.align="center", fig.cap=c("DJ10 USA limits from production")}
-knitr::include_graphics(paste0(vacc_cfact_path, "/shifts_plots/USA.png"))
+### DJ10
+```{r prod-cap, fig.align="center", fig.cap=c("DJ10 Limits from production")}
+production = readRDS(paste0(prod_cfact_path, "/counterfactual_production.Rds"))
+
+countries_of_interest = c("United States", "United Kingdom")
+for (country_name in countries_of_interest) {
+  country_cfact = counterfactuals %>%
+    filter(country == country_name)
+  country_prod = production %>% filter(country == country_name)
+  
+  dj10 = ggplot() +
+    geom_line(data = country_prod,
+              aes(
+                x = as.Date(date),
+                y = cumulative_available_vaccines,
+                color = "Production"
+              )) +
+    geom_line(data = country_cfact,
+              aes(
+                x = as.Date(date),
+                y = total_vacc,
+                color = "Vaccination"
+              )) +
+    labs(x = "Date",
+         y = "Cumulative vaccinations",
+         color = country_name) +
+    scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+    facet_wrap(~ shifted_by)
+  
+  plot(dj10)
+}
 ```
 

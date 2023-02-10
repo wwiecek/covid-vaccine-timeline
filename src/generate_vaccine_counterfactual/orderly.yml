@@ -63,11 +63,6 @@ artefacts:
         - counterfactual_plots/USA_60.png
         - counterfactual_plots/GBR_90.png
         - counterfactual_plots/USA_90.png
-  - staticgraph:
-      description: Examining how much is the production binding
-      filenames:
-        - shifts_plots/GBR.png
-        - shifts_plots/USA.png
 
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than

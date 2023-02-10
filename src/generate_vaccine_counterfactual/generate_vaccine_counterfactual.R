@@ -137,46 +137,6 @@ plot_cfact = function(cfact, baseline, production) {
   })
 }
 
-# Plot how production caps vaccination for different shifts
-plot_together = function(baseline, production) {
-  countries_of_interest = c("USA", "GBR")
-  shifts = c(0,30,60,90)
-  walk(countries_of_interest, function(country_iso) {
-    plots = map(shifts, function(shift_by) {
-      country_vacc = baseline %>% filter(iso3c == country_iso)
-      country_prod = production %>% filter(iso3c == country_iso)
-      country_cfact = gen_cfact_with_prod(country_vacc, country_prod, shift_by) %>%
-        mutate(total_vacc = cumsum(first_doses + second_doses + third_doses))
-
-      plot_prod_vs_vacc = ggplot() +
-        geom_line(data = country_prod,
-                  aes(x = as.Date(date),
-                      y = cumulative_available_vaccines,
-                      color = "Production")) +
-        geom_line(data = country_cfact,
-                  aes(x = as.Date(date), y = total_vacc, color = "Vaccination")) +
-        xlab("Date") +
-        ylab("Cumulative total vaccines") +
-        scale_y_continuous(labels = unit_format(unit = "B", scale = 1e-9)) +
-        labs(color=paste0("Shift by ", shift_by, " days"))
-
-      return(plot_prod_vs_vacc)
-    })
-    combined_plot =
-      ggarrange(plotlist = plots,
-                nrow = 2,
-                ncol = 2)
-    combined_plot = annotate_figure(combined_plot, top = text_grob(
-      paste0("Binding of production constraint for different shifts for ", country_iso),
-      color = "black",
-      size = 16
-    ))
-    ggsave(paste0("shifts_plots/", country_iso, ".png"),
-           plot = combined_plot)
-  })
-
-}
-
 # read in real world vaccination series
 base_vaccination = read.csv("owid-raw.csv") %>%
   # Cutoff later data that looks unreasonable (negative number and zeros)
@@ -209,8 +169,6 @@ counterfactuals = map_dfr(shifts, function(shift_by) {
 
   return(cfact_with_prod)
 })
-
-plot_together(base_vaccination, counterfactual_production)
 
 # create a counterfactual with no vaccines
 cfact_no_vaccines = base_vaccination %>%
