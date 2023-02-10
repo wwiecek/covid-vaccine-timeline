@@ -177,12 +177,8 @@ plot_together = function(baseline, production) {
 }
 
 plot_cumulative = function (counterfactuals) {
-  data = counterfactuals %>%
-      group_by(shifted_by, country) %>%
-      mutate(total_vacc = cumsum(first_doses + second_doses + third_doses))
-
   plot = ggplot() +
-    geom_line(data = data,
+    geom_line(data = counterfactuals,
               aes(x = as.Date(date),
                   y = total_vacc,
                   color = as.character(shifted_by))) +
@@ -217,7 +213,10 @@ counterfactuals = map_dfr(shifts, function(shift_by) {
     country_prod = counterfactual_production %>% filter(iso3c == country_iso)
     return(gen_cfact_with_prod(country_vacc, country_prod, shift_by))
   })
-  cfact_with_prod = cfact_with_prod %>% mutate(shifted_by = shift_by)
+  cfact_with_prod = cfact_with_prod %>%
+    mutate(shifted_by = shift_by) %>%
+    group_by(shifted_by, country) %>%
+    mutate(total_vacc = cumsum(first_doses + second_doses + third_doses))
 
   if (shift_by != 0) {
     saveRDS(cfact_with_prod, paste0("counterfactual_timelines/", shift_by, "_days_sooner.Rds"))
@@ -236,6 +235,10 @@ plot_together(base_vaccination, counterfactual_production)
 cfact_no_vaccines = base_vaccination %>%
   mutate(first_doses = 0, second_doses = 0, third_doses = 0)
 saveRDS(cfact_no_vaccines, "counterfactual_timelines/no_vaccines.Rds")
+
+base_vaccination = base_vaccination %>%
+  group_by(country) %>%
+  mutate(total_vacc = cumsum(first_doses + second_doses + third_doses))
 
 # save the base real scenario from OWID
 saveRDS(base_vaccination, "counterfactual_timelines/owid_raw.Rds")
