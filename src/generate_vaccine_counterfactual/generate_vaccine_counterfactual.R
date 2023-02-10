@@ -177,22 +177,6 @@ plot_together = function(baseline, production) {
 
 }
 
-plot_cumulative = function (counterfactuals) {
-  plot = ggplot() +
-    geom_line(data = counterfactuals,
-              aes(x = as.Date(date),
-                  y = total_vacc,
-                  color = as.character(shifted_by))) +
-    facet_wrap(~country, ncol = 2, scales = "free_y") +
-    scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
-    labs(x = "Date",
-         y = "Cumulative vaccinations",
-         color = "Vaccinations start sooner by:") +
-    theme(aspect.ratio = 1)
-
-  ggsave("cumulative_counterfactuals.png", plot=plot)
-}
-
 # read in real world vaccination series
 base_vaccination = read.csv("owid-raw.csv") %>%
   # Cutoff later data that looks unreasonable (negative number and zeros)
@@ -225,8 +209,6 @@ counterfactuals = map_dfr(shifts, function(shift_by) {
 
   return(cfact_with_prod)
 })
-
-plot_cumulative(counterfactuals)
 
 plot_together(base_vaccination, counterfactual_production)
 

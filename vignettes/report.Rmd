@@ -10,16 +10,6 @@ output:
 header-includes:
   - |
     ```{=latex}
-    \usepackage{fvextra}
-    \usepackage{adjustbox}
-    \usepackage{tabularx}
-    \usepackage{graphicx}
-    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
-      showspaces = false,
-      showtabs = false,
-      breaklines,
-      commandchars=\\\{\}
-    }
     ```
 ---
 
@@ -27,23 +17,25 @@ header-includes:
 install.packages("orderly")
 install.packages("knitr")
 install.packages("here")
+install.packages("dplyr")
+install.packages("ggplot2")
 
 library(orderly)
 library(knitr)
 library(here)
+library(dplyr)
+library(ggplot2)
 ```
 
 ```{r setup, include=FALSE}
 root_path = here::here()
 knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
-knitr::opts_chunk$set(out.height = "\\textheight",  out.width = "\\textwidth")
-knitr::opts_chunk$set(fig.height = 9, fig.width = 7)
 knitr::opts_knit$set(root.dir = root_path)
 setwd(root_path)
 ```
 
 
-```{r generate_production_counterfactual}
+```{r get-paths}
 stage = "generate_production_counterfactual"
 id = orderly::orderly_latest(stage)
 prod_cfact_path = paste0(root_path, "/archive/", stage, "/", id)
@@ -62,7 +54,26 @@ deaths_av_path = paste0(root_path, "/archive/", stage, "/", id)
 ```
 
 ```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("DJ4 Cumulative vaccine counterfactuals")}
-knitr::include_graphics(paste0(vacc_cfact_path, "/cumulative_counterfactuals.png"))
+baseline = readRDS(paste0(vacc_cfact_path, "/counterfactual_timelines/owid_raw.Rds"))
+sooner_30 = readRDS(paste0(vacc_cfact_path, "/counterfactual_timelines/30_days_sooner.Rds"))
+sooner_60 = readRDS(paste0(vacc_cfact_path, "/counterfactual_timelines/60_days_sooner.Rds"))
+sooner_90 = readRDS(paste0(vacc_cfact_path, "/counterfactual_timelines/90_days_sooner.Rds"))
+
+counterfactuals = bind_rows(baseline, sooner_30, sooner_60, sooner_90)
+
+dj4 = ggplot() +
+  geom_line(data = counterfactuals,
+            aes(x = as.Date(date),
+                y = total_vacc,
+                color = as.character(shifted_by))) +
+  facet_wrap(~country, ncol = 2, scales = "free_y") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+  labs(x = "Date",
+       y = "Cumulative vaccinations",
+       color = "Vaccinations start sooner by:") +
+  theme(aspect.ratio = 1)
+
+plot(dj4)
 ```
 
 ### DJ5 Table
