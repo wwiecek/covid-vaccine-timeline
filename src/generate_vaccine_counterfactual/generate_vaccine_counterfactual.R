@@ -56,7 +56,8 @@ gen_cfact_with_prod = function(base_series, prod_series, shift_days) {
   cfact_df = base_shifted_with_prod %>%
     mutate(first_doses = first_doses_cfact,
            second_doses = second_doses_cfact) %>%
-    select(country, iso3c, date, first_doses, second_doses, third_doses)
+    mutate(total_vacc = cumsum(first_doses + second_doses + third_doses)) %>%
+    select(country, iso3c, date, first_doses, second_doses, third_doses, total_vacc)
 
   return(cfact_df)
 }
@@ -214,9 +215,7 @@ counterfactuals = map_dfr(shifts, function(shift_by) {
     return(gen_cfact_with_prod(country_vacc, country_prod, shift_by))
   })
   cfact_with_prod = cfact_with_prod %>%
-    mutate(shifted_by = shift_by) %>%
-    group_by(shifted_by, country) %>%
-    mutate(total_vacc = cumsum(first_doses + second_doses + third_doses))
+    mutate(shifted_by = as.character(shift_by))
 
   if (shift_by != 0) {
     saveRDS(cfact_with_prod, paste0("counterfactual_timelines/", shift_by, "_days_sooner.Rds"))
@@ -236,9 +235,13 @@ cfact_no_vaccines = base_vaccination %>%
   mutate(first_doses = 0, second_doses = 0, third_doses = 0)
 saveRDS(cfact_no_vaccines, "counterfactual_timelines/no_vaccines.Rds")
 
-base_vaccination = base_vaccination %>%
-  group_by(country) %>%
-  mutate(total_vacc = cumsum(first_doses + second_doses + third_doses))
+base_vaccination = map_dfr(countries_of_interest, function(country_iso) {
+  country_data = base_vaccination %>% filter(iso3c == country_iso) %>%
+  mutate(total_vacc = cumsum(first_doses + second_doses + third_doses),
+         date = as.Date(date)) %>%
+  select(country, iso3c, date, first_doses, second_doses, third_doses, total_vacc) %>%
+  mutate(shifted_by = "baseline")
+})
 
 # save the base real scenario from OWID
 saveRDS(base_vaccination, "counterfactual_timelines/owid_raw.Rds")
