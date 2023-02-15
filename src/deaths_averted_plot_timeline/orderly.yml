@@ -52,10 +52,6 @@ artefacts:
       filenames:
         - deaths_averted_plot.pdf
   - staticgraph:
-      description: A graph of daily deaths under all counterfactual scenarios
-      filenames:
-        - all_tsplot.png
-  - staticgraph:
       description: Graphs of daily deaths under the baseline and counterfactual scenarios
       filenames:
         - owid_raw_tsplot.pdf
@@ -65,10 +61,15 @@ artefacts:
       filenames:
         - owid_raw_cum_tsplot.pdf
         - no_vaccines_cum_tsplot.pdf
-  - report:
-      description: Table of changes in deaths for different counterfactual scenarios
-      filenames:
-        - counterfactuals_table.tex
+  - data:
+      description: Total deaths and infections averted per counterfactual
+      filenames: deaths_averted_summary.Rds
+  - data:
+      description: Detail of deaths and infections averted per day
+      filenames: deaths_averted_detail.Rds
+
+
+
 
 
 
