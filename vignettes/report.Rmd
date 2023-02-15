@@ -88,7 +88,42 @@ knitr::include_graphics(paste0(deaths_av_path, "/all_tsplot.png"))
 ```
 
 ```{r prod-assumptions, fig.align="center", fig.cap=c("DJ9 Vaccine production assumptions")}
-knitr::include_graphics(paste0(prod_cfact_path, "/vaccine_production.png"))
+detail_prod = readRDS(paste0(prod_cfact_path, "/detail_production.Rds"))
+pfizer_prod = readRDS(paste0(prod_cfact_path, "/pfizer_estimated_production.Rds"))
+moderna_prod = readRDS(paste0(prod_cfact_path, "/moderna_estimated_production.Rds"))
+
+plot1 = ggplot() +
+  geom_line(data = detail_prod,
+            aes(x = date, y = cumulative_available_vaccines)) +
+  ylab("Cumulative number of vaccines available") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot2 = ggplot() +
+  geom_line(data = detail_prod,
+            aes(x = date, y = daily_vaccines)) +
+  ylab("Daily vaccines produced") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot3 = ggplot() +
+  geom_line(data = moderna_prod,
+            aes(x = date, y = daily_production)) +
+  ylab("Daily vaccines produced Moderna") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot4 = ggplot() +
+  geom_line(data = pfizer_prod,
+            aes(x = date, y = daily_production)) +
+  ylab("Daily vaccines produced Pfizer") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+combined_plot =
+  ggarrange(plot3,
+            plot4,
+            plot2,
+            plot1,
+            nrow = 2,
+            ncol = 2)
+plot(combined_plot)
 ```
 
 ### DJ10

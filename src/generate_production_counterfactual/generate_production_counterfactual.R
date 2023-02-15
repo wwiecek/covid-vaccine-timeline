@@ -65,39 +65,6 @@ total_production = pfizer_daily %>%
   mutate(daily_vaccines = daily_production_pfi + daily_production_mod) %>%
   mutate(cumulative_available_vaccines = cumsum(daily_vaccines))
 
-plot1 = ggplot() +
-  geom_line(data = total_production,
-            aes(x = date, y = cumulative_available_vaccines)) +
-  ylab("Cumulative number of vaccines available") +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
-
-plot2 = ggplot() +
-  geom_line(data = total_production,
-            aes(x = date, y = daily_vaccines)) +
-  ylab("Daily vaccines produced") +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
-
-plot3 = ggplot() +
-  geom_line(data = moderna_daily,
-            aes(x = date, y = daily_production)) +
-  ylab("Daily vaccines produced Moderna") +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
-
-plot4 = ggplot() +
-  geom_line(data = pfizer_daily,
-            aes(x = date, y = daily_production)) +
-  ylab("Daily vaccines produced Pfizer") +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
-
-combined_plot =
-  ggarrange(plot3,
-            plot4,
-            plot2,
-            plot1,
-            nrow = 2,
-            ncol = 2)
-ggsave("vaccine_production.png", plot = combined_plot)
-
 unconstrained_period = data.frame(
   date = seq(as.Date("2021-01-01"), as.Date("2022-12-31"), by = 1),
   cumulative_available_vaccines = Inf
@@ -111,4 +78,7 @@ uk_prod = full_production %>%
   mutate(country = "United Kingdom", iso3c = "GBR")
 counterfactual_production = bind_rows(us_prod, uk_prod)
 
+saveRDS(total_production, "detail_production.Rds")
+saveRDS(pfizer_daily, "pfizer_estimated_production.Rds")
+saveRDS(moderna_daily, "moderna_estimated_production.Rds")
 saveRDS(counterfactual_production, "counterfactual_production.Rds")
