@@ -58,16 +58,21 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
-\usepackage{fvextra}
-\usepackage{adjustbox}
-\usepackage{tabularx}
-\usepackage{graphicx}
-\DefineVerbatimEnvironment{Highlighting}{Verbatim}{
-  showspaces = false,
-  showtabs = false,
-  breaklines,
-  commandchars=\\\{\}
-}
+\usepackage{booktabs}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
 
 \title{Plots}
 \author{}
@@ -78,30 +83,47 @@
 
 \begin{figure}
 
-{\centering \includegraphics[width=\textwidth,height=\textheight]{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/archive/generate_vaccine_counterfactual/20230206-170427-bd46e4e9/cumulative_counterfactuals} 
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/cumul-vacc-cfacts-1} 
 
 }
 
 \caption{DJ4 Cumulative vaccine counterfactuals}\label{fig:cumul-vacc-cfacts}
 \end{figure}
 
-\hypertarget{dj5-table}{%
-\subsubsection{DJ5 Table}\label{dj5-table}}
+\begin{table}
 
-\input{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/archive/deaths_averted_plot_timeline/20230206-181403-b1c10039/counterfactuals_table.tex}
+\caption{\label{tab:deaths-averted-table}DJ5 Averted deaths}
+\centering
+\begin{tabular}[t]{lll}
+\toprule
+Counterfactual scenario & Deaths averted & Deaths averted per 10,000\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{3}{l}{\textbf{United Kingdom}}\\
+\hspace{1em}Vaccines 30 days sooner & -67 [-6,531; 7,941] & -0.01 [-0.97; 1.18]\\
+\hspace{1em}Vaccines 60 days sooner & -5,759 [-25,124; 8,630] & -0.86 [-3.75; 1.29]\\
+\hspace{1em}Vaccines 90 days sooner & -9,174 [-53,511; 23,387] & -1.37 [-7.98; 3.49]\\
+\addlinespace[0.3em]
+\multicolumn{3}{l}{\textbf{United States}}\\
+\hspace{1em}Vaccines 30 days sooner & 24,962 [12,248; 38,662] & 0.75 [0.37; 1.17]\\
+\hspace{1em}Vaccines 60 days sooner & 15,179 [-11,323; 44,089] & 0.46 [-0.34; 1.33]\\
+\hspace{1em}Vaccines 90 days sooner & -132 [-30,113; 27,867] & 0.00 [-0.91; 0.84]\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{figure}
 
-{\centering \includegraphics[width=\textwidth,height=\textheight]{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/archive/deaths_averted_plot_timeline/20230206-181403-b1c10039/all_tsplot} 
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/deaths-averted-plot-1} 
 
 }
 
-\caption{DJ6 Daily deaths per scenario}\label{fig:daily-deaths}
+\caption{DJ6 Daily deaths per scenario}\label{fig:deaths-averted-plot}
 \end{figure}
 
 \begin{figure}
 
-{\centering \includegraphics[width=\textwidth,height=\textheight]{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/archive/generate_production_counterfactual/20230206-111046-65dc3164/vaccine_production} 
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/prod-assumptions-1} 
 
 }
 
@@ -110,19 +132,19 @@
 
 \begin{figure}
 
-{\centering \includegraphics[width=\textwidth,height=\textheight]{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/archive/generate_vaccine_counterfactual/20230206-170427-bd46e4e9/shifts_plots/GBR} 
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/prod-cap-1} 
 
 }
 
-\caption{DJ10 UK limits from production}\label{fig:GBR-prod-cap}
+\caption{DJ10 Limits from production}\label{fig:prod-cap-1}
 \end{figure}
 \begin{figure}
 
-{\centering \includegraphics[width=\textwidth,height=\textheight]{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/archive/generate_vaccine_counterfactual/20230206-170427-bd46e4e9/shifts_plots/USA} 
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/prod-cap-2} 
 
 }
 
-\caption{DJ10 USA limits from production}\label{fig:USA-prod-cap}
+\caption{DJ10 Limits from production}\label{fig:prod-cap-2}
 \end{figure}
 
 \end{document}
