@@ -7,6 +7,7 @@ knit: (function(inputFile, encoding) {
 output: 
   pdf_document:
     keep_tex: true
+fontsize: 12pt
 header-includes:
   - |
     ```{=latex}
@@ -62,10 +63,17 @@ deaths_av_path = paste0("../archive/", stage, "/", id)
 ```
 
 ```{r set-theme}
+fontsize = 12
+
 colour_direct <- "#98df8a"
 colour_total <- "#17becf"
 colour_baseline <- "black"
 colour_counterfactual <- "#d62728"
+
+theme = theme_bw() +
+  theme(text = element_text(family = "serif", size = fontsize),
+        legend.position = 'bottom')
+theme_set(theme)
 ```
 
 ```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("DJ4 Cumulative vaccine counterfactuals")}
@@ -80,13 +88,16 @@ dj4 = ggplot() +
   geom_line(data = counterfactuals,
             aes(x = as.Date(date),
                 y = total_vacc,
-                color = as.character(shifted_by))) +
+                color = shifted_by)) +
   facet_wrap(~country, ncol = 2, scales = "free_y") +
   scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+  scale_colour_manual(
+    labels = c('30 days', '60 days', '90 days', 'baseline'),
+    values = c(alpha(colour_counterfactual, 0.33), alpha(colour_counterfactual, 0.66), colour_counterfactual, colour_baseline)
+  ) +
   labs(x = "Date",
        y = "Cumulative vaccinations",
-       color = "Vaccinations start sooner by:") +
-  theme(aspect.ratio = 1)
+       color = "Vaccinations starting sooner by:")
 
 plot(dj4)
 ```
@@ -204,12 +215,14 @@ single_timeseries_plot = ggplot(zoomed_deaths_averted, aes(x = date)) +
     alpha = 0.3,
     fill = colour_counterfactual
   ) +
-  facet_grid(counterfactual_label ~ country) +
+  facet_grid(counterfactual_label ~ country,
+             labeller = labeller(.rows=label_wrap_gen(width = 15))) +
   scale_colour_manual(
     labels = c('baseline', 'counterfactual'),
     values = c(colour_baseline, colour_counterfactual)
   ) +
-  labs(x = "Date", y = "Daily Deaths")
+  labs(x = "Date", y = "Daily Deaths", color = "Colour")
+  
 
 plot(single_timeseries_plot)
 
@@ -224,25 +237,29 @@ moderna_prod = readRDS(paste0(prod_cfact_path, "/moderna_estimated_production.Rd
 plot1 = ggplot() +
   geom_line(data = detail_prod,
             aes(x = date, y = cumulative_available_vaccines)) +
-  ylab("Cumulative number of vaccines available") +
+  xlab("Date") +
+  ylab("Cumulative vaccines available") +
   scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
 
 plot2 = ggplot() +
   geom_line(data = detail_prod,
             aes(x = date, y = daily_vaccines)) +
+  xlab("Date") +
   ylab("Daily vaccines produced") +
   scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
 
 plot3 = ggplot() +
   geom_line(data = moderna_prod,
             aes(x = date, y = daily_production)) +
-  ylab("Daily vaccines produced Moderna") +
+  xlab("Date") +
+  ylab("Daily vaccines produced\nModerna") +
   scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
 
 plot4 = ggplot() +
   geom_line(data = pfizer_prod,
             aes(x = date, y = daily_production)) +
-  ylab("Daily vaccines produced Pfizer") +
+  xlab("Date") +
+  ylab("Daily vaccines produced\nPfizer") +
   scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
 
 combined_plot =
@@ -261,8 +278,19 @@ production = readRDS(paste0(prod_cfact_path, "/counterfactual_production.Rds"))
 countries_of_interest = c("United States", "United Kingdom")
 for (country_name in countries_of_interest) {
   country_cfact = counterfactuals %>%
-    filter(country == country_name)
-  country_prod = production %>% filter(country == country_name)
+    filter(country == country_name) %>%
+    mutate(shifted_by = factor(
+      shifted_by,
+      levels = c("baseline", "30", "60", "90"),
+      labels = c(
+        "Baseline",
+        "Vaccines 30 days sooner",
+        "Vaccines 60 days sooner",
+        "Vaccines 90 days sooner"
+      )
+    ))
+    country_prod = production %>% filter(country == country_name)
+    
   
   dj10 = ggplot() +
     geom_line(data = country_prod,
@@ -278,8 +306,13 @@ for (country_name in countries_of_interest) {
                 color = "Vaccination"
               )) +
     labs(x = "Date",
-         y = "Cumulative vaccinations",
-         color = country_name) +
+         y = "Cumulative production / vaccinations",
+         color = "Colour") +
+    ggtitle(country_name) +
+    scale_colour_manual(
+      labels = c('Production', 'Vaccination'),
+      values = c(colour_baseline, colour_counterfactual)
+    ) +
     scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
     facet_wrap(~ shifted_by)
   
