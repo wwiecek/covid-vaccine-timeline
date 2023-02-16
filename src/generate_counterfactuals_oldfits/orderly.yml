@@ -52,9 +52,9 @@ artefacts:
   - data:
       description: Pandemic simulations with counterfactual vaccine timelines
       filenames: counterfactual_data/counterfactual_simulation.Rds
-  # - data:
-  #     description: Raw excess mortality data
-  #     filenames: excess_deaths.Rds
+  - data:
+      description: Raw excess mortality data
+      filenames: excess_deaths.Rds
   - staticgraph:
       description: Fitting plots for each country simulated
       filenames: fitting_plots.pdf
