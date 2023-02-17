@@ -60,7 +60,7 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
       baseline_N = mean(.data$N),
       baseline_percent_susceptible = ((baseline_N - baseline_recovered) * 
         (1 - 0.55*(baseline_vaccinated/baseline_N - baseline_vaccinated_second_waned/baseline_N)
-           - 0.3*baseline_vaccinated_second_waned/baseline_N)/baseline_N)
+           - 0.05*baseline_vaccinated_second_waned/baseline_N)/baseline_N)
       )  %>%
     dplyr::filter(!.data$iso3c %in% exclude_iso3cs))
 
@@ -92,7 +92,7 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
       recovered = sum(.data$R),
       N  = mean(.data$N),
       percent_susceptible = ((N - recovered) * (1 - 0.55*(vaccinated/N
-       - vaccinated_second_waned/N) - 0.3*(vaccinated_second_waned/N))/N)
+       - vaccinated_second_waned/N) - 0.05*(vaccinated_second_waned/N))/N)
     ) %>%
     dplyr::filter(!.data$iso3c %in% exclude_iso3cs))
 

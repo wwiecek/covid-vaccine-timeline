@@ -52,9 +52,6 @@ artefacts:
   - data:
       description: Pandemic simulations with counterfactual vaccine timelines
       filenames: counterfactual_data/counterfactual_simulation.Rds
-  # - data:
-  #     description: Raw excess mortality data
-  #     filenames: excess_deaths.Rds
   - staticgraph:
       description: Fitting plots for each country simulated
       filenames: fitting_plots.pdf
@@ -84,6 +81,10 @@ artefacts:
 #
 parameters:
   excess:
+    default: TRUE
+  lowtransmission:
+    default: FALSE
+  boosters:
     default: TRUE
 
 # Similar to "data" but sets of temporary views before the data are
@@ -125,6 +126,10 @@ resources:
     - model_fits/excess_mortality/GBR.Rds
     - model_fits/reported_deaths/USA.Rds
     - model_fits/reported_deaths/GBR.Rds
+    - model_fits/excess_mortality/USA_lowtransmission.Rds
+    - model_fits/excess_mortality/GBR_lowtransmission.Rds
+    - model_fits/reported_deaths/USA_lowtransmission.Rds
+    - model_fits/reported_deaths/GBR_lowtransmission.Rds
 
 # Optional name of a variable to make the SQL connection available to
 # the script.  Use this with care and avoid using any queries that

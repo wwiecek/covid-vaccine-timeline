@@ -40,6 +40,12 @@ countries_of_interest <- c('USA','GBR')
 iso3cs <- gsub(".Rds", "", list.files(fit_loc))
 iso3cs <- iso3cs[iso3cs %in% countries_of_interest]
 
+if(lowtransmission){
+  input_fits <- paste0(iso3cs, "_lowtransmission")
+} else {
+  input_fits <- iso3cs
+}
+
 # Counterfactual scenarios
 
 cfs <- gsub(".Rds", "", list.files(cf_params))
@@ -203,8 +209,14 @@ update_counterfactual <- function(out, counterfactual){
 
   out$parameters$primary_doses <- c(0,counterfactual$first_doses)
   out$parameters$tt_primary_doses <- c(0,tt_primary_doses)
-  out$parameters$booster_doses <- c(0,counterfactual$third_doses)
-  out$parameters$tt_booster_doses <- c(0,tt_primary_doses)
+  if(boosters) {
+    out$parameters$booster_doses <- c(0,counterfactual$third_doses)
+    out$parameters$tt_booster_doses <- c(0,tt_primary_doses)  
+  } else {
+    out$parameters$booster_doses <- 0
+    out$parameters$tt_booster_doses <- 0
+  }
+  
 
   # for(sampIdx in seq_along(out$samples)){
   #    for(ve_t_Idx in seq_along(out$samples[[sampIdx]]$vaccine_efficacy_infection)){
@@ -270,7 +282,7 @@ load_counterfactuals <- function(cf, iso3c_in) {
   return(cfs)
 }
 
-counterfactuals <- lapply(iso3cs,function(iso3c) {
+counterfactuals <- lapply(iso3cs, function(iso3c) {
 
   # No vaccine counterfactual
 
@@ -289,10 +301,10 @@ names(counterfactuals) <- iso3cs
 
 #simplify submission (hold over from using cluster)
 submission_lists <- map(
-  iso3cs,
+  input_fits,
   ~list(
     iso3c = .x,
-    counterfactual = counterfactuals[[.x]],
+    counterfactual = counterfactuals[[gsub("_lowtransmission", "", .x)]],
     excess = excess_mortality
   )
 )
