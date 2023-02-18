@@ -86,7 +86,6 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
 
   #Set up the baseline results
   baseline <- squire.page::generate_draws(out, t_end)#, date_0, project_forwards=FALSE)
-
   #create the fitting plot if needed
   if(!is.null(plot_name)){
     fit_1 <- dp_plot_2(baseline, excess) + ggplot2::labs(
@@ -237,13 +236,10 @@ update_counterfactual <- function(out, counterfactual){
 
 #updated version of dp plot to make it similar to cdp_plot
 dp_plot_2 <- function (res, excess) {
-  date_0 <- squire.page:::get_data_end_date.excess_nimue_simulation(res)
-  data <- res$pmcmc_results$inputs$data
-  #data$date <- squire.page:::get_dates_greater.excess_nimue_simulation(res)
+  data <- res$inputs$data
   data$adjusted_deaths <- data$deaths/as.numeric(data$date_end -
                                                    data$date_start)
-  suppressWarnings(dp <- plot(res, "deaths", date_0 = date_0,
-                              x_var = "date") + ggplot2::theme_bw() + ggplot2::theme(legend.position = "none",
+  suppressWarnings(dp <- plot(res, particle_fit=TRUE) + ggplot2::theme_bw() + ggplot2::theme(legend.position = "none",
                                                                                      axis.title.x = ggplot2::element_blank()) + ggplot2::ylab("Daily Deaths") +
                      ggplot2::scale_x_date(date_labels = "%b %Y", date_breaks = "3 months") +
                      ggplot2::xlab(""))
