@@ -315,7 +315,7 @@ df_out <- map_dfr(submission_lists, function(sub_list){
                    iso3c = sub_list$iso3c,
                    reduce_age = TRUE,
                    direct = sub_list$excess,
-                   # plot_name = paste0(temp_plots, "/", sub_list$iso3c, ".pdf"),
+                   plot_name = paste0(temp_plots, "/", sub_list$iso3c, ".pdf"),
                    excess = sub_list$excess)
 })
 
@@ -352,3 +352,5 @@ if(excess){
     saveRDS("excess_deaths.Rds")
 
 }
+
+dump_replicate_quantiles(input_fits, output, fit_loc)

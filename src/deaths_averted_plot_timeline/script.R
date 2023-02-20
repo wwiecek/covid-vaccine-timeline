@@ -112,3 +112,29 @@ cum_ts_plots <- lapply(cfs,function(cf){
   ggsave(fn,cum_deaths_timeseries_plot,device='pdf')
 
   })
+
+sensitivities <- c('veis', 'dur_Vs', 'dur_Rs')
+
+quantiles <- c(10, 90)
+
+for(sen in sensitivities){
+    for(quant in quantiles){
+        table3_df_ind <- loadCounterfactualDataSingle(cfs,
+                                     group_by = c("iso3c","date"), sensitivity = sen, quantile = quant)
+    
+        lapply(cfs,function(cf){
+            sensitivity_deaths_plot <- ggplot(table3_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
+                geom_line(aes(y = deaths_avg, colour="deaths")) +
+                geom_line(aes(y = baseline_deaths_avg, colour="baseline deaths")) +
+                facet_wrap(~iso3c,nrow=2)
+                scale_colour_manual(labels=c('baseline','counterfactual','vaccinated','baseline_vaccinated'),
+                  values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated))
+                labs(x = "Date", y = "Percent",title=cf) +
+                theme_pubr() +
+                theme(legend.position = "right")
+        
+            fn <- paste0(cf,"_", sen, "_", quant, "_tsplot.pdf")
+            ggsave(fn,sensitivity_deaths_plot,device='pdf')
+        })
+    }
+}

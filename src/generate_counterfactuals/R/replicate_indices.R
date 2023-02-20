@@ -1,43 +1,63 @@
 ## Takes an rt_optimised model fit and returns the indices for
 ## replicates that fall into either the bottom or top 10% 
 ## for their time-averaged values of the following parameters:
-## 		- Vaccine efficacy against infection of two doses
-##		- Duration of vaccine-derived immunity
-##		- Duration of naturally-derived immunity
+##      - Vaccine efficacy against infection of two doses
+##      - Duration of vaccine-derived immunity
+##      - Duration of naturally-derived immunity
 
-excess_mortality <- TRUE
-if(excess_mortality){
-  fit_loc <- file.path("model_fits", "excess_mortality")
-  output <- file.path("counterfactual_data")
-} else {
-  fit_loc <- file.path("model_fits", "reported_deaths")
-  output <- file.path("counterfactual_data")
+# Given a list of replicate values, return the indices for the <10%
+# and >90% quantiles
+
+replicate_quantiles <- function(reps) {
+    quants <- quantile(unlist(reps), c(0.1,0.9))
+    result <- list(
+            replicates_10 = which(reps <= quants[1]),
+            replicates_90 = which(reps >= quants[2]),
+            rep_10_average = mean(reps[replicates_10]),
+            rep_90_average = mean(reps[replicates_90])
+        )
 }
 
-# Choose which countries to simulate
+# Vaccine efficacies (2nd does only)
 
-countries_of_interest <- c('USA','GBR')
-
-iso3cs <- gsub(".Rds", "", list.files(fit_loc))
-iso3cs <- iso3cs[iso3cs %in% countries_of_interest]
-
-if(lowtransmission){
-  input_fits <- paste0(iso3cs, "_lowtransmission")
-} else {
-  input_fits <- iso3cs
+get_veis <- function(out) {
+    veis <- lapply(out$samples, function(samp){
+        mean(unlist(lapply(samp$vaccine_efficacy_infection, function(vei){
+            vei[2]
+        })))
+    })
 }
 
-# Parameters of interest
+# Vaccine duration (2nd dose only)
 
-parameters <- c('dur_R', 'dur_V', 'vaccine_efficacy_infection')
+get_dur_Vs <- function(out) {
+    dur_vs <- lapply(out$samples, function(samp){
+        mean(unlist(lapply(samp$dur_V, function(dv){
+            dv[2]
+        })))
+    })
+}
 
-# Vaccine efficacy replicates
+# Natural immunity duration
 
-vei_replicates <- function(out) {
-	veis <- lapply(GBR$samples, function(samp){
-	    mean(unlist(lapply(samp$vaccine_efficacy_infection, function(vei){
-	        vei[2]
-	    })))
-	})
-	
+get_dur_Rs <- function(out) {
+    dur_rs <- lapply(out$samples, function(samp){
+        mean(samp$dur_R)
+    })
+}
+
+dump_replicate_quantiles <- function(input_fits, output, fit_loc) {
+    replicates <- lapply(input_fits, function(fit){
+        fit <- readRDS(paste0(fit_loc, "/", as.character(fit), ".Rds"))
+
+        country_reps <- list(
+            veis = replicate_quantiles(get_veis(fit)),
+            dur_Vs = replicate_quantiles(get_dur_Vs(fit)),
+            dur_Rs = replicate_quantiles(get_dur_Rs(fit))
+            )
+        })
+
+    names(replicates) <- iso3cs
+    print('saving replicates')
+    saveRDS(replicates, paste0(output, '/quantile_replicates.Rds'))
 }
