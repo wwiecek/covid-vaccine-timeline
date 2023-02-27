@@ -184,7 +184,7 @@ walk(countries_of_interest, function(country_iso) {
     ylab("Vaccines administered") +
     scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
     labs(color=country_iso)
-  # print(plot)
+  print(plot)
 })
 
 

@@ -84,6 +84,10 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
 
   t_end <- as.integer(max(counterfactual$counterfactual_vaccination$date) - out$inputs$start_date)
 
+  # Add the rt_optimised class label to try to prevent a failure of the generic function
+  # generate_draws
+  attr(out, "class") <- c("rt_optimised",class(out))
+
   #Set up the baseline results
   baseline <- squire.page::generate_draws(out, t_end)#, date_0, project_forwards=FALSE)
   #create the fitting plot if needed
@@ -157,7 +161,14 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   for(counterIndex in seq_along(counterfactual)){
     #generate draws with pars.list
     if(!is.null(counterfactual[[counterIndex]])){
-      counter <- squire.page::generate_draws(out = update_counterfactual(out, counterfactual[[counterIndex]]), t_end)
+
+      cf_out <- update_counterfactual(out, counterfactual[[counterIndex]])
+
+      counter <- squire.page::generate_draws(out = cf_out, t_end)
+
+      # We need to add this class so that the nimue_format utility knows it's a booster sim
+      attr(counter, "class") <- c("lmic_booster_nimue_simulation",class(counter))
+
       #format the counter factual run
       counter_df <- squire.page::nimue_format(counter, c("deaths", "infections", "vaccinated_first_dose",
        "vaccinated_second_dose", "vaccinated_second_waned", "N", "R"),
@@ -167,9 +178,6 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
         tidyr::pivot_wider(names_from = .data$compartment, values_from = .data$y) %>%
         na.omit() %>%
         dplyr::mutate(counterfactual = names(counterfactual)[counterIndex])
-
-      # We need to add this class so that the nimue_format utility knows it's a booster sim
-      attr(counter_df, "class") <- c("lmic_booster_nimue_simulation",class(counter_df))
 
       if(!reduce_age){
         counter_df <- dplyr::mutate(counter_df, age_group = as.character(.data$age_group))
@@ -215,21 +223,6 @@ update_counterfactual <- function(out, counterfactual){
     out$parameters$booster_doses <- 0
     out$parameters$tt_booster_doses <- 0
   }
-  
-
-  # for(sampIdx in seq_along(out$samples)){
-  #    for(ve_t_Idx in seq_along(out$samples[[sampIdx]]$vaccine_efficacy_infection)){
-  #        out$samples[[sampIdx]]$vaccine_efficacy_infection[[ve_t_Idx]] <- rep(0,6)
-  #    }
-  # }
-
-  # for(sampIdx in seq_along(out$samples)){
-  #    for(ve_t_Idx in seq_along(out$samples[[sampIdx]]$vaccine_efficacy_disease)){
-  #        out$samples[[sampIdx]]$vaccine_efficacy_infection[[ve_t_Idx]] <- rep(0,6)
-  #    }
-  # }
-
-  out$parameters$rel_infectiousness_vaccinated <- c(0.5,0.5,1,0.5,0.8,0.9)
 
   return(out)
 }
@@ -268,11 +261,11 @@ load_counterfactuals <- function(cf, iso3c_in) {
   end_date <- max_date(fit)
   cf_data <- readRDS(paste0(cf_params,"/",cf,".Rds")) %>%
     filter(iso3c == iso3c_in)
-  cfs <- cf_data %>%
-    filter(date <= as.character(end_date)) %>%
+  cfs <- cf_data  %>%
     mutate (
       date = as.Date(date,'%Y-%m-%d')
       ) %>%
+    filter(date <= as.Date(end_date)) %>%
     select(first_doses, third_doses, date)
   cfs = as.list(cfs)
   return(cfs)
@@ -310,12 +303,14 @@ df_out <- map_dfr(submission_lists, function(sub_list){
 
   out <- readRDS(paste0(fit_loc, "/", as.character(sub_list$iso3c), ".Rds"))
 
+  iso3c <- gsub("_lowtransmission", "", sub_list$iso3c)
+
   df <- deaths_averted(out, draws = NULL,
                    counterfactual = sub_list$counterfactual,
-                   iso3c = sub_list$iso3c,
+                   iso3c = iso3c,
                    reduce_age = TRUE,
                    direct = sub_list$excess,
-                   plot_name = paste0(temp_plots, "/", sub_list$iso3c, ".pdf"),
+                   plot_name = paste0(temp_plots, "/", iso3c, ".pdf"),
                    excess = sub_list$excess)
 })
 

@@ -1,12 +1,11 @@
 
 # Counterfactual selection, manually specified
 
-cfs <- c('owid_raw','no_vaccines','counterfactual_vaccination')
+cfs <- c('counterfactual_vaccination')
 
 ###Load data:
 
-table1_df_ind <- loadCounterfactualDataSingle(cfs,
-    group_by = "iso3c") %>%
+table1_df_ind <- loadCounterfactualDataSingle(group_by = "iso3c") %>%
   select(!country)
 
 #colours
@@ -25,33 +24,18 @@ da_plot <- ggplot(table1_df_ind,aes(x=counterfactual,y=averted_deaths_avg))+
 
 ggsave("deaths_averted_plot.pdf",da_plot,device='pdf')
 
-table2_df_ind <- loadCounterfactualDataSingle(cfs,
-                                 group_by = c("iso3c","date")) %>%
+table2_df_ind <- loadCounterfactualDataSingle(group_by = c("iso3c","date")) %>%
     mutate(
         cumulative_deaths = ave(deaths_avg,counterfactual,iso3c,FUN=cumsum)
       ) %>%
     mutate(
         baseline_cumulative_deaths = ave(baseline_deaths_avg,counterfactual,iso3c,FUN=cumsum)
-       ) %>%
-    mutate (
-        vaccinated = vaccinated_avg /2.5e4 - vaccinated_second_waned_avg /2.5e4
-      ) %>%
-    mutate(
-        baseline_vaccinated = baseline_vaccinated_avg /2.5e4 - baseline_vaccinated_second_waned_avg /2.5e4
-      ) %>%
-    mutate(
-        percent_susceptible = percent_susceptible_avg*3000
-        ) %>%
-    mutate(
-        baseline_percent_susceptible = baseline_percent_susceptible_avg*3000
-        )
+       )
 
 ts_plots <- lapply(cfs,function(cf){
     deaths_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
         geom_line(aes(y = baseline_deaths_avg, colour="baseline")) +
         geom_line(aes(y = deaths_avg, colour = "counterfactual")) +
-        geom_line(aes(y = percent_susceptible, colour = "counterfactual percent susceptible")) +
-        geom_line(aes(y = baseline_percent_susceptible, colour = "baseline percent susceptible")) +
         facet_wrap(~iso3c,nrow=2)
         scale_colour_manual(labels=c('baseline','counterfactual','percent susceptible','baseline percent susceptible'),
           values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated, colour_waned))
@@ -66,8 +50,6 @@ ts_plots <- lapply(cfs,function(cf){
     infections_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
         geom_line(aes(y = baseline_infections_avg, colour="baseline")) +
         geom_line(aes(y = infections_avg, colour = "counterfactual")) +
-        # geom_line(aes(y = percent_susceptible*300, colour = "counterfactual percent susceptible")) +
-        # geom_line(aes(y = baseline_percent_susceptible*300, colour = "baseline percent susceptible")) +
         facet_wrap(~iso3c,nrow=2)
         scale_colour_manual(labels=c('baseline','counterfactual','vaccinated','baseline_vaccinated'),
           values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated))
@@ -81,10 +63,8 @@ ts_plots <- lapply(cfs,function(cf){
 
 
     log_infections_timeseries_plot <- ggplot(table2_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
-        geom_line(aes(y = log(infections_avg)/14.65, colour="log infections")) +
-        geom_line(aes(y = log(baseline_infections_avg)/14.65, colour="log baseline infections")) +
-        geom_line(aes(y = percent_susceptible/3000, colour = "counterfactual percent susceptible")) +
-        geom_line(aes(y = baseline_percent_susceptible/3000, colour = "baseline percent susceptible")) +
+        geom_line(aes(y = log(infections_avg), colour="log infections")) +
+        geom_line(aes(y = log(baseline_infections_avg), colour="log baseline infections")) +
         facet_wrap(~iso3c,nrow=2)
         scale_colour_manual(labels=c('baseline','counterfactual','vaccinated','baseline_vaccinated'),
           values=c(colour_baseline,colour_counterfactual,colour_vaccinated,colour_baseline_vaccinated))
@@ -113,14 +93,18 @@ cum_ts_plots <- lapply(cfs,function(cf){
 
   })
 
+# Sensitivity analysis
+#  - veis: vaccine efficacy vs infection
+#  - dur_Vs: duration of vaccine protection
+#  - dur_Rs: duration of natural immunity
+
 sensitivities <- c('veis', 'dur_Vs', 'dur_Rs')
 
 quantiles <- c(10, 90)
 
 for(sen in sensitivities){
     for(quant in quantiles){
-        table3_df_ind <- loadCounterfactualDataSingle(cfs,
-                                     group_by = c("iso3c","date"), sensitivity = sen, quantile = quant)
+        table3_df_ind <- loadCounterfactualDataSingle(group_by = c("iso3c","date"), sensitivity = sen, quantile = quant)
     
         lapply(cfs,function(cf){
             sensitivity_deaths_plot <- ggplot(table3_df_ind %>% filter(counterfactual == cf), aes(x = date)) +

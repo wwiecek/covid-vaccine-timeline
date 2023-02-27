@@ -60,19 +60,19 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
   baseline_data <- suppressMessages(baseline_data %>%
     dplyr::group_by_at(unique(c(group_by, "replicate", "iso3c"))) %>%
     dplyr::summarise(
-      baseline_infections = sum(.data$infections),
-      baseline_deaths = sum(.data$deaths),
-      baseline_vaccinated = sum(.data$vaccinated_second_dose),
-      baseline_vaccinated_second_waned = sum(.data$vaccinated_second_waned),
-      baseline_recovered = sum(.data$R),
-      baseline_N = mean(.data$N),
+      baseline_infections = sum(infections),
+      baseline_deaths = sum(deaths),
+      baseline_vaccinated = sum(vaccinated_second_dose),
+      baseline_vaccinated_second_waned = sum(vaccinated_second_waned),
+      baseline_recovered = sum(R),
+      baseline_N = mean(N),
       baseline_cumulative_infections = cumsum(baseline_infections),
       baseline_cumulative_deaths = cumsum(baseline_deaths),
       baseline_percent_susceptible = ((baseline_N - baseline_recovered) * 
         (1 - 0.55*(baseline_vaccinated/baseline_N - baseline_vaccinated_second_waned/baseline_N)
            - 0.05*baseline_vaccinated_second_waned/baseline_N)/baseline_N)
       )  %>%
-    dplyr::filter(!.data$iso3c %in% exclude_iso3cs))
+    dplyr::filter(!iso3c %in% exclude_iso3cs))
 
   counterfactual_data = readRDS("counterfactual_simulation.Rds")
 
@@ -98,58 +98,40 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
             quantile_replicates[[iso3c]][[sensitivity]][[paste0('replicates_',quantile)]]
           })
 
-    uniqueCountries <- sort(unique(counterfactual_data$iso3c))
-    counterfactual_data <- counterfactual_data %>% #remove previous groupings:
-      dplyr::mutate(countryNumber =
-                      sapply(.data$iso3c,
-                             function(x){
-                               which(uniqueCountries == x)
-                             },
-                             USE.NAMES = F)
-                      )
-    baseline_data <- baseline_data %>% #remove previous groupings:
-      dplyr::mutate(countryNumber =
-                      sapply(.data$iso3c,
-                             function(x){
-                               which(uniqueCountries == x)
-                             },
-                             USE.NAMES = F)
-                      )
-    quantile_names <- unique(counterfactual_data$countryNumber)
-
-    names(replicates) <- quantile_names
+    names(replicates) <- unique(counterfactual_data$iso3c)
 
     counterfactual_data <- counterfactual_data %>%
       filter(
-          (replicate %in% replicates[[1]] & countryNumber == 1) |
-          (replicate %in% replicates[[2]] & countryNumber == 2)
+          (replicate %in% replicates[['GBR']] & iso3c == 'GBR') |
+          (replicate %in% replicates[['USA']] & iso3c == 'USA')
         )
 
     baseline_data <- baseline_data %>%
       filter(
-          (replicate %in% replicates[[1]] & countryNumber == 1) |
-          (replicate %in% replicates[[2]] & countryNumber == 2)
+          (replicate %in% replicates[['GBR']] & iso3c == 'GBR') |
+          (replicate %in% replicates[['USA']] & iso3c == 'USA')
         )
       
   }
+  
   
 
   #summarise data
   counterfactual_data <- suppressMessages(counterfactual_data %>%
     dplyr::group_by_at(unique(c(group_by, "replicate", "iso3c","counterfactual"))) %>%
     dplyr::summarise(
-      infections = sum(.data$infections),
-      deaths = sum(.data$deaths),
-      vaccinated = sum(.data$vaccinated_second_dose),
-      vaccinated_second_waned = sum(.data$vaccinated_second_waned),
-      recovered = sum(.data$R),
-      N  = mean(.data$N),
+      infections = sum(infections),
+      deaths = sum(deaths),
+      vaccinated = sum(vaccinated_second_dose),
+      vaccinated_second_waned = sum(vaccinated_second_waned),
+      recovered = sum(R),
+      N  = mean(N),
       cumulative_infections = cumsum(infections),
       cumulative_deaths = cumsum(deaths),
       percent_susceptible = ((N - recovered) * (1 - 0.55*(vaccinated/N
        - vaccinated_second_waned/N) - 0.05*(vaccinated_second_waned/N))/N)
     ) %>%
-    dplyr::filter(!.data$iso3c %in% exclude_iso3cs))
+    dplyr::filter(!iso3c %in% exclude_iso3cs))
 
   #add baseline data
   counterfactual_data <- suppressMessages(dplyr::full_join(
@@ -157,8 +139,8 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
     baseline_data
   ) %>%
     dplyr::mutate(
-      averted_deaths = .data$deaths - .data$baseline_deaths,
-      averted_infections = .data$infections - .data$baseline_infections
+      averted_deaths = deaths - baseline_deaths,
+      averted_infections = infections - baseline_infections
     ))
   counterfactual_data <- dplyr::group_by_at(counterfactual_data, c(group_by,"counterfactual"))
 
