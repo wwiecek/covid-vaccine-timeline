@@ -40,12 +40,6 @@ countries_of_interest <- c('USA','GBR')
 iso3cs <- gsub(".Rds", "", list.files(fit_loc))
 iso3cs <- iso3cs[iso3cs %in% countries_of_interest]
 
-if(lowtransmission){
-  input_fits <- paste0(iso3cs, "_lowtransmission")
-} else {
-  input_fits <- iso3cs
-}
-
 # Counterfactual scenarios
 
 cfs <- gsub(".Rds", "", list.files(cf_params))
@@ -70,26 +64,30 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     stop('"Baseline" is a reserved name for a counterfactual, please choose another name')
   }
 
-  # get the real data
-  data <- out$inputs$data
-  country <- out$parameters$country
-  # iso3c <- squire::population$iso3c[squire::population$country == country][1]
-  if(is.null(suppressWarnings(data$date_end))){
-    date_0 <- max(data$date)
-  } else {
-    date_0 <- max(data$date_end)
+  # return NULL if nothing
+  if(!("pmcmc_results" %in% names(out))) {
+    return(NULL)
   }
 
-  date_start <- min(data$date_start)
-
-  t_end <- as.integer(max(counterfactual$counterfactual_vaccination$date) - out$inputs$start_date)
-
-  # Add the rt_optimised class label to try to prevent a failure of the generic function
-  # generate_draws
-  attr(out, "class") <- c("rt_optimised",class(out))
+  # get the real data
+  data <- out$pmcmc_results$inputs$data
+  country <- out$parameters$country
+  # iso3c <- squire::population$iso3c[squire::population$country == country][1]
+  if(is.null(suppressWarnings(data$week_end))){
+    date_0 <- max(data$date)
+  } else {
+    date_0 <- max(data$week_end)
+  }
+  #draw the parameters
+  if(is.null(draws)){
+    pars.list <- NULL
+  } else {
+    pars.list <- squire.page::generate_parameters(out, draws)
+  }
 
   #Set up the baseline results
-  baseline <- squire.page::generate_draws(out, t_end) 
+  baseline <- squire.page::generate_draws(out, pars.list, draws)
+
   #create the fitting plot if needed
   if(!is.null(plot_name)){
     fit_1 <- dp_plot_2(baseline, excess) + ggplot2::labs(
@@ -124,19 +122,14 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     ggplot2::ggsave(plot_name, plot)
   }
 
-    # We need to add this class so that the nimue_format utility knows it's a booster sim
-  attr(baseline, "class") <- c("lmic_booster_nimue_simulation",class(baseline))
-
-
   # format the counter factual run
-  baseline_deaths <- squire.page::nimue_format(baseline, c("deaths", "infections", "vaccinated_first_dose",
-        "vaccinated_second_dose", "vaccinated_second_waned", "N", "R"), date_0 = date_start,
-      reduce_age = reduce_age) %>%
+  baseline_deaths <- squire.page::nimue_format(baseline, c("deaths", "infections", "vaccinated",
+  "N", "R"), date_0 = date_0,
+                                               reduce_age = reduce_age) %>%
     dplyr::distinct() %>%
     tidyr::pivot_wider(names_from = .data$compartment, values_from = .data$y) %>%
     na.omit() %>%
     dplyr::mutate(counterfactual = "Baseline")
-
 
   if(!reduce_age){
     baseline_deaths <- dplyr::mutate(baseline_deaths, age_group = as.character(.data$age_group))
@@ -161,18 +154,12 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   for(counterIndex in seq_along(counterfactual)){
     #generate draws with pars.list
     if(!is.null(counterfactual[[counterIndex]])){
-
-      cf_out <- update_counterfactual(out, counterfactual[[counterIndex]])
-
-      counter <- squire.page::generate_draws(out = cf_out, t_end)
-
-      # We need to add this class so that the nimue_format utility knows it's a booster sim
-      attr(counter, "class") <- c("lmic_booster_nimue_simulation",class(counter))
-
+      counter <- squire.page::generate_draws(out = update_counterfactual(out, counterfactual[[counterIndex]]),
+                                             pars.list = pars.list, draws = draws)
       #format the counter factual run
-      counter_df <- squire.page::nimue_format(counter, c("deaths", "infections", "vaccinated_first_dose",
-       "vaccinated_second_dose", "vaccinated_second_waned", "N", "R"),
-                                              date_0 = date_start,
+      counter_df <- squire.page::nimue_format(counter, c("deaths", "infections", "vaccinated", 
+        "N", "R"),
+                                              date_0 = date_0,
                                               reduce_age = reduce_age) %>%
         dplyr::distinct() %>%
         tidyr::pivot_wider(names_from = .data$compartment, values_from = .data$y) %>%
@@ -199,8 +186,36 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     baseline_deaths
   )
 
-  deaths_df <- dplyr::arrange(deaths_df, counterfactual, 
-    N, R, replicate, vaccinated_second_dose, vaccinated_second_waned, date)
+  if(!is.null(out$interventions$pre_epidemic_isolated_deaths)){
+    if(out$interventions$pre_epidemic_isolated_deaths > 0){
+      if(reduce_age){
+        deaths_df <- rbind(deaths_df,
+                           expand.grid(replicate = unique(deaths_df$replicate),
+                                       counterfactual = unique(deaths_df$counterfactual)) %>%
+                             dplyr::mutate(
+                               date = NA,
+                               deaths = out$interventions$pre_epidemic_isolated_deaths,
+                               infections = 0
+                             )
+        )
+      } else {
+        deaths_df <- rbind(deaths_df,
+                           expand.grid(replicate = unique(deaths_df$replicate),
+                                       counterfactual = unique(deaths_df$counterfactual),
+                                       age_group = unique(deaths_df$age_group)) %>%
+                             dplyr::group_by(replicate, counterfactual) %>%
+                             dplyr::mutate(
+                               date = NA,
+                               deaths = out$interventions$pre_epidemic_isolated_deaths/length(age_group),
+                               infections = 0
+                             ) %>% dplyr::ungroup()
+        )
+      }
+    }
+  }
+
+  deaths_df <- dplyr::arrange(deaths_df, counterfactual, vaccinated,
+    N, R, replicate, date)
 
   # and add country info
   deaths_df$country <- country
@@ -208,76 +223,159 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   return(deaths_df)
 }
 
-update_counterfactual <- function(out, counterfactual){
-
-  tt_primary_doses <- as.integer(counterfactual$date - out$inputs$start_date)
-
-  # replace the vaccination data with the counterfactual data
-
-  out$parameters$primary_doses <- c(0,counterfactual$first_doses)
-  out$parameters$tt_primary_doses <- c(0,tt_primary_doses)
-  if(boosters) {
-    out$parameters$booster_doses <- c(0,counterfactual$third_doses)
-    out$parameters$tt_booster_doses <- c(0,tt_primary_doses)  
-  } else {
-    out$parameters$booster_doses <- 0
-    out$parameters$tt_booster_doses <- 0
+remove_indirect <- function(out){
+  #we update the efficacies in the interventions
+  #just set ve_i's to 0, no need to scale disease as this is done later in ll func
+  for(var in grep("ve_i", names(out$interventions$vaccine_efficacies))){
+    out$interventions$vaccine_efficacies[[var]] <- rep(0, 3)
+    out$pmcmc_results$inputs$interventions$vaccine_efficacies[[var]] <- rep(0, 3)
   }
 
+  #set relative infectiousness to 1
+  out$pmcmc_results$inputs$model_params$rel_infectiousness_vaccinated <-
+    matrix(1,
+           nrow = nrow(out$pmcmc_results$inputs$model_params$rel_infectiousness_vaccinated),
+           ncol = ncol(out$pmcmc_results$inputs$model_params$rel_infectiousness_vaccinated)
+    )
+  out$odin_parameters$rel_infectiousness_vaccinated <-
+    matrix(1,
+           nrow = nrow(out$odin_parameters$rel_infectiousness_vaccinated),
+           ncol = ncol(out$odin_parameters$rel_infectiousness_vaccinated)
+    )
+  out$parameters$rel_infectiousness_vaccinated <-
+    rep(1, length(out$parameters$rel_infectiousness_vaccinated))
+  return(out)
+}
+remove_healthcare <- function(out){
+  out$parameters$hosp_bed_capacity <- 10^7
+  out$parameters$ICU_bed_capacity <- 10^7
+  out$odin_parameters$hosp_beds <- 10^7
+  out$odin_parameters$ICU_beds <- 10^7
+  out$interventions$hosp_bed_capacity <- 10^7
+  out$interventions$ICU_bed_capacity <- 10^7
+  out$pmcmc_results$inputs$model_params$hosp_beds <- 10^7
+  out$pmcmc_results$inputs$model_params$ICU_beds <- 10^7
+  out$pmcmc_results$inputs$interventions$hosp_bed_capacity <- 10^7
+  out$pmcmc_results$inputs$interventions$ICU_bed_capacity <- 10^7
+  return(out)
+}
+update_counterfactual <- function(out, counterfactual){
+
+  # For some reason, max_vaccine needs to be longer than everything else
+
+  # if (length(counterfactual$max_vaccine) == length(counterfactual$date_vaccine_change)) {
+  #   counterfactual$max_vaccine <- append(0,counterfactual$max_vaccine)
+  # }
+
+  out$pmcmc_results$inputs$interventions$date_vaccine_change <-
+    counterfactual$date_vaccine_change
+  out$pmcmc_results$inputs$interventions$date_vaccine_efficacy <-
+    counterfactual$date_vaccine_efficacy
+  out$pmcmc_results$inputs$interventions$max_vaccine <-
+    counterfactual$max_vaccine
+  out$pmcmc_results$inputs$interventions$dose_ratio <-
+    counterfactual$dose_ratio
+
+  #don't need to update the max vaccine as it uses intervention data
+
+
+  out$interventions$date_vaccine_change <-
+    counterfactual$date_vaccine_change
+  out$interventions$date_vaccine_efficacy <-
+    counterfactual$date_vaccine_efficacy
+  out$interventions$max_vaccine <-
+    counterfactual$max_vaccine
+  out$interventions$dose_ratio <-
+    counterfactual$dose_ratio
+
+  # Update vaccine duration
+  if (!is.null(counterfactual$dur_V)){
+    out$parameters$dur_V <- counterfactual$dur_V
+    out$odin_parameters$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
+    out$pmcmc_results$inputs$model_params$gamma_vaccine[4:5] <- 2*1/counterfactual$dur_V
+  }
+
+  # What does setting efficacy to 0 do?
+  out$pmcmc_results$inputs$vaccine_efficacy_infection <-
+    array(rep(0,17*6),c(1,17,6))
+
+ for(sampIdx in seq_along(out$pmcmc_results$inputs$interventions$vaccine_efficacies)) {
+    out$pmcmc_results$inputs$interventions$vaccine_efficacies[[sampIdx]] <- rep(0,3)
+ }
+
+
+  #also remove healthcare if requested
+  if(!is.null(counterfactual$no_healthcare)){
+    if(counterfactual$no_healthcare){
+      out <- remove_healthcare(out)
+    }
+  }
   return(out)
 }
 
 #updated version of dp plot to make it similar to cdp_plot
 dp_plot_2 <- function (res, excess) {
-  data <- res$inputs$data
-  data$adjusted_deaths <- data$deaths/as.numeric(data$date_end -
-                                                   data$date_start)
-  suppressWarnings(dp <- plot(res, particle_fit=TRUE) + ggplot2::theme_bw() + ggplot2::theme(legend.position = "none",
+  date_0 <- squire.page:::get_data_end_date.excess_nimue_simulation(res)
+  data <- res$pmcmc_results$inputs$data
+  #data$date <- squire.page:::get_dates_greater.excess_nimue_simulation(res)
+  data$adjusted_deaths <- data$deaths/as.numeric(data$week_end -
+                                                   data$week_start)
+  suppressWarnings(dp <- plot(res, "deaths", date_0 = date_0,
+                              x_var = "date") + ggplot2::theme_bw() + ggplot2::theme(legend.position = "none",
                                                                                      axis.title.x = ggplot2::element_blank()) + ggplot2::ylab("Daily Deaths") +
                      ggplot2::scale_x_date(date_labels = "%b %Y", date_breaks = "3 months") +
                      ggplot2::xlab(""))
   if(excess){
     dp + ggplot2::geom_segment(data = data,
-                               ggplot2::aes(x = .data$date_start, xend = .data$date_end,
+                               ggplot2::aes(x = .data$week_start, xend = .data$week_end,
                                             y = .data$adjusted_deaths, yend = .data$adjusted_deaths),
                                linetype = "dashed")
   } else {
     dp + ggplot2::geom_point(data = data,
-                             ggplot2::aes(x = .data$date_end, y = .data$adjusted_deaths),
+                             ggplot2::aes(x = .data$week_end, y = .data$adjusted_deaths),
                              size = 1)
   }
 }
 
-# Get max date
-
-max_date <- function(out) {
-  as.Date(max(out$inputs$start_date) + max(out$parameters$tt_primary_doses),"%Y-%m-%d")
-}
 
 # Load counterfactuals
+# TODO: this needs to be changed when we start handling third doses
 
 load_counterfactuals <- function(cf, iso3c_in) {
   fit <- readRDS(paste0(fit_loc, "/", iso3c_in, ".Rds"))
-  end_date <- max_date(fit)
+  max_date <- max(fit$interventions$date_vaccine_change)
   cf_data <- readRDS(paste0(cf_params,"/",cf,".Rds")) %>%
-    filter(iso3c == iso3c_in)
-  cfs <- cf_data  %>%
-    mutate (
-      date = as.Date(date,'%Y-%m-%d')
+    filter(iso3c == iso3c_in) %>%
+    mutate(second_dose_ratio = replace(cumsum(second_doses)/max(cumsum(first_doses),1),1,0))
+  cfs <- cf_data %>%
+    filter(date <= as.character(max_date)) %>%
+    rename(
+        max_vaccine = first_doses,
+        dose_ratio = second_dose_ratio,
+        date_vaccine_efficacy = date
       ) %>%
-    filter(date <= as.Date(end_date)) %>%
-    select(first_doses, third_doses, date)
+    mutate (
+      date_vaccine_efficacy = as.Date(date_vaccine_efficacy,'%Y-%m-%d')
+      ) %>%
+    mutate (
+      date_vaccine_change = date_vaccine_efficacy
+      ) %>%
+    select(max_vaccine,dose_ratio,date_vaccine_efficacy,date_vaccine_change)
   cfs = as.list(cfs)
+  # For some unknown reason, this needs to be longer
+  cfs$max_vaccine <- append(0,cfs$max_vaccine)
   return(cfs)
 }
 
-counterfactuals <- lapply(iso3cs, function(iso3c) {
+counterfactuals <- lapply(iso3cs,function(iso3c) {
 
   # No vaccine counterfactual
 
-  c0 <- list(first_doses = c(0),
-             date = as.Date(Sys.Date()) - 1,
-             third_doses = c(0))
+  c0 <- list(max_vaccine = c(0,0),
+             date_vaccine_change = as.Date(Sys.Date()) - 1,
+             dose_ratio = 0,
+             date_vaccine_efficacy = as.Date(Sys.Date()) - 1,
+             dur_V = 446)
   cf_scenarios <- lapply(cfs, function(cf){
     return(load_counterfactuals(cf,iso3c))
     })
@@ -290,10 +388,10 @@ names(counterfactuals) <- iso3cs
 
 #simplify submission (hold over from using cluster)
 submission_lists <- map(
-  input_fits,
+  iso3cs,
   ~list(
     iso3c = .x,
-    counterfactual = counterfactuals[[gsub("_lowtransmission", "", .x)]],
+    counterfactual = counterfactuals[[.x]],
     excess = excess_mortality
   )
 )
@@ -303,14 +401,12 @@ df_out <- map_dfr(submission_lists, function(sub_list){
 
   out <- readRDS(paste0(fit_loc, "/", as.character(sub_list$iso3c), ".Rds"))
 
-  iso3c <- gsub("_lowtransmission", "", sub_list$iso3c)
-
   df <- deaths_averted(out, draws = NULL,
                    counterfactual = sub_list$counterfactual,
-                   iso3c = iso3c,
+                   iso3c = sub_list$iso3c,
                    reduce_age = TRUE,
                    direct = sub_list$excess,
-                   plot_name = paste0(temp_plots, "/", iso3c, ".pdf"),
+                   plot_name = paste0(temp_plots, "/", sub_list$iso3c, ".pdf"),
                    excess = sub_list$excess)
 })
 
@@ -332,20 +428,18 @@ if(excess){
     #get fit
     readRDS(paste0(
       fit_loc, "/", iso3c, ".Rds"
-    ))$inputs$data
+    ))$pmcmc_results$inputs$data
   }, .id = "iso3c") %>%
-    group_by(date_start, date_end) %>%
+    group_by(week_start, week_end) %>%
     summarise(
       deaths = sum(deaths)
     ) %>%
     mutate(
-      obsDate = (date_end - date_start)/2 + date_start,
-      deaths = deaths/as.numeric(date_end - date_start)
+      obsDate = (week_end - week_start)/2 + week_start,
+      deaths = deaths/as.numeric(week_end - week_start)
     ) %>%
     ungroup() %>%
     select(obsDate, deaths) %>%
     saveRDS("excess_deaths.Rds")
 
 }
-
-dump_replicate_quantiles(input_fits, output, fit_loc)
