@@ -89,7 +89,7 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   attr(out, "class") <- c("rt_optimised",class(out))
 
   #Set up the baseline results
-  baseline <- squire.page::generate_draws(out, t_end)#, date_0, project_forwards=FALSE)
+  baseline <- squire.page::generate_draws(out, t_end) 
   #create the fitting plot if needed
   if(!is.null(plot_name)){
     fit_1 <- dp_plot_2(baseline, excess) + ggplot2::labs(
