@@ -54,22 +54,13 @@ artefacts:
   - staticgraph:
       description: Graphs of daily deaths under the baseline and counterfactual scenarios
       filenames:
-        - owid_raw_tsplot.pdf
-        - no_vaccines_tsplot.pdf
+        - owid-raw_tsplot.pdf
+        - no-vaccines_tsplot.pdf
   - staticgraph:
       description: Graphs of cumulative deaths under the baseline and counterfactual scenarios
       filenames:
-        - owid_raw_cum_tsplot.pdf
-        - no_vaccines_cum_tsplot.pdf
-  - data:
-      description: Total deaths and infections averted per counterfactual
-      filenames: deaths_averted_summary.Rds
-  - data:
-      description: Detail of deaths and infections averted per day
-      filenames: deaths_averted_detail.Rds
-
-
-
+        - owid-raw_cum_tsplot.pdf
+        - no-vaccines_cum_tsplot.pdf
 
 
 
@@ -97,14 +88,9 @@ artefacts:
 # a parameter of b with no default.
 #
 parameters:
-  # seed:
-  #   default: NA
-  excess:
-    default: TRUE
-  lowtransmission:
-    default: FALSE
-  boosters:
-    default: TRUE
+  seed:
+    default: NA
+  excess: ~
 
 # Similar to "data" but sets of temporary views before the data are
 # extracted.  Can be embedded SQL strings or filenames to actual
@@ -118,7 +104,6 @@ parameters:
 # reports.
 #
 packages:
-  - plyr
   - dplyr
   - gridExtra
   - squire.page
@@ -129,7 +114,6 @@ packages:
   - countrycode
   - ggplot2
   - ggpubr
-  - tables
 
 
 # Source files, in addition to the script.  Typically these will
@@ -183,10 +167,9 @@ sources:
 
 
 depends:
-  generate_counterfactuals:
-    id: latest((parameter:excess == excess) && (parameter:lowtransmission == lowtransmission) && (parameter:boosters == boosters))
+  generate_counterfactuals_oldfits:
+    id: latest(parameter:excess == excess)
     use:
       Baseline.Rds: counterfactual_data/Baseline.Rds
       counterfactual_simulation.Rds: counterfactual_data/counterfactual_simulation.Rds
-      quantile_replicates.Rds: counterfactual_data/quantile_replicates.Rds
       

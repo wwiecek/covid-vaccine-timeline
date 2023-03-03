@@ -146,7 +146,7 @@ base_vaccination = read.csv("owid-raw.csv") %>%
 counterfactual_production = readRDS("counterfactual_production.Rds")
 
 dir.create("counterfactual_timelines")
-
+print('success')
 countries_of_interest = c("USA", "GBR")
 
 shifts = c(0, 30, 60, 90)
