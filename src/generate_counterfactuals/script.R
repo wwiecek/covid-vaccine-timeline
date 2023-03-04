@@ -87,14 +87,14 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
 
   date_start <- min(data$date_start)
 
-  t_end <- as.integer(max(counterfactual$counterfactual_vaccination$date) - out$inputs$start_date)
+  t_end <- as.integer(max(counterfactual$owid_raw$date) - out$inputs$start_date)
 
   # Add the rt_optimised class label to try to prevent a failure of the generic function
   # generate_draws
   attr(out, "class") <- c("rt_optimised",class(out))
 
   #Set up the baseline results
-  baseline <- squire.page::generate_draws(out, t_end) 
+  baseline <- squire.page::generate_draws(out, t_end)
   #create the fitting plot if needed
   if(!is.null(plot_name)){
     fit_1 <- dp_plot_2(baseline, excess) + ggplot2::labs(
@@ -204,7 +204,7 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     baseline_deaths
   )
 
-  deaths_df <- dplyr::arrange(deaths_df, counterfactual, 
+  deaths_df <- dplyr::arrange(deaths_df, counterfactual,
     N, R, replicate, vaccinated_second_dose, vaccinated_second_waned, date)
 
   # and add country info
@@ -223,7 +223,7 @@ update_counterfactual <- function(out, counterfactual){
   out$parameters$tt_primary_doses <- c(0,tt_primary_doses)
   if(boosters) {
     out$parameters$booster_doses <- c(0,counterfactual$third_doses)
-    out$parameters$tt_booster_doses <- c(0,tt_primary_doses)  
+    out$parameters$tt_booster_doses <- c(0,tt_primary_doses)
   } else {
     out$parameters$booster_doses <- 0
     out$parameters$tt_booster_doses <- 0
