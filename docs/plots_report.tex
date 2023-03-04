@@ -90,6 +90,29 @@
 
 \caption{DJ4 Cumulative vaccine counterfactuals}\label{fig:cumul-vacc-cfacts}
 \end{figure}
+\begin{table}
+
+\caption{\label{tab:vaccinations-table}Total vaccinations at sample dates}
+\centering
+\begin{tabular}[t]{llll}
+\toprule
+Counterfactual scenario & 2021-01-01 & 2021-04-01 & 2021-07-01\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{4}{l}{\textbf{United Kingdom}}\\
+\hspace{1em}Baseline & 0 & 33,337,926 & 75,688,766\\
+\hspace{1em}Vaccines 30 days sooner & 3,460,361 & 42,486,427 & 80,736,395\\
+\hspace{1em}Vaccines 60 days sooner & 14,859,054 & 57,449,853 & 86,771,215\\
+\hspace{1em}Vaccines 90 days sooner & 28,042,344 & 71,663,088 & 91,140,069\\
+\addlinespace[0.3em]
+\multicolumn{4}{l}{\textbf{United States}}\\
+\hspace{1em}Baseline & 4,521,988 & 172,124,225 & 347,123,032\\
+\hspace{1em}Vaccines 30 days sooner & 23,889,241 & 238,670,399 & 357,876,350\\
+\hspace{1em}Vaccines 60 days sooner & 56,107,462 & 289,245,438 & 372,702,522\\
+\hspace{1em}Vaccines 90 days sooner & 56,107,489 & 289,245,510 & 376,955,754\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{table}
 
@@ -101,14 +124,14 @@ Counterfactual scenario & Deaths averted & Deaths averted per 10,000\\
 \midrule
 \addlinespace[0.3em]
 \multicolumn{3}{l}{\textbf{United Kingdom}}\\
-\hspace{1em}Vaccines 30 days sooner & -19,262 [-21,651; -15,113] & -2.87 [-3.23; -2.25]\\
-\hspace{1em}Vaccines 60 days sooner & -45,721 [-56,045; -31,177] & -6.82 [-8.35; -4.65]\\
-\hspace{1em}Vaccines 90 days sooner & -66,243 [-77,468; -42,136] & -9.88 [-11.55; -6.28]\\
+\hspace{1em}Vaccines 30 days sooner & -10,297 [-14,392; -8,677] & -1.54 [-2.15; -1.29]\\
+\hspace{1em}Vaccines 60 days sooner & -38,156 [-41,006; -32,924] & -5.69 [-6.11; -4.91]\\
+\hspace{1em}Vaccines 90 days sooner & -56,912 [-59,944; -51,235] & -8.48 [-8.94; -7.64]\\
 \addlinespace[0.3em]
 \multicolumn{3}{l}{\textbf{United States}}\\
-\hspace{1em}Vaccines 30 days sooner & -48,693 [-161,710; 59,449] & -1.47 [-4.88; 1.79]\\
-\hspace{1em}Vaccines 60 days sooner & -125,682 [-321,476; 182,365] & -3.79 [-9.70; 5.50]\\
-\hspace{1em}Vaccines 90 days sooner & -182,137 [-391,651; 95,408] & -5.49 [-11.81; 2.88]\\
+\hspace{1em}Vaccines 30 days sooner & -28,813 [-104,112; 60,806] & -0.87 [-3.14; 1.83]\\
+\hspace{1em}Vaccines 60 days sooner & -99,247 [-228,949; 89,877] & -2.99 [-6.91; 2.71]\\
+\hspace{1em}Vaccines 90 days sooner & -160,778 [-270,186; -18,949] & -4.85 [-8.15; -0.57]\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -120,6 +143,14 @@ Counterfactual scenario & Deaths averted & Deaths averted per 10,000\\
 }
 
 \caption{DJ6 Daily deaths per scenario}\label{fig:deaths-averted-plot}
+\end{figure}
+\begin{figure}
+
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/cumulative-deaths-1} 
+
+}
+
+\caption{Cumulative deaths per scenario}\label{fig:cumulative-deaths}
 \end{figure}
 
 \begin{figure}

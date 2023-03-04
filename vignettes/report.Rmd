@@ -78,13 +78,18 @@ theme = theme_bw() +
 theme_set(theme)
 ```
 
+```{r global-options}
+last_date_to_display = as.Date("2022-01-01")
+```
+
 ```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("DJ4 Cumulative vaccine counterfactuals")}
 baseline = readRDS(paste0(vacc_cfact_path, "/counterfactual_timelines/owid_raw.Rds"))
 sooner_30 = readRDS(paste0(vacc_cfact_path, "/counterfactual_timelines/30_days_sooner.Rds"))
 sooner_60 = readRDS(paste0(vacc_cfact_path, "/counterfactual_timelines/60_days_sooner.Rds"))
 sooner_90 = readRDS(paste0(vacc_cfact_path, "/counterfactual_timelines/90_days_sooner.Rds"))
 
-counterfactuals = bind_rows(baseline, sooner_30, sooner_60, sooner_90)
+counterfactuals = bind_rows(baseline, sooner_30, sooner_60, sooner_90) %>%
+  filter(date <= last_date_to_display)
 
 dj4 = ggplot() +
   geom_line(data = counterfactuals,
@@ -146,14 +151,14 @@ vaccinations_table %>%
 
 
 ```{r deaths-averted-table}
+deaths_averted_summary = readRDS(paste0(deaths_av_path, "/deaths_averted_summary.Rds"))
+
 cfacts_to_display = c("30_days_sooner",
                      "60_days_sooner",
                      "90_days_sooner")
 labels_to_display = c("Vaccines 30 days sooner",
                      "Vaccines 60 days sooner",
                      "Vaccines 90 days sooner")
-
-deaths_averted_summary = readRDS(paste0(deaths_av_path, "/deaths_averted_summary.Rds"))
 
 # source: https://data.worldbank.org/indicator/SP.POP.TOTL
 population = data.frame(
@@ -240,7 +245,7 @@ differences_table %>%
 deaths_averted = readRDS(paste0(deaths_av_path, "/deaths_averted_detail.Rds"))
 
 zoomed_deaths_averted = deaths_averted %>%
-  filter(date > as.Date("2020-09-01")) %>%
+  filter(date > as.Date("2020-09-01") & date <= last_date_to_display) %>%
   filter(counterfactual %in% cfacts_to_display) %>%
   mutate(counterfactual_label = mapvalues(
     counterfactual,
@@ -271,6 +276,27 @@ plot(single_timeseries_plot)
 
 
 ```
+```{r cumulative-deaths, fig.align="center", fig.cap=c("Cumulative deaths per scenario")}
+cumulative_deaths_plot = ggplot(zoomed_deaths_averted, aes(x = date)) +
+  geom_line(aes(y = baseline_cumulative_deaths_avg, colour = "baseline")) +
+  geom_line(aes(y = cumulative_deaths_avg, colour = "counterfactual")) +
+  geom_ribbon(
+    aes(ymin = cumulative_deaths_025, ymax = cumulative_deaths_975),
+    alpha = 0.3,
+    fill = colour_counterfactual
+  ) +
+  facet_grid(counterfactual_label ~ country,
+             labeller = labeller(.rows=label_wrap_gen(width = 15))) +
+  scale_colour_manual(
+    labels = c('baseline', 'counterfactual'),
+    values = c(colour_baseline, colour_counterfactual)
+  ) +
+  labs(x = "Date", y = "Cumulative Deaths", color = "Colour")
+  
+
+plot(cumulative_deaths_plot)
+```
+
 
 ```{r prod-assumptions, fig.align="center", fig.cap=c("DJ9 Vaccine production assumptions")}
 detail_prod = readRDS(paste0(prod_cfact_path, "/detail_production.Rds"))

@@ -117,7 +117,7 @@ quantiles <- c(10, 90)
 for(sen in sensitivities){
     for(quant in quantiles){
         table3_df_ind <- loadCounterfactualDataSingle(group_by = c("iso3c","date"), sensitivity = sen, quantile = quant)
-    
+
         lapply(cfs,function(cf){
             sensitivity_deaths_plot <- ggplot(table3_df_ind %>% filter(counterfactual == cf), aes(x = date)) +
                 geom_line(aes(y = deaths_avg, colour="deaths")) +
@@ -128,7 +128,7 @@ for(sen in sensitivities){
                 labs(x = "Date", y = "Percent",title=cf) +
                 theme_pubr() +
                 theme(legend.position = "right")
-        
+
             fn <- paste0(cf,"_", sen, "_", quant, "_tsplot.pdf")
             ggsave(fn,sensitivity_deaths_plot,device='pdf')
         })

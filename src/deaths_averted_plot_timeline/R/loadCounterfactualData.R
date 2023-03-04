@@ -11,9 +11,13 @@
 # Based on loadCounterfactualData in squire.page https://github.com/mrc-ide/squire.page
 
 
-loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000, 
-                                   sensitivity = NULL, quantile = 10,
-                                   exclude_iso3cs = NULL){
+loadCounterfactualDataSingle <-
+  function(group_by,
+           end_date = as.Date("2022-01-01"),
+           quantileSamples = 2000,
+           sensitivity = NULL,
+           quantile = 10,
+           exclude_iso3cs = NULL) {
 
   if(!is.null(sensitivity)){
     if(!(sensitivity %in% c('veis', 'dur_Vs','dur_Rs'))){
@@ -56,9 +60,14 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
         month = as.Date(cut(date, "month"))
       )
   }
+
+  grouping_base = unique(c(group_by, "replicate", "iso3c"))
+  grouping_base_without_date = grouping_base[grouping_base != "date"]
+
   #summarise
   baseline_data <- suppressMessages(baseline_data %>%
-    dplyr::group_by_at(unique(c(group_by, "replicate", "iso3c"))) %>%
+    dplyr::filter(date <= end_date) %>%
+    dplyr::group_by_at(grouping_base) %>%
     dplyr::summarise(
       baseline_infections = sum(infections),
       baseline_deaths = sum(deaths),
@@ -66,12 +75,16 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
       baseline_vaccinated_second_waned = sum(vaccinated_second_waned),
       baseline_recovered = sum(R),
       baseline_N = mean(N),
-      baseline_cumulative_infections = cumsum(baseline_infections),
-      baseline_cumulative_deaths = cumsum(baseline_deaths),
-      baseline_percent_susceptible = ((baseline_N - baseline_recovered) * 
+      baseline_percent_susceptible = ((baseline_N - baseline_recovered) *
         (1 - 0.55*(baseline_vaccinated/baseline_N - baseline_vaccinated_second_waned/baseline_N)
            - 0.05*baseline_vaccinated_second_waned/baseline_N)/baseline_N)
       )  %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by_at(grouping_base_without_date) %>%
+    dplyr::mutate(
+      baseline_cumulative_infections = cumsum(baseline_infections),
+      baseline_cumulative_deaths = cumsum(baseline_deaths),
+    ) %>%
     dplyr::filter(!iso3c %in% exclude_iso3cs))
 
   counterfactual_data = readRDS("counterfactual_simulation.Rds")
@@ -111,14 +124,16 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
           (replicate %in% replicates[['GBR']] & iso3c == 'GBR') |
           (replicate %in% replicates[['USA']] & iso3c == 'USA')
         )
-      
+
   }
-  
-  
+
+  grouping_by = unique(c(group_by, "replicate", "iso3c","counterfactual"))
+  grouping_without_date = grouping_by[grouping_by != "date"]
 
   #summarise data
   counterfactual_data <- suppressMessages(counterfactual_data %>%
-    dplyr::group_by_at(unique(c(group_by, "replicate", "iso3c","counterfactual"))) %>%
+    dplyr::filter(date <= end_date) %>%
+    dplyr::group_by_at(grouping_by) %>%
     dplyr::summarise(
       infections = sum(infections),
       deaths = sum(deaths),
@@ -126,10 +141,14 @@ loadCounterfactualDataSingle <- function(group_by, quantileSamples = 2000,
       vaccinated_second_waned = sum(vaccinated_second_waned),
       recovered = sum(R),
       N  = mean(N),
-      cumulative_infections = cumsum(infections),
-      cumulative_deaths = cumsum(deaths),
       percent_susceptible = ((N - recovered) * (1 - 0.55*(vaccinated/N
        - vaccinated_second_waned/N) - 0.05*(vaccinated_second_waned/N))/N)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by_at(grouping_without_date) %>%
+    dplyr::mutate(
+      cumulative_infections = cumsum(infections),
+      cumulative_deaths = cumsum(deaths),
     ) %>%
     dplyr::filter(!iso3c %in% exclude_iso3cs))
 
