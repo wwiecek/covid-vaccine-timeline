@@ -19,6 +19,7 @@ header-includes:
 install.packages("orderly", repos = "http://cran.us.r-project.org")
 install.packages("knitr", repos = "http://cran.us.r-project.org")
 install.packages("here", repos = "http://cran.us.r-project.org")
+install.packages("tidyr", repos = "http://cran.us.r-project.org")
 install.packages("plyr", repos = "http://cran.us.r-project.org")
 install.packages("dplyr", repos = "http://cran.us.r-project.org")
 install.packages("ggplot2", repos = "http://cran.us.r-project.org")
@@ -30,6 +31,7 @@ install.packages("svglite", repos = "http://cran.us.r-project.org")
 ```
 
 ```{r load-packages, include=FALSE}
+library(tidyr)
 library(orderly)
 library(here)
 library(plyr)
@@ -101,6 +103,47 @@ dj4 = ggplot() +
 
 plot(dj4)
 ```
+```{r vaccinations-table}
+vaccinations_table = counterfactuals %>%
+  filter(date %in% c(
+    as.Date('2021-01-01'),
+    as.Date('2021-04-01'),
+    as.Date('2021-07-01')
+  )) %>%
+  select(country, date, total_vacc, shifted_by) %>%
+  mutate(
+    total_vacc = format(total_vacc,
+                        big.mark = ",",
+                        trim = TRUE),
+    shifted_by = mapvalues(
+      shifted_by,
+      from = c("baseline", "30", "60", "90"),
+      to = c(
+        "Baseline",
+        "Vaccines 30 days sooner",
+        "Vaccines 60 days sooner",
+        "Vaccines 90 days sooner"
+      )
+    )
+  ) %>%
+  rename(
+    c(
+      "Counterfactual scenario" = "shifted_by"
+    )
+  ) %>%
+  pivot_wider(names_from = date,
+              values_from = total_vacc) %>%
+  replace(is.na(.), '0') %>%
+  arrange(country) %>%
+  select(-country)
+
+vaccinations_table %>%
+  kbl(booktabs=TRUE, centering = TRUE, caption = "Total vaccinations at sample dates") %>%
+  pack_rows("United Kingdom", 1, 4) %>%
+  pack_rows("United States", 5, 8)
+
+```
+
 
 ```{r deaths-averted-table}
 cfacts_to_display = c("30_days_sooner",
