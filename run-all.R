@@ -6,7 +6,7 @@ devtools::install_github("mrc-ide/nimue")
 devtools::install_github("mrc-ide/squire")
 devtools::install_github(
   "mrc-ide/squire.page",
-  ref = "3fbb97f3e72c4e6bd7f66690a53f7bb59ce5ea0e"
+  ref = "fc27dcabec55d70ec293328813cec644c56a63db"
 )
 devtools::install_github(
   "mrc-ide/drjacoby",
