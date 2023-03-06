@@ -25,7 +25,7 @@
 # You must have a script that does something with the data.  This
 # will be a single string and the filename must exist when orderly is
 # run
-script: script.R
+script: generate_counterfactuals.R
 
 # You must list at least one artefact that your report will generate.
 # Each artefact consists of one or more files.  The format is to list
@@ -167,4 +167,6 @@ depends:
     use:
       counterfactual_timelines/no_vaccines.Rds: counterfactual_timelines/no_vaccines.Rds
       counterfactual_timelines/owid_raw.Rds: counterfactual_timelines/owid_raw.Rds
-      counterfactual_timelines/counterfactual_vaccination.Rds: counterfactual_timelines/counterfactual_vaccination.Rds
+      counterfactual_timelines/30_days_sooner.Rds: counterfactual_timelines/30_days_sooner.Rds
+      counterfactual_timelines/60_days_sooner.Rds: counterfactual_timelines/60_days_sooner.Rds
+      counterfactual_timelines/90_days_sooner.Rds: counterfactual_timelines/90_days_sooner.Rds

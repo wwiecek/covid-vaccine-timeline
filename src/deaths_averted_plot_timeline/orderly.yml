@@ -25,7 +25,7 @@
 # You must have a script that does something with the data.  This
 # will be a single string and the filename must exist when orderly is
 # run
-script: script.R
+script: deaths_averted_plot_timeline.R
 
 # You must list at least one artefact that your report will generate.
 # Each artefact consists of one or more files.  The format is to list
@@ -54,13 +54,22 @@ artefacts:
   - staticgraph:
       description: Graphs of daily deaths under the baseline and counterfactual scenarios
       filenames:
-        - owid-raw_tsplot.pdf
-        - no-vaccines_tsplot.pdf
+        - owid_raw_tsplot.pdf
+        - no_vaccines_tsplot.pdf
   - staticgraph:
       description: Graphs of cumulative deaths under the baseline and counterfactual scenarios
       filenames:
-        - owid-raw_cum_tsplot.pdf
-        - no-vaccines_cum_tsplot.pdf
+        - owid_raw_cum_tsplot.pdf
+        - no_vaccines_cum_tsplot.pdf
+  - data:
+      description: Total deaths and infections averted per counterfactual
+      filenames: deaths_averted_summary.Rds
+  - data:
+      description: Detail of deaths and infections averted per day
+      filenames: deaths_averted_detail.Rds
+
+
+
 
 
 
@@ -109,6 +118,7 @@ parameters:
 # reports.
 #
 packages:
+  - plyr
   - dplyr
   - gridExtra
   - squire.page
@@ -119,6 +129,7 @@ packages:
   - countrycode
   - ggplot2
   - ggpubr
+  - tables
 
 
 # Source files, in addition to the script.  Typically these will

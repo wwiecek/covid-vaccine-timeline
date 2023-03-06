@@ -25,7 +25,7 @@
 # You must have a script that does something with the data.  This
 # will be a single string and the filename must exist when orderly is
 # run
-script: script.R
+script: generate_production_counterfactual.R
 
 # You must list at least one artefact that your report will generate.
 # Each artefact consists of one or more files.  The format is to list
@@ -45,14 +45,17 @@ script: script.R
 #             - figures/fig2.png
 artefacts:
   - data:
-      description:
-        - production time series
-      filenames:
-        - counterfactual_production.Rds
-  - staticgraph:
-      description: production of vaccines in 2020
-      filenames:
-        - vaccine_production.png
+      description: production time series
+      filenames: counterfactual_production.Rds
+  - data:
+      description: production daily and cumulative
+      filenames: detail_production.Rds
+  - data:
+      description: time series of estimated production for Pfizer
+      filenames: pfizer_estimated_production.Rds
+  - data:
+      description: time series of estimated production for Moderna
+      filenames: moderna_estimated_production.Rds
 
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than

@@ -1,0 +1,182 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+  12pt,
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Plots},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+
+\title{Plots}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+\begin{figure}
+
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/cumul-vacc-cfacts-1} 
+
+}
+
+\caption{DJ4 Cumulative vaccine counterfactuals}\label{fig:cumul-vacc-cfacts}
+\end{figure}
+\begin{table}
+
+\caption{\label{tab:vaccinations-table}Total vaccinations at sample dates}
+\centering
+\begin{tabular}[t]{llll}
+\toprule
+Counterfactual scenario & 2021-01-01 & 2021-04-01 & 2021-07-01\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{4}{l}{\textbf{United Kingdom}}\\
+\hspace{1em}Baseline & 0 & 33,337,926 & 75,688,766\\
+\hspace{1em}Vaccines 30 days sooner & 3,460,361 & 42,486,427 & 80,736,395\\
+\hspace{1em}Vaccines 60 days sooner & 14,859,054 & 57,449,853 & 86,771,215\\
+\hspace{1em}Vaccines 90 days sooner & 28,042,344 & 71,663,088 & 91,140,069\\
+\addlinespace[0.3em]
+\multicolumn{4}{l}{\textbf{United States}}\\
+\hspace{1em}Baseline & 4,521,988 & 172,124,225 & 347,123,032\\
+\hspace{1em}Vaccines 30 days sooner & 23,889,241 & 238,670,399 & 357,876,350\\
+\hspace{1em}Vaccines 60 days sooner & 56,107,462 & 289,245,438 & 372,702,522\\
+\hspace{1em}Vaccines 90 days sooner & 56,107,489 & 289,245,510 & 376,955,754\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:deaths-averted-table}DJ5 Averted deaths}
+\centering
+\begin{tabular}[t]{lll}
+\toprule
+Counterfactual scenario & Deaths averted & Deaths averted per 10,000\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{3}{l}{\textbf{United Kingdom}}\\
+\hspace{1em}Vaccines 30 days sooner & -10,297 [-14,392; -8,677] & -1.54 [-2.15; -1.29]\\
+\hspace{1em}Vaccines 60 days sooner & -38,156 [-41,006; -32,924] & -5.69 [-6.11; -4.91]\\
+\hspace{1em}Vaccines 90 days sooner & -56,912 [-59,944; -51,235] & -8.48 [-8.94; -7.64]\\
+\addlinespace[0.3em]
+\multicolumn{3}{l}{\textbf{United States}}\\
+\hspace{1em}Vaccines 30 days sooner & -28,813 [-104,112; 60,806] & -0.87 [-3.14; 1.83]\\
+\hspace{1em}Vaccines 60 days sooner & -99,247 [-228,949; 89,877] & -2.99 [-6.91; 2.71]\\
+\hspace{1em}Vaccines 90 days sooner & -160,778 [-270,186; -18,949] & -4.85 [-8.15; -0.57]\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}
+
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/deaths-averted-plot-1} 
+
+}
+
+\caption{DJ6 Daily deaths per scenario}\label{fig:deaths-averted-plot}
+\end{figure}
+\begin{figure}
+
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/cumulative-deaths-1} 
+
+}
+
+\caption{Cumulative deaths per scenario}\label{fig:cumulative-deaths}
+\end{figure}
+
+\begin{figure}
+
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/prod-assumptions-1} 
+
+}
+
+\caption{DJ9 Vaccine production assumptions}\label{fig:prod-assumptions}
+\end{figure}
+
+\begin{figure}
+
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/prod-cap-1} 
+
+}
+
+\caption{DJ10 Limits from production}\label{fig:prod-cap-1}
+\end{figure}
+\begin{figure}
+
+{\centering \includegraphics{/Users/Personal/Dropbox/Mac/Documents/HCT Counterfactuals/covid-vaccine-timeline/docs/plots_report_files/figure-latex/prod-cap-2} 
+
+}
+
+\caption{DJ10 Limits from production}\label{fig:prod-cap-2}
+\end{figure}
+
+\end{document}

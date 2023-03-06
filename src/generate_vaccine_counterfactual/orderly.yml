@@ -25,7 +25,7 @@
 # You must have a script that does something with the data.  This
 # will be a single string and the filename must exist when orderly is
 # run
-script: script.R
+script: generate_vaccine_counterfactual.R
 
 # You must list at least one artefact that your report will generate.
 # Each artefact consists of one or more files.  The format is to list
@@ -49,21 +49,20 @@ artefacts:
       filenames:
         - counterfactual_timelines/no_vaccines.Rds
         - counterfactual_timelines/owid_raw.Rds
-        - counterfactual_timelines/counterfactual_vaccination.Rds
+        - counterfactual_timelines/30_days_sooner.Rds
+        - counterfactual_timelines/60_days_sooner.Rds
+        - counterfactual_timelines/90_days_sooner.Rds
   - staticgraph:
       description: Comparing counterfactual with baseline vaccination
       filenames:
-        - counterfactual_plots/GBR.png
-        - counterfactual_plots/USA.png
-  - staticgraph:
-      description: Examining how much is the production binding
-      filenames:
-        - shifts_plots/GBR.png
-        - shifts_plots/USA.png
-  - staticgraph:
-      description: Cumulative total vaccines in counterfactual scenarios
-      filenames:
-        - cumulative_counterfactuals.png
+        - counterfactual_plots/GBR_0.png
+        - counterfactual_plots/USA_0.png
+        - counterfactual_plots/GBR_30.png
+        - counterfactual_plots/USA_30.png
+        - counterfactual_plots/GBR_60.png
+        - counterfactual_plots/USA_60.png
+        - counterfactual_plots/GBR_90.png
+        - counterfactual_plots/USA_90.png
 
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than
@@ -88,9 +87,6 @@ artefacts:
 # would declare a parameter called 'a' with a default value of 1, and
 # a parameter of b with no default.
 #
-parameters:
-  shift_by:
-    default: 60
 
 # Similar to "data" but sets of temporary views before the data are
 # extracted.  Can be embedded SQL strings or filenames to actual
