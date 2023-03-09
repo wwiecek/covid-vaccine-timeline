@@ -158,8 +158,8 @@ loadCounterfactualDataSingle <-
     baseline_data
   ) %>%
     dplyr::mutate(
-      averted_deaths = deaths - baseline_deaths,
-      averted_infections = infections - baseline_infections
+      averted_deaths = cumulative_deaths - cumulative_baseline_deaths,
+      averted_infections = cumulative_infections - cumulative_baseline_infections
     ))
   counterfactual_data <- dplyr::group_by_at(counterfactual_data, c(group_by,"counterfactual"))
 
