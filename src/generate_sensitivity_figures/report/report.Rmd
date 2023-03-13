@@ -1,0 +1,303 @@
+---
+title: "Plots"
+knit: (function(inputFile, encoding) { 
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(here::here())) })
+output: 
+  pdf_document:
+    keep_tex: true
+fontsize: 12pt
+header-includes:
+  - |
+    ```{=latex}
+    \usepackage{booktabs} 
+    ```
+---
+
+```{r load-packages, include=FALSE}
+library(tidyr)
+library(orderly)
+library(here)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(ggpubr)
+library(kableExtra)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r global-options}
+last_dates_to_display <- c(as.Date("2021-07-01"), as.Date("2022-01-01"))
+
+data_source <- c('e', 'r')
+
+parameter_variants <- c('veis', 'dur_Vs', 'dur_Rs')
+
+percentiles <- c(10, 90)
+
+```
+
+
+```{r get-paths}
+stage = "generate_production_counterfactual"
+id = orderly::orderly_latest(stage)
+prod_cfact_path = paste0("../archive/", stage, "/", id)
+
+stage = "generate_vaccine_counterfactual"
+id = orderly::orderly_latest(stage)
+vacc_cfact_path = paste0("../archive/", stage, "/", id)
+
+stage = "deaths_averted_plot_timeline"
+id = orderly::orderly_latest(stage)
+deaths_av_path = paste0("../archive/", stage, "/", id)
+```
+
+```{r set-theme}
+fontsize = 12
+
+colour_direct <- "#98df8a"
+colour_total <- "#17becf"
+colour_baseline <- "black"
+colour_counterfactual <- "#d62728"
+
+theme = theme_bw() +
+  theme(text = element_text(family = "serif", size = fontsize),
+        legend.position = 'bottom')
+theme_set(theme)
+```
+
+```{r load-functions}
+
+parameter_names <- list(
+  veis = "VEI",
+  dur_Vs = "DVI",
+  dur_Rs = "DNI"
+  )
+
+join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
+  counterfactuals <- lapply(sensitivities, function(sen) {
+    lapply(quantiles, function(quant) {
+        cf_table <- readRDS(paste0("deaths_averted_", sen, "_", quant, "_detail.Rds")) %>%
+          mutate( sen = sen ) %>%
+          mutate( quant = quant ) %>% 
+          filter(date %in% dates)
+      })
+  })
+  names(counterfactuals) <- sensitivities
+  counterfactuals <- lapply(counterfactuals, function(sen) {
+       do.call(rbind, sen)
+      })
+  counterfactuals
+}
+
+join_counterfactual_tables_horizontal <- function(sensitivity, quantiles) {
+  population <- data.frame(
+    iso3c = c("GBR", "USA"),
+    pop10k = c(67081000, 331501080) / 10000
+  )
+
+  counterfactuals <- lapply(quantiles, function(quant) {
+      cf_table <- readRDS(paste0("deaths_averted_", sensitivity, "_", quant, "_detail.Rds")) %>%
+        left_join(population, by = "iso3c") %>%
+        mutate(sen = sensitivity,
+               quant = quant,
+               averted_deaths_perpop_avg = averted_deaths_avg / pop10k,
+               averted_deaths_perpop_025 = averted_deaths_025 / pop10k,
+               averted_deaths_perpop_975 = averted_deaths_975 / pop10k)
+
+      return(cf_table)
+    })
+  counterfactuals <- counterfactuals %>% reduce(
+    left_join, 
+    by = c("iso3c", "date", "counterfactual", "country"),
+    suffix = c('_10', '_90')
+   )
+}
+
+
+deaths_averted_table <- function(sensitivities, quantiles, dates) {
+
+  das <- join_counterfactual_tables(sensitivities, quantiles, dates)
+
+  cfacts_to_display <- c("30_days_sooner",
+                       "60_days_sooner",
+                       "90_days_sooner")
+  labels_to_display <- c("30 days sooner",
+                       "60 days sooner",
+                       "90 days sooner")
+
+  # source: https://data.worldbank.org/indicator/SP.POP.TOTL
+  population <- data.frame(
+    iso3c = c("GBR", "USA"),
+    pop10k = c(67081000, 331501080) / 10000
+  )
+
+  differences_tables <- lapply(das, function(dad){
+    with_pop <- dad %>%
+      left_join(population, by = "iso3c") %>%
+      mutate(cumulative_averted_deaths_perpop_avg = cumulative_averted_deaths_avg / pop10k,
+             cumulative_averted_deaths_perpop_025 = cumulative_averted_deaths_025 / pop10k,
+             cumulative_averted_deaths_perpop_975 = cumulative_averted_deaths_975 / pop10k)
+
+    differences_table <- with_pop %>%
+      filter(counterfactual %in% cfacts_to_display) %>%
+      mutate(
+        delta_deaths = paste0(
+          format(
+            round(cumulative_averted_deaths_avg, 0),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          " [",
+          format(
+            round(cumulative_averted_deaths_025, 0),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "; ",
+          format(
+            round(cumulative_averted_deaths_975, 0),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "]"
+        ),
+        delta_deaths_perpop = paste0(
+          format(
+            round(cumulative_averted_deaths_perpop_avg, 2),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          " [",
+          format(
+            round(cumulative_averted_deaths_perpop_025, 2),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "; ",
+          format(
+            round(cumulative_averted_deaths_perpop_975, 2),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "]"
+        ),
+        sensitivity_value_avg = round(sensitivity_value_avg, 2),
+        counterfactual_label = mapvalues(counterfactual,
+                                         from = cfacts_to_display,
+                                         to = labels_to_display),
+        iso3c = as.factor(iso3c)
+      ) %>%
+      mutate(counterfactual_label = factor(counterfactual_label,
+                                           labels_to_display)) %>%
+      arrange(iso3c, date, counterfactual_label) %>%
+      select(counterfactual_label,
+             sensitivity_value_avg,
+             date,
+             delta_deaths) %>%
+      rename(
+        c(
+           "counterfactual_label" = "Counterfactual scenario",
+           "delta_deaths" = "Deaths averted",
+           "sensitivity_value_avg" = paste0("Average ", parameter_names[unique(dad$sen)]),
+           "date" = "Simulation end"
+        )
+      )
+    })   
+  }
+
+deaths_averted_plot <- function(sen, quantities, dates)  {
+
+  das <- join_counterfactual_tables_horizontal(sen, quantiles)
+  for (last_date_to_display in dates) {
+    zoomed_deaths_averted <- das %>%
+      filter(date > as.Date("2020-09-01") & date <= last_date_to_display) %>%
+      filter(counterfactual %in% cfacts_to_display) %>%
+      mutate(counterfactual_label = mapvalues(
+        counterfactual,
+        from = cfacts_to_display,
+        to = labels_to_display
+      )) %>%
+      mutate(counterfactual_label = factor(counterfactual_label,
+                                           labels_to_display))
+
+    single_timeseries_plot <- ggplot(zoomed_deaths_averted, aes(x = date)) +
+      geom_line(aes(y = averted_deaths_perpop_avg_10, colour = "10th percentile")) +
+      geom_line(aes(y = averted_deaths_perpop_avg_90, colour = "90th percentile")) +
+      geom_ribbon(
+        aes(ymin = averted_deaths_perpop_025_10, ymax = averted_deaths_perpop_975_10),
+        alpha = 0.3,
+        fill = colour_direct
+      ) +
+      geom_ribbon(
+        aes(ymin = averted_deaths_perpop_025_90, ymax = averted_deaths_perpop_975_90),
+        alpha = 0.3,
+        fill = colour_total
+      ) +
+      facet_grid(counterfactual_label ~ country,
+                 labeller = labeller(.rows=label_wrap_gen(width = 15))) +
+      scale_colour_manual(
+        labels = c(
+          paste0("10th percentile ", parameter_names[sen], sep=' '),
+          paste0("90th percentile ", parameter_names[sen], sep=' ')),
+        values = c(colour_direct, colour_total)
+      ) +
+      labs(x = "Date", y = "Daily deaths averted per 10 000 people", color = "Colour")
+
+
+    plot(single_timeseries_plot) 
+  }  
+}
+
+```
+
+```{r deaths-averted-table-vei, echo=FALSE, results='asis'}
+differences_tables <- deaths_averted_table(parameter_variants, percentiles, last_dates_to_display)
+
+differences_tables$veis %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to average vaccine efficacy against infection (VEI)") %>%
+  pack_rows("United Kingdom", 1, 12) %>%
+  pack_rows("United States", 13, 24)
+
+
+```
+
+```{r deaths-averted-table-durV, echo=FALSE, results='asis'}
+differences_tables <- deaths_averted_table(parameter_variants, percentiles, last_dates_to_display)
+
+differences_tables$dur_Vs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of vaccine acquired immunity (DVI)") %>%
+  pack_rows("United Kingdom", 1, 12) %>%
+  pack_rows("United States", 13, 24)
+
+```
+
+```{r deaths-averted-table-durR, echo=FALSE, results='asis'}
+differences_tables <- deaths_averted_table(parameter_variants, percentiles, last_dates_to_display)
+
+differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of naturally acquired immunity (DNI)") %>%
+  pack_rows("United Kingdom", 1, 12) %>%
+  pack_rows("United States", 13, 24)
+
+```
+
+```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to vaccine efficacy")}
+
+deaths_averted_plots <- deaths_averted_plot('veis', percentiles, last_dates_to_display)
+
+```
+
+```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to vaccine duration")}
+
+deaths_averted_plots <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to_display)
+
+```
+
+```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to natural immunity duration")}
+
+deaths_averted_plots <- deaths_averted_plot('dur_Rs', percentiles, last_dates_to_display)
+
+```
