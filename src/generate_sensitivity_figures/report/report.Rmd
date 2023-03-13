@@ -79,6 +79,13 @@ parameter_names <- list(
   dur_Rs = "DNI"
   )
 
+parameter_precision <- list(
+  veis = 2,
+  dur_Vs = 0,
+  dur_Rs = 0
+  )
+
+
 join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
   counterfactuals <- lapply(sensitivities, function(sen) {
     lapply(quantiles, function(quant) {
@@ -187,7 +194,7 @@ deaths_averted_table <- function(sensitivities, quantiles, dates) {
           ),
           "]"
         ),
-        sensitivity_value_avg = round(sensitivity_value_avg, 2),
+        sensitivity_value_avg = round(sensitivity_value_avg, as.numeric(parameter_precision[sen])),
         counterfactual_label = mapvalues(counterfactual,
                                          from = cfacts_to_display,
                                          to = labels_to_display),
@@ -260,8 +267,10 @@ deaths_averted_plot <- function(sen, quantities, dates)  {
 differences_tables <- deaths_averted_table(parameter_variants, percentiles, last_dates_to_display)
 
 differences_tables$veis %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to average vaccine efficacy against infection (VEI)") %>%
-  pack_rows("United Kingdom", 1, 12) %>%
-  pack_rows("United States", 13, 24)
+  pack_rows("United Kingdom to July 2021", 1, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 12) %>%
+  pack_rows("United States to July 2021", 13, 18) %>%
+  pack_rows("United States to Jan 2022", 19, 24)
 
 
 ```
@@ -270,8 +279,10 @@ differences_tables$veis %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Se
 differences_tables <- deaths_averted_table(parameter_variants, percentiles, last_dates_to_display)
 
 differences_tables$dur_Vs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of vaccine acquired immunity (DVI)") %>%
-  pack_rows("United Kingdom", 1, 12) %>%
-  pack_rows("United States", 13, 24)
+  pack_rows("United Kingdom to July 2021", 1, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 12) %>%
+  pack_rows("United States to July 2021", 13, 18) %>%
+  pack_rows("United States to Jan 2022", 19, 24)
 
 ```
 
@@ -279,8 +290,10 @@ differences_tables$dur_Vs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "
 differences_tables <- deaths_averted_table(parameter_variants, percentiles, last_dates_to_display)
 
 differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of naturally acquired immunity (DNI)") %>%
-  pack_rows("United Kingdom", 1, 12) %>%
-  pack_rows("United States", 13, 24)
+  pack_rows("United Kingdom to July 2021", 1, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 12) %>%
+  pack_rows("United States to July 2021", 13, 18) %>%
+  pack_rows("United States to Jan 2022", 19, 24)
 
 ```
 
