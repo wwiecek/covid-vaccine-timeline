@@ -1,0 +1,30 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Methods
+
+Our strategy for modelling counterfactually altered vaccination timelines was to take an existing compartmental model that simulated the COVID-19 pandemic through 2020 and 2021 including the impact of vaccinations (the "baseline model"), and re-run the simulation freezing all parameters except the vaccination timelines (the "counterfactual models").
+
+For our baseline pandemic model, we used the model behind [@watsonoliverj.COVID19LMICReports2022]. This approach is implemented in open source R packages Squire [@hoganWithincountryAgebasedPrioritisation2021, @walkerImpactCOVID19Strategies2020, @watsonLeveragingCommunityMortality2021] and SirCOVID[@baguelinSircovidSIRModel2022]. Since our approach is documented in several previous publications and in package documentation, here we only discuss the main model features and focus on the features that are likely to impact results of counterfactual simulations.[^f]
+
+The baseline model is an age-stratified SIRD model with multiple infectious compartments to reflect different stages and courses of disease progression. The model also classifies people as unvaccinated, vaccinated with 1 dose, vaccinated with 2 doses, vaccinated with 2 doses with waned protection, vaccinated 3 doses and vaccinated with 3 doses with waned protection. People progress through vaccination classes according to vaccination dosage data from Our World in Data [@mathieuCoronavirusPandemicCOVID192020] and according to the assumed rate of waning of vaccine-derived immunity, which is itself time and dose-dependent. The model accounts for separate modes of vaccine action (infection blocking vs disease blocking), variant-dependent efficacy of vaccine and naturally derived immunity and age-dependent vaccination strategies. 
+
+Some documentation of the model parameters can be found in the [COVID-19 LMIC Reports documentation](https://web.archive.org/web/20221230232942/https://mrc-ide.github.io/global-lmic-reports/parameters.html) [@watsonoliverj.COVID19LMICReports2022]. Note that, on this page, the vaccine efficacies are attributed to the supplementary material of [@watsonGlobalImpactFirst2022], but the Omicron-specific efficacies cannot have been sourced from there as that older report did not account for booster vaccinations or the Omicron strain. Furthermore, the model diagram on this documentation page is based on a simplified version of the underlying model. The diagram and equations in the supplementary material of [@hoganWithincountryAgebasedPrioritisation2021] or [in the Nimue documentation](https://web.archive.org/web/20221230232915/https://mrc-ide.github.io/nimue/index.html) [@winskillNimue] are closer to the model we used, though once again the model we used contains additional parameters for booster doses and the Omicron strain.
+
+We modified the baseline model in one way: by default, vaccination was assumed to reduce onward transmission by 50%, regardless of whether the dose was fresh or waned. We modified this to the schedule shown in Table \@ref{tab:onward}. These represented an average between the estimates of [@eyreImpactSARSCoV2Vaccination2021a] for effectiveness at blocking onward transmission of Alpha and Delta and the estimate of [@tanInfectiousnessSARSCoV2Breakthrough2023] for effectiveness of the vaccine at blocking onward transmission of Omicron (the period of the simulation included both Delta and Omicron waves).
+
+```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed degree to which vaccination blocks onward transmission')}
+knitr::kable(
+  c(('1 dose (fresh)', '2 doses (fresh)', '2 doses (waned)', '3 doses (fresh)', '3 doses (waned)', '3 doses (waned)'),('27%', '27%', '0%', '30%', '7.5%'),
+  booktabs = TRUE
+)
+```
+
+[^f]: This model has gone through many iterations, adding new parameters for new variants and increasing the sophistication of its handling of uncertainty. Our version can be found on Github with the commit ref `bad4334f972eb03fe9c37cda7bb47667a2ffc640`.
+
+The model parameters are a combination of hard coded fixed values, parameters sampled from a fixed distribution representing parameter uncertainty and parameters inferred to fit the observed data. The only inferred parameters are sequences of $R_t$, the effective reproductive number at time $t$ *without* any vaccine or naturally derived immunity. The full set of parameters are described in Supplementary Table [TODO - this will probably take a while].
+
+
+

@@ -1,0 +1,78 @@
+--- 
+title: "The impact of accelerated COVID vaccine trials on mortality"
+author: "Tomáš Dulka, David Johnston, Witold Więcek"
+date: "`r Sys.Date()`"
+output:
+  bookdown::pdf_book:
+    base_format: rticles::arxiv_article
+    citation_package: natbib
+documentclass: article
+bibliography: report.bib
+biblio-style: apalike
+header-includes:
+ - \usepackage{natbib}
+description: "This is an article describing a retrospective comparison between the
+  actual mortality incurred during the COVID-19 pandemic in the US and the UK, and
+  the moretality incurred in several counterfactual scenarios involving accelerated
+  vaccine trials\n"
+link-citations: yes
+github-repo: "davidoj/covid-vaccine-timeline-preprint"
+site: bookdown::bookdown_site
+---
+
+
+```{r, include=FALSE}
+fontsize = 12
+
+colour_direct <- "#98df8a"
+colour_total <- "#17becf"
+colour_baseline <- "black"
+colour_counterfactual <- "#d62728"
+colour_10 <- "#0485d1"
+colour_90 <- "#fac205"
+
+
+theme = theme_bw() +
+  theme(text = element_text(family = "serif", size = fontsize),
+        legend.position = 'bottom')
+theme_set(theme)
+```
+
+```{r, include=FALSE}
+primary_last_date = as.Date("2021-07-01")
+last_dates_to_display <- c(as.Date("2021-07-01"), as.Date("2022-01-01"))
+
+data_source <- c('e', 'r')
+
+parameter_variants <- c('veis', 'dur_Vs', 'dur_Rs')
+
+percentiles <- c(10, 90)
+```
+
+# Abstract
+
+
+```{r include=FALSE}
+# automatically create a bib database for R packages
+knitr::write_bib(c(
+  .packages(), 'bookdown', 'knitr', 'rmarkdown'
+), 'packages.bib')
+```
+
+
+```{r include=FALSE}
+
+# Fix the bibliography location
+
+options(bookdown.post.latex = function(x) {
+  
+  # x is the content of the LaTeX output file
+  # str_replace can take a named vector of patterns and replacements
+  replace_patterns <- c(
+    "^\\\\bibliography\\{report.bib\\}" = "",         # Remove the default bibliography
+    "^BIBLIOGRAPHY" = "\\\\bibliography{report.bib}"  # Add it in a new spot
+  )
+  
+  stringr::str_replace_all(x, replace_patterns)
+})
+```

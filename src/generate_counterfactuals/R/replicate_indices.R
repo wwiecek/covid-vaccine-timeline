@@ -18,22 +18,22 @@ replicate_quantiles <- function(reps) {
         )
 }
 
-# Vaccine efficacies (2nd does only)
+# Vaccine efficacies (1st & 2nd does only)
 
 get_veis <- function(out) {
     veis <- lapply(out$samples, function(samp){
         mean(unlist(lapply(samp$vaccine_efficacy_infection, function(vei){
-            vei[2]
+            vei[1:2]
         })))
     })
 }
 
-# Vaccine duration (2nd dose only)
+# Vaccine duration (1st & 2nd doses only)
 
 get_dur_Vs <- function(out) {
     dur_vs <- lapply(out$samples, function(samp){
         mean(unlist(lapply(samp$dur_V, function(dv){
-            dv[2]
+            dv
         })))
     })
 }

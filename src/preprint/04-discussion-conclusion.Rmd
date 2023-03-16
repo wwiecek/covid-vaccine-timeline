@@ -1,0 +1,28 @@
+# Discussion
+
+## Behaviour change
+
+Our model also does not attempt to account for any behavioural responses to vaccination, which is another source of uncertainty over both the near and long-term effects of accelerated vaccine timelines. The effect of behavioural changes is not straightforward to assess; for example, if earlier vaccination leads to fewer infections in deaths at a given point in time, and as a result people relax social distancing behaviour, then our model might overestimate short-term infections and deaths in the early vaccination scenario (though people would of course be benefiting from reduced social distancing). At the same time, such a situation would lead to a higher rate of natural immunity, which could reduce the impact of a subsequent infection wave.
+
+## Rebound effect
+
+While our main results present the number of deaths averted up to July 2021, we simulated the counterfactual scenarious up until the end of 2021. The longer timeline includes an additional wave of infections in both the US and the UK. Our model shows much more uncertainty over the effect of earlier vaccination timelines for this second wave of infections, ranging from substantial protection in both waves in some trajectories to substantial worsening of the second wave in others. We say that trajectories where the second wave was worse in the earlier vaccination scenarios experienced a *rebound effect*. This appears to be due to the fact that an earlier vaccination campaign corresponds to an earlier waning of vaccination-induced protection. Note that rebound effects are not an inevitable consequence of earlier vaccination - if an earlier vaccination campaign causes an infection wave to coincide with a minimum of vaccine-induced immunity (for example, if it occurs just before most people receive booster doses) then we might expect a rebound. On the other hand, if it causes the infection wave to coincide with a maximum of vaccine-induced immunity (for example, if most people receive booster doses just before the wave occurs) then we expect the earlier vaccinations to offer additional protection for both waves.
+
+We found that the rebound effect was sensitive to the assumed duration of vaccine-induced protection from infection. Somewhat counterintuitively, assuming a *longer* duration of vaccine-induced protection corresponded to a larger rebound effect. We are estimating the impact of the assumed duration of protection, not the impact of a counterfactual vaccine with longer protection. If the assumed duration of protection is longer, the model compensates with a higher value of $R_t$ at times distant from the vaccine administration in order to maintain the same level of infections and deaths. The assumption of longer vaccine-induced prodection thus combines a higher value of $R_t$ with a *relatively* lower level of vaccine-derived immunity in the counterfactual scenario, which we hypothesis together accounts for the larger rebound effect under longer vaccine-derived immunity durations. 
+
+## Sensitivity to parametric assumptions
+
+We estimate the impact of accelerated vaccination timelines by modelling counterfactual pandemic trajectories. We aim to have these counterfactual trajectories match the real-world trajectory in all important respects except for vaccination timelines and consequences thereof. However, we cannot guarantee that this is so. The model we use may not adequately capture the counterfactuals of interest for many reasons. The underlying SEIRD model is based on an idealisation of pandemic dynamics, and there may be features of the true pandemic dynamics that are not adequately captured by this model but are critical for counterfactual modelling; for example, overdispersion in the distribution of contact rates is not captured by our model, but overdispersion in this distribution was typically found to be high [@endoEstimatingOverdispersionCOVID192020]. As a result, other parameters in our model must be set so as to accommodate features that might actually be due to overdispersion. In turn, this may harm our ability to ascertain sound counterfactual trajectories.
+
+Even if the model structure captures the most important dynamics of the pandemic, there is uncertainty over key model parameters. Assessing the impact of model structure on our estimates is beyond the scope of the present work, but we do assess the impact of three different parameter values:
+ - The average infection-blocking efficacy of one and two doses of the vaccine
+ - The average duration for protection due to one and two doses of the vaccine
+ - The average duration of protection due to natural immunity
+
+We have already discussed a key finding of this analysis: that longer durations of vacine-induced protection correspond to higher infection and death rates in the second wave of infections after the vaccination campaign began. 
+
+
+
+# Conclusion
+
+
