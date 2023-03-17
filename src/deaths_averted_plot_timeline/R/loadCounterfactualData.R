@@ -108,22 +108,35 @@ loadCounterfactualDataSingle <-
     quantile_replicates <- readRDS("quantile_replicates.Rds")
 
     replicates <- lapply(unique(counterfactual_data$iso3c), function(iso3c){
-            quantile_replicates[[iso3c]][[sensitivity]][[paste0('replicates_',quantile)]]
+          list(
+              reps = quantile_replicates[[iso3c]][[sensitivity]][[paste0('replicates_',quantile)]],
+              values = quantile_replicates[[iso3c]][[sensitivity]][[paste0('rep_',quantile,'_average')]],
+              iso3c = iso3c
+            )
           })
 
-    names(replicates) <- unique(counterfactual_data$iso3c)
+    names(replicates) = unique(counterfactual_data$iso3c)
+    replicates <- bind_rows(replicates)
+    replicates$iso3c <- as.character(replicates$iso3c)
 
     counterfactual_data <- counterfactual_data %>%
+      left_join(replicates, by = "iso3c") %>%
       filter(
-          (replicate %in% replicates[['GBR']] & iso3c == 'GBR') |
-          (replicate %in% replicates[['USA']] & iso3c == 'USA')
+          (replicate == reps)
+        ) %>%
+      mutate(
+          sensitivity_value = as.numeric(values)
         )
 
     baseline_data <- baseline_data %>%
+      left_join(replicates, by = "iso3c") %>%
       filter(
-          (replicate %in% replicates[['GBR']] & iso3c == 'GBR') |
-          (replicate %in% replicates[['USA']] & iso3c == 'USA')
+          (replicate == reps)
+        ) %>%
+      mutate(
+          sensitivity_value = as.numeric(values)
         )
+
 
   }
 
@@ -159,7 +172,9 @@ loadCounterfactualDataSingle <-
   ) %>%
     dplyr::mutate(
       averted_deaths = deaths - baseline_deaths,
-      averted_infections = infections - baseline_infections
+      averted_infections = infections - baseline_infections,
+      cumulative_averted_deaths = cumulative_deaths - baseline_cumulative_deaths,
+      cumulative_averted_infections = cumulative_infections - baseline_cumulative_infections
     ))
   counterfactual_data <- dplyr::group_by_at(counterfactual_data, c(group_by,"counterfactual"))
 
@@ -168,7 +183,7 @@ loadCounterfactualDataSingle <-
   counterfactual_data %>%
     dplyr::summarise(
       dplyr::across(
-        .cols = dplyr::ends_with(c("deaths", "infections", "vaccinated", "susceptible", "waned")),
+        .cols = dplyr::ends_with(c("deaths", "infections", "vaccinated", "susceptible", "waned", "value")),
         .fns = list(
           avg = ~median(.x, na.rm = TRUE),
           `025` = ~quantile(.x, probs = 0.025, na.rm = TRUE),

@@ -78,7 +78,7 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   # get the real data
   data <- out$inputs$data
   country <- out$parameters$country
-  # iso3c <- squire::population$iso3c[squire::population$country == country][1]
+
   if(is.null(suppressWarnings(data$date_end))){
     date_0 <- max(data$date)
   } else {
@@ -330,27 +330,5 @@ saveRDS(df_cf,paste0(output,'/counterfactual_simulation.Rds'))
 
 #combine outputs into final objects
 qpdf::pdf_combine(list.files(temp_plots, full.names = TRUE), plot_output)
-
-#save raw excess mortality
-if(excess){
-  map_dfr(iso3cs, function(iso3c){
-    #get fit
-    readRDS(paste0(
-      fit_loc, "/", iso3c, ".Rds"
-    ))$inputs$data
-  }, .id = "iso3c") %>%
-    group_by(date_start, date_end) %>%
-    summarise(
-      deaths = sum(deaths)
-    ) %>%
-    mutate(
-      obsDate = (date_end - date_start)/2 + date_start,
-      deaths = deaths/as.numeric(date_end - date_start)
-    ) %>%
-    ungroup() %>%
-    select(obsDate, deaths) %>%
-    saveRDS("excess_deaths.Rds")
-
-}
 
 dump_replicate_quantiles(input_fits, output, fit_loc)

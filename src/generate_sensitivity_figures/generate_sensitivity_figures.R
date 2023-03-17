@@ -1,0 +1,1 @@
+rmarkdown::render('report/report.Rmd', 'pdf_document')

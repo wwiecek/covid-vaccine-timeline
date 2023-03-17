@@ -132,5 +132,6 @@ for(sen in sensitivities){
             fn <- paste0(cf,"_", sen, "_", quant, "_tsplot.pdf")
             ggsave(fn,sensitivity_deaths_plot,device='pdf')
         })
+        saveRDS(table3_df_ind, paste0("deaths_averted_", sen, "_", quant, "_detail.Rds"))
     }
 }
