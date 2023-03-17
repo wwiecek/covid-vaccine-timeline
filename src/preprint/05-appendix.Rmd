@@ -1,46 +1,10 @@
----
-title: "Plots"
-knit: (function(inputFile, encoding) { 
-      rmarkdown::render(inputFile,
-                        encoding=encoding, 
-                        output_file=file.path(here::here())) })
-output: 
-  pdf_document:
-    keep_tex: true
-fontsize: 12pt
-header-includes:
-  - |
-    ```{=latex}
-    \usepackage{booktabs} 
-    ```
----
+BIBLIOGRAPHY
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
-```
 
-```{r global-options}
-last_dates_to_display <- c(as.Date("2021-07-01"), as.Date("2022-01-01"))
+# (APPENDIX) Appendix {-}
 
-data_source <- c('e', 'r')
+# Sensitivity analysis
 
-parameter_variants <- c('veis', 'dur_Vs', 'dur_Rs')
-
-percentiles <- c(10, 90)
-
-```
-
-```{r set-theme}
-fontsize = 12
-
-colour_10 <- "#0485d1"
-colour_90 <- "#fac205"
-
-theme = theme_bw() +
-  theme(text = element_text(family = "serif", size = fontsize),
-        legend.position = 'bottom')
-theme_set(theme)
-```
 
 ```{r load-functions, echo=FALSE}
 
@@ -86,7 +50,13 @@ join_counterfactual_tables_horizontal <- function(sensitivity, quantiles) {
                quant = quant,
                averted_deaths_perpop_avg = averted_deaths_avg / pop10k,
                averted_deaths_perpop_025 = averted_deaths_025 / pop10k,
-               averted_deaths_perpop_975 = averted_deaths_975 / pop10k)
+               averted_deaths_perpop_975 = averted_deaths_975 / pop10k,
+               vaccinated_perpop_avg = (vaccinated_avg - vaccinated_second_waned_avg) / pop10k,
+               vaccinated_perpop_025 = (vaccinated_025 - vaccinated_second_waned_025) / pop10k,
+               vaccinated_perpop_975 = (vaccinated_975 - vaccinated_second_waned_975) / pop10k,
+               baseline_vaccinated_perpop_avg = (baseline_vaccinated_avg - baseline_vaccinated_second_waned_avg) / pop10k,
+               baseline_vaccinated_perpop_025 = (baseline_vaccinated_025 - baseline_vaccinated_second_waned_025) / pop10k,
+               baseline_vaccinated_perpop_975 = (baseline_vaccinated_975 - baseline_vaccinated_second_waned_975) / pop10k)
 
       return(cf_table)
     })
@@ -115,8 +85,8 @@ deaths_averted_table <- function(sensitivities, quantiles, dates) {
     pop10k = c(67081000, 331501080) / 10000
   )
 
-  differences_tables <- lapply(das, function(dad){
-    with_pop <- dad %>%
+  differences_tables <- lapply(das, function(deaths_averted_detail){
+    with_pop <- deaths_averted_detail %>%
       left_join(population, by = "iso3c") %>%
       mutate(cumulative_averted_deaths_perpop_avg = cumulative_averted_deaths_avg / pop10k,
              cumulative_averted_deaths_perpop_025 = cumulative_averted_deaths_025 / pop10k,
@@ -182,7 +152,7 @@ deaths_averted_table <- function(sensitivities, quantiles, dates) {
         c(
            "counterfactual_label" = "Counterfactual scenario",
            "delta_deaths" = "Deaths averted",
-           "sensitivity_value_avg" = paste0("Average ", parameter_names[unique(dad$sen)]),
+           "sensitivity_value_avg" = paste0("Average ", parameter_names[unique(deaths_averted_detail$sen)]),
            "date" = "Simulation end"
         )
       )
@@ -191,9 +161,9 @@ deaths_averted_table <- function(sensitivities, quantiles, dates) {
 
 deaths_averted_plot <- function(sen, quantities, dates)  {
 
-  das <- join_counterfactual_tables_horizontal(sen, quantiles)
+  deaths_averted_detail <- join_counterfactual_tables_horizontal(sen, quantiles)
   for (last_date_to_display in dates) {
-    zoomed_deaths_averted <- das %>%
+    zoomed_deaths_averted <- deaths_averted_detail %>%
       filter(date > as.Date("2020-09-01") & date <= last_date_to_display) %>%
       filter(counterfactual %in% cfacts_to_display) %>%
       mutate(counterfactual_label = mapvalues(
@@ -226,6 +196,49 @@ deaths_averted_plot <- function(sen, quantities, dates)  {
         values = c(colour_10, colour_90)
       ) +
       labs(x = "Date", y = "Daily deaths averted per 10 000 people", color = "Colour")
+
+
+    plot(single_timeseries_plot) 
+  }  
+}
+
+vaccinated_plot <- function(sen, quantities, dates)  {
+
+  deaths_averted_detail <- join_counterfactual_tables_horizontal(sen, quantiles)
+  for (last_date_to_display in dates) {
+    zoomed_deaths_averted <- deaths_averted_detail %>%
+      filter(date > as.Date("2020-09-01") & date <= last_date_to_display) %>%
+      filter(counterfactual %in% cfacts_to_display) %>%
+      mutate(counterfactual_label = mapvalues(
+        counterfactual,
+        from = cfacts_to_display,
+        to = labels_to_display
+      )) %>%
+      mutate(counterfactual_label = factor(counterfactual_label,
+                                           labels_to_display))
+
+    single_timeseries_plot <- ggplot(zoomed_deaths_averted, aes(x = date)) +
+      geom_line(aes(y = baseline_vaccinated_perpop_avg_10/vaccinated_perpop_avg_10, colour = "10th percentile")) +
+      geom_line(aes(y = baseline_vaccinated_perpop_avg_90/vaccinated_perpop_avg_90, colour = "90th percentile")) +
+      geom_ribbon(
+        aes(ymin = averted_deaths_perpop_025_10, ymax = averted_deaths_perpop_975_10),
+        alpha = 0.5,
+        fill = colour_10
+      ) +
+      geom_ribbon(
+        aes(ymin = averted_deaths_perpop_025_90, ymax = averted_deaths_perpop_975_90),
+        alpha = 0.4,
+        fill = colour_90
+      ) +
+      facet_grid(counterfactual_label ~ country,
+                 labeller = labeller(.rows=label_wrap_gen(width = 15))) +
+      scale_colour_manual(
+        labels = c(
+          paste0("10th percentile ", parameter_names[sen], sep=' '),
+          paste0("90th percentile ", parameter_names[sen], sep=' ')),
+        values = c(colour_10, colour_90)
+      ) +
+      labs(x = "Date", y = "Effective number of fully vaccinated people per 10 000 population", color = "Colour")
 
 
     plot(single_timeseries_plot) 
@@ -268,20 +281,123 @@ differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "
 
 ```
 
-```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to vaccine efficacy")}
+```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to vaccine duration"), echo=FALSE}
 
 deaths_averted_plots <- deaths_averted_plot('veis', percentiles, last_dates_to_display)
 
 ```
 
-```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to vaccine duration")}
+```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to vaccine efficacy"), echo=FALSE}
 
 deaths_averted_plots <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to_display)
 
 ```
 
-```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to natural immunity duration")}
+```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to natural immunity duration"), echo=FALSE}
 
 deaths_averted_plots <- deaths_averted_plot('dur_Rs', percentiles, last_dates_to_display)
+```
 
+```{r vaccinated-plot-vei, fig.align="center", fig.cap=c("Vaccinated, sensitivity to vaccine duration"), echo=FALSE}
+
+deaths_averted_plots <- vaccinated_plot('dur_Vs', percentiles, last_dates_to_display[2])
+
+```
+
+# Vaccine production model
+
+Figure \@ref(fig:prod-assumptions) shows the assumptions we made about the achievable production when vaccines were approved to be used 30, 60 and 90 days earlier.
+
+```{r prod-assumptions, fig.align="center", fig.cap=c("DJ9 Vaccine production assumptions"), echo=FALSE}
+detail_prod = readRDS("data/detail_production.Rds")
+pfizer_prod = readRDS("data/pfizer_estimated_production.Rds")
+moderna_prod = readRDS("data/moderna_estimated_production.Rds")
+
+plot1 = ggplot() +
+  geom_line(data = detail_prod,
+            aes(x = date, y = cumulative_available_vaccines)) +
+  xlab("Date") +
+  ylab("Cumulative vaccines available") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot2 = ggplot() +
+  geom_line(data = detail_prod,
+            aes(x = date, y = daily_vaccines)) +
+  xlab("Date") +
+  ylab("Daily vaccines produced") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot3 = ggplot() +
+  geom_line(data = moderna_prod,
+            aes(x = date, y = daily_production)) +
+  xlab("Date") +
+  ylab("Daily vaccines produced\nModerna") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot4 = ggplot() +
+  geom_line(data = pfizer_prod,
+            aes(x = date, y = daily_production)) +
+  xlab("Date") +
+  ylab("Daily vaccines produced\nPfizer") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+combined_plot =
+  ggarrange(plot3,
+            plot4,
+            plot2,
+            plot1,
+            nrow = 2,
+            ncol = 2)
+plot(combined_plot)
+```
+
+
+Figure \@ref(fig:prod-cap) shows our assumptions about the maximum number of vaccines that could be produced each day if vaccines were approved 30, 60 and 90 days earlier.
+
+```{r prod-cap, fig.align="center", fig.cap=c("DJ10 Limits from production UK"), echo=FALSE}
+production = readRDS("data/counterfactual_production.Rds")
+
+countries_of_interest = c("United States", "United Kingdom")
+for (country_name in countries_of_interest) {
+  country_cfact = counterfactuals %>%
+    filter(country == country_name) %>%
+    mutate(shifted_by = factor(
+      shifted_by,
+      levels = c("baseline", "30", "60", "90"),
+      labels = c(
+        "Baseline",
+        "Vaccines 30 days sooner",
+        "Vaccines 60 days sooner",
+        "Vaccines 90 days sooner"
+      )
+    ))
+    country_prod = production %>% filter(country == country_name)
+    
+  
+  dj10 = ggplot() +
+    geom_line(data = country_prod,
+              aes(
+                x = as.Date(date),
+                y = cumulative_available_vaccines,
+                color = "Production"
+              )) +
+    geom_line(data = country_cfact,
+              aes(
+                x = as.Date(date),
+                y = total_vacc,
+                color = "Vaccination"
+              )) +
+    labs(x = "Date",
+         y = "Cumulative production / vaccinations",
+         color = "Colour") +
+    ggtitle(country_name) +
+    scale_colour_manual(
+      labels = c('Production', 'Vaccination'),
+      values = c(colour_baseline, colour_counterfactual)
+    ) +
+    scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+    facet_wrap(~ shifted_by)
+  
+  plot(dj10)
+}
 ```
