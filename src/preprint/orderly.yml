@@ -175,28 +175,43 @@ resources:
 # add them as dependencies here
 
 depends:
-  deaths_averted_plot_timeline:
-    id: latest(parameter:excess == TRUE)
-    use:
-      data/deaths_averted_summary.Rds: deaths_averted_summary.Rds
-      data/deaths_averted_detail.Rds: deaths_averted_detail.Rds
-      data/deaths_averted_veis_10_detail.Rds: deaths_averted_veis_10_detail.Rds
-      data/deaths_averted_veis_90_detail.Rds: deaths_averted_veis_90_detail.Rds
-      data/deaths_averted_dur_Vs_10_detail.Rds: deaths_averted_dur_Vs_10_detail.Rds
-      data/deaths_averted_dur_Vs_90_detail.Rds: deaths_averted_dur_Vs_90_detail.Rds
-      data/deaths_averted_dur_Rs_10_detail.Rds: deaths_averted_dur_Rs_10_detail.Rds
-      data/deaths_averted_dur_Rs_90_detail.Rds: deaths_averted_dur_Rs_90_detail.Rds
-  generate_production_counterfactual:
-    id: latest
-    use:
-      data/detail_production.Rds: detail_production.Rds
-      data/pfizer_estimated_production.Rds: pfizer_estimated_production.Rds
-      data/moderna_estimated_production.Rds: moderna_estimated_production.Rds
-      data/counterfactual_production.Rds: counterfactual_production.Rds
-  generate_vaccine_counterfactual:
-    id: latest
-    use:
-      data/owid_raw.Rds: counterfactual_timelines/owid_raw.Rds
-      data/30_days_sooner.Rds: counterfactual_timelines/30_days_sooner.Rds
-      data/60_days_sooner.Rds: counterfactual_timelines/60_days_sooner.Rds
-      data/90_days_sooner.Rds: counterfactual_timelines/90_days_sooner.Rds
+  - deaths_averted_plot_timeline:
+      id: latest((parameter:excess == TRUE) && (parameter:boosters == TRUE) && (parameter:double_boosters == FALSE) && (parameter:lowtransmission == FALSE))
+      use:
+        data/deaths_averted_summary.Rds: deaths_averted_summary.Rds
+        data/deaths_averted_detail.Rds: deaths_averted_detail.Rds
+        data/deaths_averted_veis_10_detail.Rds: deaths_averted_veis_10_detail.Rds
+        data/deaths_averted_veis_90_detail.Rds: deaths_averted_veis_90_detail.Rds
+        data/deaths_averted_dur_Vs_10_detail.Rds: deaths_averted_dur_Vs_10_detail.Rds
+        data/deaths_averted_dur_Vs_90_detail.Rds: deaths_averted_dur_Vs_90_detail.Rds
+        data/deaths_averted_dur_Rs_10_detail.Rds: deaths_averted_dur_Rs_10_detail.Rds
+        data/deaths_averted_dur_Rs_90_detail.Rds: deaths_averted_dur_Rs_90_detail.Rds
+  - deaths_averted_plot_timeline:
+      id: latest((parameter:excess == FALSE) && (parameter:boosters == TRUE) && (parameter:double_boosters == FALSE) && (parameter:lowtransmission == FALSE))
+      use:
+        data/reported_deaths_averted_summary.Rds: deaths_averted_summary.Rds
+        data/reported_deaths_averted_detail.Rds: deaths_averted_detail.Rds
+        data/reported_deaths_averted_veis_10_detail.Rds: deaths_averted_veis_10_detail.Rds
+        data/reported_deaths_averted_veis_90_detail.Rds: deaths_averted_veis_90_detail.Rds
+        data/reported_deaths_averted_dur_Vs_10_detail.Rds: deaths_averted_dur_Vs_10_detail.Rds
+        data/reported_deaths_averted_dur_Vs_90_detail.Rds: deaths_averted_dur_Vs_90_detail.Rds
+        data/reported_deaths_averted_dur_Rs_10_detail.Rds: deaths_averted_dur_Rs_10_detail.Rds
+        data/reported_deaths_averted_dur_Rs_90_detail.Rds: deaths_averted_dur_Rs_90_detail.Rds
+  - deaths_averted_plot_timeline:
+      id: latest((parameter:excess == TRUE) && (parameter:boosters == TRUE) && (parameter:double_boosters == TRUE) && (parameter:lowtransmission == FALSE))
+      use:
+        data/doubleboost_deaths_averted_detail.Rds: deaths_averted_detail.Rds
+  - generate_production_counterfactual:
+      id: latest
+      use:
+        data/detail_production.Rds: detail_production.Rds
+        data/pfizer_estimated_production.Rds: pfizer_estimated_production.Rds
+        data/moderna_estimated_production.Rds: moderna_estimated_production.Rds
+        data/counterfactual_production.Rds: counterfactual_production.Rds
+  - generate_vaccine_counterfactual:
+      id: latest
+      use:
+        data/owid_raw.Rds: counterfactual_timelines/owid_raw.Rds
+        data/30_days_sooner.Rds: counterfactual_timelines/30_days_sooner.Rds
+        data/60_days_sooner.Rds: counterfactual_timelines/60_days_sooner.Rds
+        data/90_days_sooner.Rds: counterfactual_timelines/90_days_sooner.Rds

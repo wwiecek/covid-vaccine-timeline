@@ -14,7 +14,8 @@ replicate_quantiles <- function(reps) {
             replicates_10 = which(reps <= quants[1]),
             replicates_90 = which(reps >= quants[2]),
             rep_10_average = mean(as.numeric(reps[which(reps <= quants[1])])),
-            rep_90_average = mean(as.numeric(reps[which(reps >= quants[2])]))
+            rep_90_average = mean(as.numeric(reps[which(reps >= quants[2])])),
+            reps_raw = reps
         )
 }
 

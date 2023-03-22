@@ -16,7 +16,7 @@
 cf_params <- file.path("counterfactual_timelines")
 
 #which type of fit
-excess_mortality <- TRUE
+excess_mortality <- excess
 if(excess_mortality){
   fit_loc <- file.path("model_fits", "excess_mortality")
   output <- file.path("counterfactual_data")
@@ -132,6 +132,7 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     # We need to add this class so that the nimue_format utility knows it's a booster sim
   attr(baseline, "class") <- c("lmic_booster_nimue_simulation",class(baseline))
 
+  baseline <- update_parameters(baseline, iso3c)
 
   # format the counter factual run
   baseline_deaths <- squire.page::nimue_format(baseline, c("deaths", "infections", "vaccinated_first_dose",
@@ -168,6 +169,7 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     if(!is.null(counterfactual[[counterIndex]])){
 
       cf_out <- update_counterfactual(out, counterfactual[[counterIndex]])
+      cf_out <- update_parameters(cf_out, iso3c)
 
       counter <- squire.page::generate_draws(out = cf_out, t_end)
 
@@ -213,22 +215,33 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   return(deaths_df)
 }
 
+# This is for updating both baseline and counterfactual parameters
+
+update_parameters <- function(out, iso3c) {
+
+  if (double_boosters){
+      if (iso3c == "USA") {
+        out$parameters$booster_doses <- out$parameters$booster_doses*50.5/23.4
+      }
+    }
+  return(out)
+}
+
 update_counterfactual <- function(out, counterfactual){
 
   tt_primary_doses <- as.integer(counterfactual$date - out$inputs$start_date)
 
   # replace the vaccination data with the counterfactual data
 
-  out$parameters$primary_doses <- c(0,counterfactual$first_doses)
-  out$parameters$tt_primary_doses <- c(0,tt_primary_doses)
+  out$parameters$primary_doses <- c(0, counterfactual$first_doses)
+  out$parameters$tt_primary_doses <- c(0, tt_primary_doses)
   if(boosters) {
-    out$parameters$booster_doses <- c(0,counterfactual$third_doses)
-    out$parameters$tt_booster_doses <- c(0,tt_primary_doses)
+    out$parameters$booster_doses <- c(0, counterfactual$third_doses)
+    out$parameters$tt_booster_doses <- c(0, tt_primary_doses)
   } else {
     out$parameters$booster_doses <- 0
     out$parameters$tt_booster_doses <- 0
   }
-
   return(out)
 }
 

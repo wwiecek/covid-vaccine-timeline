@@ -162,7 +162,7 @@ resources:
 
 depends:
   deaths_averted_plot_timeline:
-    id: latest(parameter:excess == excess)
+    id: latest((parameter:excess == excess) && (parameter:double_boosters == FALSE) && (parameter:lowtransmission == FALSE))
     use:
       report/deaths_averted_detail.Rds: deaths_averted_detail.Rds
       report/deaths_averted_veis_10_detail.Rds: deaths_averted_veis_10_detail.Rds
