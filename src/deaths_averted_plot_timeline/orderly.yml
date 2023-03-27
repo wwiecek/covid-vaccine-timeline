@@ -111,14 +111,14 @@ artefacts:
 # a parameter of b with no default.
 #
 parameters:
-  # seed:
-  #   default: NA
   excess:
     default: TRUE
   lowtransmission:
     default: FALSE
   boosters:
     default: TRUE
+  double_boosters:
+    default: FALSE
 
 # Similar to "data" but sets of temporary views before the data are
 # extracted.  Can be embedded SQL strings or filenames to actual
@@ -198,7 +198,7 @@ sources:
 
 depends:
   generate_counterfactuals:
-    id: latest((parameter:excess == excess) && (parameter:lowtransmission == lowtransmission) && (parameter:boosters == boosters))
+    id: latest((parameter:excess == excess) && (parameter:lowtransmission == lowtransmission) && (parameter:boosters == boosters) && (parameter:double_boosters == double_boosters))
     use:
       Baseline.Rds: counterfactual_data/Baseline.Rds
       counterfactual_simulation.Rds: counterfactual_data/counterfactual_simulation.Rds

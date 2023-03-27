@@ -5,26 +5,68 @@ output:
 ---
 # Methods
 
-Our strategy for modelling counterfactually altered vaccination timelines was to take an existing compartmental model that simulated the COVID-19 pandemic through 2020 and 2021 including the impact of vaccinations (the "baseline model"), and re-run the simulation freezing all parameters except the vaccination timelines (the "counterfactual models").
+## Baseline model
 
-For our baseline pandemic model, we used the model behind [@watsonoliverj.COVID19LMICReports2022]. This approach is implemented in open source R packages Squire [@hoganWithincountryAgebasedPrioritisation2021, @walkerImpactCOVID19Strategies2020, @watsonLeveragingCommunityMortality2021] and SirCOVID[@baguelinSircovidSIRModel2022]. Since our approach is documented in several previous publications and in package documentation, here we only discuss the main model features and focus on the features that are likely to impact results of counterfactual simulations.[^f]
+To model alternative vaccination timelines, we took an existing compartmental model that simulated the COVID-19 pandemic through 2020 and 2021 including the impact of vaccinations (the "baseline model") and re-ran the simulation freezing all parameters except the vaccination timelines (the "counterfactual models").
 
-The baseline model is an age-stratified SIRD model with multiple infectious compartments to reflect different stages and courses of disease progression. The model also classifies people as unvaccinated, vaccinated with 1 dose, vaccinated with 2 doses, vaccinated with 2 doses with waned protection, vaccinated 3 doses and vaccinated with 3 doses with waned protection. People progress through vaccination classes according to vaccination dosage data from Our World in Data [@mathieuCoronavirusPandemicCOVID192020] and according to the assumed rate of waning of vaccine-derived immunity, which is itself time and dose-dependent. The model accounts for separate modes of vaccine action (infection blocking vs disease blocking), variant-dependent efficacy of vaccine and naturally derived immunity and age-dependent vaccination strategies. 
+The baseline pandemic model used the model behind [@watsonoliverj.COVID19LMICReports2022]. This model is implemented in open source R packages Squire [@hoganWithincountryAgebasedPrioritisation2021, @walkerImpactCOVID19Strategies2020, @watsonLeveragingCommunityMortality2021] and SirCOVID [@baguelinSircovidSIRModel2022]. An older version of this model is described in detail in the supplementary material of [@walkerImpactCOVID19Strategies2020], and details of many parameters -- again, for an older version of the model -- can be found in the supplementary material of [@watsonGlobalImpactFirst2022]. Additional incomplete information about the parametrisation of the version of the model we used can be found at [COVID-19 LMIC Reports documentation](https://web.archive.org/web/20221230232942/https://mrc-ide.github.io/global-lmic-reports/parameters.html) [@watsonoliverj.COVID19LMICReports2022], and more up-to-date but less complete model structure can be found in the [Nimue documentation](https://web.archive.org/web/20221230232915/https://mrc-ide.github.io/nimue/index.html) [@winskillNimue]. Here we will describe the model in broad terms.
 
-Some documentation of the model parameters can be found in the [COVID-19 LMIC Reports documentation](https://web.archive.org/web/20221230232942/https://mrc-ide.github.io/global-lmic-reports/parameters.html) [@watsonoliverj.COVID19LMICReports2022]. Note that, on this page, the vaccine efficacies are attributed to the supplementary material of [@watsonGlobalImpactFirst2022], but the Omicron-specific efficacies cannot have been sourced from there as that older report did not account for booster vaccinations or the Omicron strain. Furthermore, the model diagram on this documentation page is based on a simplified version of the underlying model. The diagram and equations in the supplementary material of [@hoganWithincountryAgebasedPrioritisation2021] or [in the Nimue documentation](https://web.archive.org/web/20221230232915/https://mrc-ide.github.io/nimue/index.html) [@winskillNimue] are closer to the model we used, though once again the model we used contains additional parameters for booster doses and the Omicron strain.
+The baseline model is an age-stratified SEIRD model. In addition to classifying the population by infection status, the model also classifies people by vaccination status: they may be unvaccinated, vaccinated with 1 dose, vaccinated with 2 doses, vaccinated with 2 doses with waned protection, vaccinated 3 doses and vaccinated with 3 doses with waned protection. People are vaccinated according to vaccination dosage data from Our World in Data [@mathieuCoronavirusPandemicCOVID192020] together with a model of vaccine prioritisation. They progress to "waned" classes according to an assumed rate of waning of vaccine-derived immunity, which is itself time and dose-number-dependent. The model accounts for separate modes of vaccine action (infection blocking vs disease blocking), variant-dependent efficacy of vaccine and naturally derived immunity and age-dependent vaccination strategies. 
 
-We modified the baseline model in one way: by default, vaccination was assumed to reduce onward transmission by 50%, regardless of whether the dose was fresh or waned. We modified this to the schedule shown in Table \@ref{tab:onward}. These represented an average between the estimates of [@eyreImpactSARSCoV2Vaccination2021a] for effectiveness at blocking onward transmission of Alpha and Delta and the estimate of [@tanInfectiousnessSARSCoV2Breakthrough2023] for effectiveness of the vaccine at blocking onward transmission of Omicron (the period of the simulation included both Delta and Omicron waves).
+The model assumes homogenous mixing of the population. It models different kinds of infection -- "severe" and "non-severe" -- which have different age-dependent probabilities of progressing to recovery or death. Individuals who have recovered are assumed to be fully protected by natural immunity for an exponentially random duration duration which is, on average, around 250 days. Individuals who have been vaccinated have different levels of protection at different points in time depending on the dominant strain, and unless they receive additional doeses then protection is considered to have waned after an exponentially random period of time (on average, around 150 days). Vaccinated individuals are also considered to have a reduced likelihood of onward transmission, which also fades when the vaccine protection wanes.
 
-```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed degree to which vaccination blocks onward transmission')}
+The model features deterministic parameters, random parameters and derived parameters. We run an ensemble of simulations for each country, sampling the random parameters at the start of each run from pre-defined distributions. There are three derived parameters: the duration of vaccine-derived immunity, the initial number of cases seeding the pandemic in the country and the time series of reproduction numbers of infections in a fully susceptible population $R_t$. The duration of vaccine derived immunity is derived from the sampled efficacy of vaccination against infection by simulating an antibody decay curve [@watsonoliverj.COVID19LMICReports2022]. The initial number of cases and the timeseries of effective reproductive numbers is subsequently chosen such that the model outputs fit the observations - either of excess or officially reported deaths. We report the central estimates of vaccine efficacy in Table \@ref{tab:vaccine-efficacy}.
+
+We made one change to the model used by [@watsonoliverj.COVID19LMICReports2022]: by default, vaccination was assumed to reduce onward transmission by 50%, regardless of whether the dose was fresh or waned. We modified this to the schedule shown in Table \@ref(tab:onward). These represented an average between the estimates of [@eyreImpactSARSCoV2Vaccination2021a] for effectiveness at blocking onward transmission of Alpha and Delta and the estimate of [@tanInfectiousnessSARSCoV2Breakthrough2023] for effectiveness of the vaccine at blocking onward transmission of Omicron, as the period of the simulation included both Delta and Omicron waves.
+
+As the documentation for older models does not cover the parameters for booster vaccines or efficacy vs the Omicron strain, we report central estimates of efficacies in Table \@ref(tab:vaccine-efficacy).
+
+```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated')}
 knitr::kable(
-  c(('1 dose (fresh)', '2 doses (fresh)', '2 doses (waned)', '3 doses (fresh)', '3 doses (waned)', '3 doses (waned)'),('27%', '27%', '0%', '30%', '7.5%'),
-  booktabs = TRUE
+  data.frame(
+    'Doses' = c(
+      '1 dose (fresh)', 
+      '2 doses (fresh)', 
+      '2 doses (waned)',
+      '3 doses (fresh)',
+      '3 doses (waned stage 1)',
+      '3 doses (waned stage 2)'
+      ),
+    'Protection from onward transmission' = c(
+      '73%', 
+      '73%', 
+      '100%',
+      '70%',
+      '10%',
+      '5%'
+      )
+    ),
+  booktabs = TRUE,
+  col.names = c('Doses', 'Protection from onward transmission'),
+  linesep = "",
+  caption = 'Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated',
+  centering = TRUE
 )
 ```
 
-[^f]: This model has gone through many iterations, adding new parameters for new variants and increasing the sophistication of its handling of uncertainty. Our version can be found on Github with the commit ref `bad4334f972eb03fe9c37cda7bb47667a2ffc640`.
+```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy')}
+knitr::kable(
+  data.frame(
+    'Vaccine type' = c('mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA'), 
+    'Doses' = c('1', '2', '1', '2', '1', '2', '3'),
+    'Strain' = c('Wild', 'Wild', 'Delta', 'Delta', 'Omicron', 'Omicron', 'Omicron'),
+    'Protection against infection' = c('0.63', '0.86', '0,36', '0.88', '0', '0.136', '0.65')),
+  booktabs = TRUE,
+  col.names = c('Vaccine type', 'Doses', 'Strain', 'Protection against infection'),
+  linesep = "",
+  caption = 'Model parameters - central estimates of vaccine efficacy',
+  centering = TRUE
+)
+```
 
-The model parameters are a combination of hard coded fixed values, parameters sampled from a fixed distribution representing parameter uncertainty and parameters inferred to fit the observed data. The only inferred parameters are sequences of $R_t$, the effective reproductive number at time $t$ *without* any vaccine or naturally derived immunity. The full set of parameters are described in Supplementary Table [TODO - this will probably take a while].
 
+## Vaccine production
 
+To produce counterfactual vaccine dosage timeseries, we suppose that vaccine approcal is brought forward by a number of days (we test approval coming 30, 60 and 90 day sooner). However, if approval is brought forward too much then manufacturers might have a harder time maintaining supply than they would have in the situation that actually played out. We model this by ... (see Tomas' entry in the shared doc)
 
+Plots can currently be found in [Vaccine production model]

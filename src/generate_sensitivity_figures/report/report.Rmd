@@ -60,7 +60,7 @@ parameter_precision <- list(
 join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
   counterfactuals <- lapply(sensitivities, function(sen) {
     lapply(quantiles, function(quant) {
-        cf_table <- readRDS(paste0("data/deaths_averted_", sen, "_", quant, "_detail.Rds")) %>%
+        cf_table <- readRDS(paste0("deaths_averted_", sen, "_", quant, "_detail.Rds")) %>%
           mutate( sen = sen ) %>%
           mutate( quant = quant ) %>% 
           filter(date %in% dates)
@@ -80,7 +80,7 @@ join_counterfactual_tables_horizontal <- function(sensitivity, quantiles) {
   )
 
   counterfactuals <- lapply(quantiles, function(quant) {
-      cf_table <- readRDS(paste0("data/deaths_averted_", sensitivity, "_", quant, "_detail.Rds")) %>%
+      cf_table <- readRDS(paste0("deaths_averted_", sensitivity, "_", quant, "_detail.Rds")) %>%
         left_join(population, by = "iso3c") %>%
         mutate(sen = sensitivity,
                quant = quant,
