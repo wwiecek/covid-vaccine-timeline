@@ -22,8 +22,8 @@ We made one change to the model used by [@watsonoliverj.COVID19LMICReports2022]:
 As the documentation for older models does not cover the parameters for booster vaccines or efficacy vs the Omicron strain, we report central estimates of efficacies in Table \@ref(tab:vaccine-efficacy).
 
 ```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated')}
-knitr::kable(
-  data.frame(
+
+vaccine_onward_protection <- data.frame(
     'Doses' = c(
       '1 dose (fresh)', 
       '2 doses (fresh)', 
@@ -33,29 +33,33 @@ knitr::kable(
       '3 doses (waned stage 2)'
       ),
     'Protection from onward transmission' = c(
-      '73%', 
-      '73%', 
-      '100%',
-      '70%',
+      '27%', 
+      '27%', 
+      '0%',
+      '30%',
       '10%',
       '5%'
       )
-    ),
+    )
+
+vaccine_onward_protection %>% kbl(
   booktabs = TRUE,
   col.names = c('Doses', 'Protection from onward transmission'),
   linesep = "",
   caption = 'Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated',
   centering = TRUE
-)
+  )
 ```
 
 ```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy')}
-knitr::kable(
-  data.frame(
+
+vaccine_efficacy <- data.frame(
     'Vaccine type' = c('mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA'), 
     'Doses' = c('1', '2', '1', '2', '1', '2', '3'),
     'Strain' = c('Wild', 'Wild', 'Delta', 'Delta', 'Omicron', 'Omicron', 'Omicron'),
-    'Protection against infection' = c('0.63', '0.86', '0,36', '0.88', '0', '0.136', '0.65')),
+    'Protection against infection' = c('0.63', '0.86', '0,36', '0.88', '0', '0.136', '0.65'))
+
+vaccine_efficacy %>% kbl(
   booktabs = TRUE,
   col.names = c('Vaccine type', 'Doses', 'Strain', 'Protection against infection'),
   linesep = "",

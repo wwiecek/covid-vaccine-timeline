@@ -217,7 +217,7 @@ format_deaths_table <- function(deaths_averted_detail){
       rename(
         all_of(c(
            "Counterfactual scenario" = "counterfactual_label",
-           "Deaths_averted" = "delta_deaths",
+           "Deaths averted" = "delta_deaths",
            "Deaths averted per 10,000" = "delta_deaths_perpop",
           "Baseline deaths" = "baseline_cumulative_deaths_avg",
           "Deaths averted per baseline death" = "delta_deaths_perreported"
@@ -307,11 +307,11 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
       rename(
         all_of(c(
            "Counterfactual scenario" = "counterfactual_label",
-           "Deaths_averted" = "delta_deaths",
+           "Deaths averted" = "delta_deaths",
            sensitivity_value = 'sensitivity_value_avg',
            "Deaths averted per 10,000" = "delta_deaths_perpop",
           "Baseline deaths" = "baseline_cumulative_deaths_avg",
-          "Deaths averted per baseline death" = "delta_deaths_perreported"
+          "Averted/baseline" = "delta_deaths_perreported"
         ))
       )
     }
