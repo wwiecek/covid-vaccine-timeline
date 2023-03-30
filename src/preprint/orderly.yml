@@ -138,7 +138,6 @@ resources:
   - article.bib
   - arxiv.sty
   - index.Rmd
-  - packages.bib
   - preamble.tex
   - report.bib
   - report.Rproj

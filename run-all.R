@@ -14,13 +14,11 @@ devtools::install_github(
 )
 
 
-# Generate all outputs -----
+# Generate vaccination timelines -----
 ord_runs <- lapply(
   list(
     "generate_production_counterfactual",
-    "generate_vaccine_counterfactual",
-    "generate_counterfactuals",
-    "deaths_averted_plot_timeline"
+    "generate_vaccine_counterfactual"
   ),
   function(x) {
     cm <- orderly::orderly_run(x)
@@ -28,3 +26,40 @@ ord_runs <- lapply(
   }
 )
 
+
+# Generate and plot infection timelines -----
+
+tasks <- list('generate_counterfactuals', 'deaths_averted_plot_timeline')
+
+parameter_sets <- list(
+    list(
+      excess=FALSE, 
+      boosters=TRUE,
+      double_boosters = FALSE
+    ),
+    list(
+      excess=TRUE, 
+      boosters=TRUE,
+      double_boosters = FALSE
+    ),
+    list(
+      excess=TRUE, 
+      boosters=TRUE,
+      double_boosters = TRUE
+    ) 
+  )
+
+ord_runs <- lapply(
+  tasks,
+  function(task) {
+    lapply(
+      parameter_sets,
+      function(params) {
+        cm <- orderly::orderly_run(task, parameters = params)
+        orderly::orderly_commit(cm)
+      })
+  }
+)
+
+preprint <- orderly::orderly_run("preprint")
+orderly::orderly_commit(preprint)

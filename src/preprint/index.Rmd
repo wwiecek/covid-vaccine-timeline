@@ -65,6 +65,13 @@ parameter_precision <- list(
   )
 
 
+cfacts_to_display <- c("30_days_sooner",
+                     "60_days_sooner",
+                     "90_days_sooner")
+labels_to_display <- c("30 days sooner",
+                     "60 days sooner",
+                     "90 days sooner")
+
 join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
   counterfactuals <- lapply(sensitivities, function(sen) {
     lapply(quantiles, function(quant) {
@@ -134,12 +141,7 @@ load_deaths_averted_table <- function( table_path = "data/deaths_averted_detail.
 
 format_deaths_table <- function(deaths_averted_detail){
 
-    cfacts_to_display <- c("30_days_sooner",
-                         "60_days_sooner",
-                         "90_days_sooner")
-    labels_to_display <- c("30 days sooner",
-                         "60 days sooner",
-                         "90 days sooner")
+
 
     # source: https://data.worldbank.org/indicator/SP.POP.TOTL
     population <- data.frame(
@@ -213,25 +215,19 @@ format_deaths_table <- function(deaths_averted_detail){
           baseline_cumulative_deaths_avg,
           delta_deaths_perreported ) %>%
       rename(
-        c(
-           "counterfactual_label" = "Counterfactual scenario",
-           "delta_deaths" = "Deaths averted",
-           "delta_deaths_perpop" = "Deaths averted per 10,000",
-           "baseline_cumulative_deaths_avg" = "Baseline deaths",
-           "delta_deaths_perreported" = "Deaths averted per baseline death"
-        )
+        all_of(c(
+           "Counterfactual scenario" = "counterfactual_label",
+           "Deaths_averted" = "delta_deaths",
+           "Deaths averted per 10,000" = "delta_deaths_perpop",
+          "Baseline deaths" = "baseline_cumulative_deaths_avg",
+          "Deaths averted per baseline death" = "delta_deaths_perreported"
+        ))
       )
     }
 
 format_deaths_table_sensitivity <- function(deaths_averted_detail){
-    # This is a hack to get around the fact that we could get data frames without the right columns
 
-    cfacts_to_display <- c("30_days_sooner",
-                         "60_days_sooner",
-                         "90_days_sooner")
-    labels_to_display <- c("30 days sooner",
-                         "60 days sooner",
-                         "90 days sooner")
+    sensitivity_value <- paste0("Average ", parameter_names[unique(deaths_averted_detail$sen)])
 
     # source: https://data.worldbank.org/indicator/SP.POP.TOTL
     population <- data.frame(
@@ -292,8 +288,8 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
                                          from = cfacts_to_display,
                                          to = labels_to_display),
         iso3c = as.factor(iso3c),
-        delta_deaths = -delta_deaths,
-        delta_deaths_perpop = -delta_deaths_perpop,
+        delta_deaths = delta_deaths,
+        delta_deaths_perpop = delta_deaths_perpop,
         sensitivity_value_avg = round(sensitivity_value_avg, as.numeric(parameter_precision[sen])),
         delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_avg,2),
         baseline_cumulative_deaths_avg = round(baseline_cumulative_deaths_avg, 0)
@@ -309,14 +305,14 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
           baseline_cumulative_deaths_avg,
           delta_deaths_perreported ) %>%
       rename(
-        c(
-           "counterfactual_label" = "Counterfactual scenario",
-           "delta_deaths" = "Deaths averted",
-           "sensitivity_value_avg" = paste0("Average ", parameter_names[unique(deaths_averted_detail$sen)]),
-           "delta_deaths_perpop" = "Deaths averted per 10,000",
-           "baseline_cumulative_deaths_avg" = "Baseline deaths",
-           "delta_deaths_perreported" = "Averted/baseline"
-        )
+        all_of(c(
+           "Counterfactual scenario" = "counterfactual_label",
+           "Deaths_averted" = "delta_deaths",
+           sensitivity_value = 'sensitivity_value_avg',
+           "Deaths averted per 10,000" = "delta_deaths_perpop",
+          "Baseline deaths" = "baseline_cumulative_deaths_avg",
+          "Deaths averted per baseline death" = "delta_deaths_perreported"
+        ))
       )
     }
 
@@ -330,7 +326,7 @@ deaths_averted_table_single <- function(deaths_averted_data) {
   differences_table <- format_deaths_table(deaths_averted_data)  
   }
 
-deaths_averted_plot <- function(sen, quantities, dates)  {
+deaths_averted_plot <- function(sen, quantiles, dates)  {
 
   deaths_averted_detail <- join_counterfactual_tables_horizontal(sen, quantiles)
   for (last_date_to_display in dates) {
@@ -373,7 +369,7 @@ deaths_averted_plot <- function(sen, quantities, dates)  {
   }  
 }
 
-vaccinated_plot <- function(sen, quantities, dates)  {
+vaccinated_plot <- function(sen, quantiles, dates)  {
 
   deaths_averted_detail <- join_counterfactual_tables_horizontal(sen, quantiles)
   for (last_date_to_display in dates) {
