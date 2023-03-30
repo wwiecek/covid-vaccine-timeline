@@ -47,6 +47,19 @@ data_source <- c('e', 'r')
 parameter_variants <- c('veis', 'dur_Vs', 'dur_Rs')
 
 percentiles <- c(10, 90)
+
+# source: https://data.worldbank.org/indicator/SP.POP.TOTL
+population <- data.frame(
+  iso3c = c("GBR", "USA"),
+  pop10k = c(67081000, 331501080) / 10000
+)
+
+cfacts_to_display <- c("30_days_sooner",
+                         "60_days_sooner",
+                         "90_days_sooner")
+labels_to_display <- c("30 days sooner",
+                         "60 days sooner",
+                         "90 days sooner")
 ```
 
 
@@ -86,10 +99,7 @@ join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
 }
 
 join_counterfactual_tables_horizontal <- function(sensitivity, quantiles) {
-  population <- data.frame(
-    iso3c = c("GBR", "USA"),
-    pop10k = c(67081000, 331501080) / 10000
-  )
+
 
   counterfactuals <- lapply(quantiles, function(quant) {
       cf_table <- readRDS(paste0("data/deaths_averted_", sensitivity, "_", quant, "_detail.Rds")) %>%
@@ -133,20 +143,6 @@ load_deaths_averted_table <- function( table_path = "data/deaths_averted_detail.
 }
 
 format_deaths_table <- function(deaths_averted_detail){
-
-    cfacts_to_display <- c("30_days_sooner",
-                         "60_days_sooner",
-                         "90_days_sooner")
-    labels_to_display <- c("30 days sooner",
-                         "60 days sooner",
-                         "90 days sooner")
-
-    # source: https://data.worldbank.org/indicator/SP.POP.TOTL
-    population <- data.frame(
-      iso3c = c("GBR", "USA"),
-      pop10k = c(67081000, 331501080) / 10000
-    )
-
     with_pop <- deaths_averted_detail %>%
       left_join(population, by = "iso3c") %>%
       mutate(cumulative_averted_deaths_perpop_avg = cumulative_averted_deaths_avg / pop10k,
@@ -212,7 +208,7 @@ format_deaths_table <- function(deaths_averted_detail){
           delta_deaths_perpop,
           baseline_cumulative_deaths_avg,
           delta_deaths_perreported ) %>%
-      rename(
+      plyr::rename(
         c(
            "counterfactual_label" = "Counterfactual scenario",
            "delta_deaths" = "Deaths averted",
@@ -225,19 +221,6 @@ format_deaths_table <- function(deaths_averted_detail){
 
 format_deaths_table_sensitivity <- function(deaths_averted_detail){
     # This is a hack to get around the fact that we could get data frames without the right columns
-
-    cfacts_to_display <- c("30_days_sooner",
-                         "60_days_sooner",
-                         "90_days_sooner")
-    labels_to_display <- c("30 days sooner",
-                         "60 days sooner",
-                         "90 days sooner")
-
-    # source: https://data.worldbank.org/indicator/SP.POP.TOTL
-    population <- data.frame(
-      iso3c = c("GBR", "USA"),
-      pop10k = c(67081000, 331501080) / 10000
-    )
 
     with_pop <- deaths_averted_detail %>%
       left_join(population, by = "iso3c") %>%
@@ -292,8 +275,6 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
                                          from = cfacts_to_display,
                                          to = labels_to_display),
         iso3c = as.factor(iso3c),
-        delta_deaths = -delta_deaths,
-        delta_deaths_perpop = -delta_deaths_perpop,
         sensitivity_value_avg = round(sensitivity_value_avg, as.numeric(parameter_precision[sen])),
         delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_avg,2),
         baseline_cumulative_deaths_avg = round(baseline_cumulative_deaths_avg, 0)
@@ -308,7 +289,7 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
           delta_deaths_perpop,
           baseline_cumulative_deaths_avg,
           delta_deaths_perreported ) %>%
-      rename(
+      plyr::rename(
         c(
            "counterfactual_label" = "Counterfactual scenario",
            "delta_deaths" = "Deaths averted",
@@ -330,7 +311,7 @@ deaths_averted_table_single <- function(deaths_averted_data) {
   differences_table <- format_deaths_table(deaths_averted_data)  
   }
 
-deaths_averted_plot <- function(sen, quantities, dates)  {
+deaths_averted_plot <- function(sen, quantiles, dates)  {
 
   deaths_averted_detail <- join_counterfactual_tables_horizontal(sen, quantiles)
   for (last_date_to_display in dates) {
@@ -373,7 +354,7 @@ deaths_averted_plot <- function(sen, quantities, dates)  {
   }  
 }
 
-vaccinated_plot <- function(sen, quantities, dates)  {
+vaccinated_plot <- function(sen, quantiles, dates)  {
 
   deaths_averted_detail <- join_counterfactual_tables_horizontal(sen, quantiles)
   for (last_date_to_display in dates) {

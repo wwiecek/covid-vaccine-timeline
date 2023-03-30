@@ -31,7 +31,7 @@ dj4 = ggplot() +
 plot(dj4)
 ```
 
-Table \@ref(tab:vaccinations-table) shows the actual vaccinations administered on 2021-01-01, 2021-04-01 and 2021-07-01 alongside the administration numbers for the counterfactual scenarios we investigage.
+Table \@ref(tab:vaccinations-table) shows the actual vaccinations administered on 2021-01-01, 2021-04-01 and 2021-07-01 alongside the administration numbers for the counterfactual scenarios we investigate.
 
 
 ```{r vaccinations-table, caption=c("Vaccinations administered under baseline and counterfactual scenarios"), echo=FALSE}
@@ -57,7 +57,7 @@ vaccinations_table = counterfactuals %>%
       )
     )
   ) %>%
-  rename(
+  plyr::rename(
     c(
       "shifted_by" = "Counterfactual scenario"
     )
@@ -110,24 +110,48 @@ zoomed_deaths_averted = deaths_averted %>%
     to = labels_to_display
   )) %>%
   mutate(counterfactual_label = factor(counterfactual_label,
-                                       labels_to_display))
-
-single_timeseries_plot = ggplot(zoomed_deaths_averted, aes(x = date)) +
-  geom_line(aes(y = baseline_deaths_avg, colour = "baseline")) +
-  geom_line(aes(y = deaths_avg, colour = "counterfactual")) +
-  geom_ribbon(
-    aes(ymin = deaths_025, ymax = deaths_975),
-    alpha = 0.3,
-    fill = colour_counterfactual
-  ) +
-  facet_grid(counterfactual_label ~ country,
-             labeller = labeller(.rows=label_wrap_gen(width = 15))) +
-  scale_colour_manual(
-    labels = c('baseline', 'counterfactual'),
-    values = c(colour_baseline, colour_counterfactual)
-  ) +
-  labs(x = "Date", y = "Daily Deaths", color = "Colour")
+                                       labels_to_display)) %>%
+  left_join(population, by = "iso3c") %>%
+  mutate(
+    deaths_025_perpop = deaths_025 / pop10k,
+    deaths_975_perpop = deaths_975 / pop10k,
+    baseline_deaths_avg_perpop = baseline_deaths_avg / pop10k,
+    deaths_avg_perpop = deaths_avg / pop10k,
+    cumulative_deaths_025_perpop = cumulative_deaths_025 / pop10k,
+    cumulative_deaths_975_perpop = cumulative_deaths_975 / pop10k,
+    baseline_cumulative_deaths_avg_perpop = baseline_cumulative_deaths_avg / pop10k,
+    cumulative_deaths_avg_perpop = cumulative_deaths_avg / pop10k,
+  )
   
+baseline_color <- "#2C3E50" # dark blue
+counterfactual1_color <- "#E74C3C" # red
+counterfactual2_color <- "#27AE60" # green
+counterfactual3_color <- "#F1C40F" # yellow
+
+single_timeseries_plot = ggplot(data = zoomed_deaths_averted,
+                                aes(x = as.Date(date),
+                                    y = deaths_avg_perpop,
+                                    color = counterfactual)) +
+  geom_line() +
+  geom_ribbon(
+    aes(ymin = deaths_025_perpop, ymax = deaths_975_perpop, fill = counterfactual),
+    alpha = 0.2,
+    color = NA,
+    show.legend = FALSE
+  ) +
+  geom_line(aes(y = baseline_deaths_avg_perpop, colour = "baseline")) +
+  facet_wrap( ~ country) +
+  scale_colour_manual(
+    aesthetics = c("fill", "colour"),
+    labels = c('30 days', '60 days', '90 days', 'baseline'),
+    values = c(
+      counterfactual1_color,
+      counterfactual2_color,
+      counterfactual3_color,
+      baseline_color
+    )
+  ) +
+  labs(x = "Date", y = "Daily Deaths per 10 000 people", color = "Colour")
 
 plot(single_timeseries_plot)
 
@@ -136,21 +160,30 @@ plot(single_timeseries_plot)
 
 
 ```{r cumulative-deaths, fig.align="center", fig.cap=c("Cumulative deaths per scenario"), echo=FALSE}
-cumulative_deaths_plot = ggplot(zoomed_deaths_averted, aes(x = date)) +
-  geom_line(aes(y = baseline_cumulative_deaths_avg, colour = "baseline")) +
-  geom_line(aes(y = cumulative_deaths_avg, colour = "counterfactual")) +
+cumulative_deaths_plot = ggplot(zoomed_deaths_averted,
+                                aes(x = as.Date(date),
+                                    y = cumulative_deaths_avg_perpop,
+                                    color = counterfactual)) +
+  geom_line() +
   geom_ribbon(
-    aes(ymin = cumulative_deaths_025, ymax = cumulative_deaths_975),
-    alpha = 0.3,
-    fill = colour_counterfactual
+    aes(ymin = cumulative_deaths_025_perpop, ymax = cumulative_deaths_975_perpop, fill = counterfactual),
+    alpha = 0.2,
+    color = NA,
+    show.legend = FALSE
   ) +
-  facet_grid(counterfactual_label ~ country,
-             labeller = labeller(.rows=label_wrap_gen(width = 15))) +
+  geom_line(aes(y = baseline_cumulative_deaths_avg_perpop, colour = "baseline")) +
+  facet_wrap( ~ country) +
   scale_colour_manual(
-    labels = c('baseline', 'counterfactual'),
-    values = c(colour_baseline, colour_counterfactual)
+    aesthetics = c("fill", "colour"),
+    labels = c('30 days', '60 days', '90 days', 'baseline'),
+    values = c(
+      counterfactual1_color,
+      counterfactual2_color,
+      counterfactual3_color,
+      baseline_color
+    )
   ) +
-  labs(x = "Date", y = "Cumulative Deaths", color = "Colour")
+  labs(x = "Date", y = "Cumulative Deaths per 10 000 people", color = "Colour")
   
 
 plot(cumulative_deaths_plot)
