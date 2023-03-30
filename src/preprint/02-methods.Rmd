@@ -15,11 +15,68 @@ The baseline model is an age-stratified SEIRD model. In addition to classifying 
 
 The model assumes homogenous mixing of the population. It models different kinds of infection -- "severe" and "non-severe" -- which have different age-dependent probabilities of progressing to recovery or death. Individuals who have recovered are assumed to be fully protected by natural immunity for an exponentially random duration duration which is, on average, around 250 days. Individuals who have been vaccinated have different levels of protection at different points in time depending on the dominant strain, and unless they receive additional doeses then protection is considered to have waned after an exponentially random period of time (on average, around 150 days). Vaccinated individuals are also considered to have a reduced likelihood of onward transmission, which also fades when the vaccine protection wanes.
 
-The model features deterministic parameters, random parameters and derived parameters. We run an ensemble of simulations for each country, sampling the random parameters at the start of each run from pre-defined distributions. There are three derived parameters: the duration of vaccine-derived immunity, the initial number of cases seeding the pandemic in the country and the time series of reproduction numbers of infections in a fully susceptible population $R_t$. The duration of vaccine derived immunity is derived from the sampled efficacy of vaccination against infection by simulating an antibody decay curve [@watsonoliverj.COVID19LMICReports2022]. The initial number of cases and the timeseries of effective reproductive numbers is subsequently chosen such that the model outputs fit the observations - either of excess or officially reported deaths. We report the central estimates of vaccine efficacy in Table \@ref{tab:vaccine-efficacy}.
+The model features a mix of deterministic parameters and random parameters. We run an ensemble of simulations for each country, sampling the random parameters at the start of each run from pre-defined distributions. The initial number of cases seeding the pandemic in the country and the time series of reproduction numbers of infections in a fully susceptible population $R_t$ is then fit to the observed course of deaths during the time period associated with the simulation. 
+
+The distributions of random parameters is given in Table \@ref(tab:trajectory-sampling-parameters). Parameters are sampled from each distribution independently except for the duration of vaccine-derived immunity, which is dependent on vaccine efficacy. 100 sets of parameters are sampled, and epidemic trajectories simulated for each. 95% intervals in our results refer to percentiles among the set of 100 sampled trajectories, so a 95% interval for deaths averted is the pair of numbers given by the 2.5th and the 97.5th percentile of deaths averted among all sampled trajectories. Note that the distributions given here are not exact representations of the models sampling distributions, which involve additional truncation steps.
+
+The model of [@watsonoliverj.COVID19LMICReports2022] also samples probabilities of hospitalisation and mechanical ventilation for each trajectory, but these play no role in our analysis not already captured by the infection fatality rate, and so we haven't reported on the relevant parameters here. 
+
+The shape parameters $\alpha_e^P, \beta_e^P$ that appear in Table \@ref(tab:trajectory-sampling-parameters) are the shape parameters associated with a beta distribution with mean $\mu_e^P$ and variance $0.005$. The mean $\mu_e^P$ is determined by estimating the efficacy of each vaccine platform $P$ against each variant (see Table \@ref(tab:vaccine-efficacy)). The mean vaccine durations are determined according to models of antibody decay, and are dependent on the sampled vaccine efficacies $\mu_e^P$ [@watsonoliverj.COVID19LMICReports2022].
+
+
+
+
+```{r trajectory-sampling-parameters, tidy=FALSE, echo=FALSE, escape=FALSE, caption=c('Pandemic trajectory sampling distributions')}
+
+sampling_dists <- data.frame(
+    'Parameter' = c('Vaccine efficacy $V$', 'Vaccine duration $D$', 'Infection fatality rate with treatment $F$'), 
+    'Distribution' = c(
+      '$V\\sim \\mathrm{Beta}(\\alpha_{e}^P, \\beta_{e}^P), P\\sim U(\\{\\mathrm{vaccine platforms}\\})$', 
+      '$\\frac{1}{\\mathrm{Gamma}(\\alpha_{d}, \\beta_d)}$',
+      '$F = \\mathrm{rescale}(X,f_{min}, f_{med}, f_{max})\\quad X\\sim \\mathrm{Beta}(2,2)$'
+      ))
+
+sampling_dists %>% kbl(
+  booktabs = TRUE,
+  linesep = "",
+  caption = 'Distributions from which parameters are sampled. The parameters $\\alpha_e^P, \\beta_e^P$ are shape parameters for vaccine platform $P$ with associated dominant strain dependent efficacy $e$ (see text for additional details). The parameters $\\alpha_d, \\beta_d$ are shape and rate parameters for distribution of vaccine durations, determined by fitting an antibody decay curve to vaccine efficacies. $\\mathrm{rescale}(\\cdot, f_{min}, f_{med}, f_{max})$ is a function that maps $0$ to $f_{min}$, $0.5$ to $f_{med}$ and $1$ to $f_{max}$, linearly interpolating between each. $f_{min}, f_{med}, f_{max}$ are respectively the minimum, median, and maximum estimates of age-adjusted infection fatality.',
+  centering = TRUE,
+  escape = FALSE
+)
+```
+
+```{r vaccine-platforms, tidy=FALSE, echo=FALSE, caption=c('Vaccine platforms for each country')}
+
+sampling_dists <- data.frame(
+    'Country' = c('USA', 'UK'), 
+    'Platforms' = c(
+      'mRNA, single dose, subunit', 'adenovirus, mRNA'))
+
+sampling_dists %>% kbl(
+  booktabs = TRUE,
+  linesep = "",
+  caption = 'Vaccine platforms used by each country.',
+  centering = TRUE,
+  escape = FALSE
+)
+```
+
+
+```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy')}
+
+vaccine_efficacy <- read.csv('vaccine_efficacy_groups.csv')
+
+vaccine_efficacy %>% kbl(
+  booktabs = TRUE,
+  linesep = "",
+  col.names = c('Vaccine type', 'Doses', 'Strain', 'Protection against infection'),
+  caption = 'Model parameters - central estimates of vaccine efficacy',
+  centering = TRUE
+)
+```
+
 
 We made one change to the model used by [@watsonoliverj.COVID19LMICReports2022]: by default, vaccination was assumed to reduce onward transmission by 50%, regardless of whether the dose was fresh or waned. We modified this to the schedule shown in Table \@ref(tab:onward). These represented an average between the estimates of [@eyreImpactSARSCoV2Vaccination2021a] for effectiveness at blocking onward transmission of Alpha and Delta and the estimate of [@tanInfectiousnessSARSCoV2Breakthrough2023] for effectiveness of the vaccine at blocking onward transmission of Omicron, as the period of the simulation included both Delta and Omicron waves.
-
-As the documentation for older models does not cover the parameters for booster vaccines or efficacy vs the Omicron strain, we report central estimates of efficacies in Table \@ref(tab:vaccine-efficacy).
 
 ```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated')}
 
@@ -49,23 +106,6 @@ vaccine_onward_protection %>% kbl(
   caption = 'Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated',
   centering = TRUE
   )
-```
-
-```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy')}
-
-vaccine_efficacy <- data.frame(
-    'Vaccine type' = c('mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA'), 
-    'Doses' = c('1', '2', '1', '2', '1', '2', '3'),
-    'Strain' = c('Wild', 'Wild', 'Delta', 'Delta', 'Omicron', 'Omicron', 'Omicron'),
-    'Protection against infection' = c('0.63', '0.86', '0,36', '0.88', '0', '0.136', '0.65'))
-
-vaccine_efficacy %>% kbl(
-  booktabs = TRUE,
-  col.names = c('Vaccine type', 'Doses', 'Strain', 'Protection against infection'),
-  linesep = "",
-  caption = 'Model parameters - central estimates of vaccine efficacy',
-  centering = TRUE
-)
 ```
 
 

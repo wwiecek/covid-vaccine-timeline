@@ -143,6 +143,7 @@ resources:
   - report.Rproj
   - search_index.json
   - style.css
+  - vaccine_efficacy_groups.csv
 
 # Optional name of a variable to make the SQL connection available to
 # the script.  Use this with care and avoid using any queries that
