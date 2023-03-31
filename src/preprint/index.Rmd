@@ -60,6 +60,15 @@ cfacts_to_display <- c("30_days_sooner",
 labels_to_display <- c("30 days sooner",
                          "60 days sooner",
                          "90 days sooner")
+
+vaccination_start_dates = data.frame(
+  iso3c = c(rep('USA',5), rep('GBR',5)),
+  counterfactual = c('no_vaccines', 'owid_raw', '30_days_sooner', '60_days_sooner', '90_days_sooner'),
+  vacc_start_date = as.Date(c("2020-12-14", "2020-12-14", "2020-11-14", "2020-10-15", "2020-09-15",
+                         "2021-01-11", "2021-01-11", "2020-12-12", "2020-11-12", "2020-10-13"))
+)
+
+
 ```
 
 
@@ -88,6 +97,17 @@ join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
             suffix = c("", "_reported")) %>%
           mutate( sen = sen ) %>%
           mutate( quant = quant ) %>% 
+          left_join(vaccination_start_dates, by = c('iso3c', 'counterfactual')) %>%
+          mutate(
+            baseline_deaths_since_vacc = ifelse(date >= vacc_start_date,
+                                                baseline_deaths_avg, 0)
+          ) %>%
+          ungroup() %>%
+          group_by(iso3c, counterfactual) %>%
+          mutate(
+            baseline_cumulative_deaths_since_vacc = cumsum(baseline_deaths_since_vacc)
+          ) %>%
+          ungroup() %>%
           filter(date %in% dates)
       })
   })
@@ -125,22 +145,44 @@ join_counterfactual_tables_horizontal <- function(sensitivity, quantiles) {
    )
 }
 
-load_deaths_averted_table <- function( table_path = "data/deaths_averted_detail.Rds", excess = TRUE ) {
-  
-  if(excess) {
-    deaths_averted_reported <- readRDS("data/reported_deaths_averted_detail.Rds")
-    deaths_averted_summary <- readRDS(table_path) %>%
-      left_join(deaths_averted_reported, by = c('iso3c', 'date', 'counterfactual'), suffix = c('', '_reported')) %>%
-      filter( date %in% last_dates_to_display)
-    return(deaths_averted_summary)
-  } else {
-    deaths_averted_summary <- readRDS("data/reported_deaths_averted_detail.Rds") %>%
-      mutate( baseline_cumulative_deaths_avg_reported = baseline_cumulative_deaths_avg ) %>%
-      filter( date %in% last_dates_to_display)
+load_deaths_averted_table <-
+  function(table_path = "data/deaths_averted_detail.Rds",
+           excess = TRUE) {
+    
+    
+    if (excess) {
+      deaths_averted_reported <-
+        readRDS("data/reported_deaths_averted_detail.Rds")
+      deaths_averted_summary <- readRDS(table_path) %>%
+        left_join(
+          deaths_averted_reported,
+          by = c('iso3c', 'date', 'counterfactual'),
+          suffix = c('', '_reported')
+        ) 
+        
+    } else {
+      deaths_averted_summary <-
+        readRDS("data/reported_deaths_averted_detail.Rds") %>%
+        mutate(baseline_cumulative_deaths_avg_reported = baseline_cumulative_deaths_avg) 
+    }
+    
+    
+    deaths_averted_summary = deaths_averted_summary %>%
+      left_join(vaccination_start_dates, by = c('iso3c', 'counterfactual')) %>%
+      mutate(
+        baseline_deaths_since_vacc = ifelse(date >= vacc_start_date,
+                                            baseline_deaths_avg, 0)
+      ) %>%
+      ungroup() %>%
+      group_by(iso3c, counterfactual) %>%
+      mutate(
+        baseline_cumulative_deaths_since_vacc = cumsum(baseline_deaths_since_vacc)
+      ) %>%
+      ungroup() %>%
+      filter(date %in% last_dates_to_display)
+    
     return(deaths_averted_summary)
   }
-  
-}
 
 format_deaths_table <- function(deaths_averted_detail){
     with_pop <- deaths_averted_detail %>%
@@ -196,8 +238,8 @@ format_deaths_table <- function(deaths_averted_detail){
                                          from = cfacts_to_display,
                                          to = labels_to_display),
         iso3c = as.factor(iso3c),
-        delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_avg,2),
-        baseline_cumulative_deaths_avg = round(baseline_cumulative_deaths_avg, 0)
+        delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_since_vacc,2),
+        baseline_cumulative_deaths_since_vacc = round(baseline_cumulative_deaths_since_vacc, 0)
       ) %>%
       mutate(counterfactual_label = factor(counterfactual_label,
                                            labels_to_display)) %>%
@@ -206,14 +248,14 @@ format_deaths_table <- function(deaths_averted_detail){
           counterfactual_label,
           delta_deaths,
           delta_deaths_perpop,
-          baseline_cumulative_deaths_avg,
+          baseline_cumulative_deaths_since_vacc,
           delta_deaths_perreported ) %>%
       plyr::rename(
         c(
            "counterfactual_label" = "Counterfactual scenario",
            "delta_deaths" = "Deaths averted",
            "delta_deaths_perpop" = "Deaths averted per 10,000",
-           "baseline_cumulative_deaths_avg" = "Baseline deaths",
+           "baseline_cumulative_deaths_since_vacc" = "Baseline deaths",
            "delta_deaths_perreported" = "Deaths averted per baseline death"
         )
       )
@@ -276,8 +318,8 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
                                          to = labels_to_display),
         iso3c = as.factor(iso3c),
         sensitivity_value_avg = round(sensitivity_value_avg, as.numeric(parameter_precision[sen])),
-        delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_avg,2),
-        baseline_cumulative_deaths_avg = round(baseline_cumulative_deaths_avg, 0)
+        delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_since_vacc,2),
+        baseline_cumulative_deaths_since_vacc = round(baseline_cumulative_deaths_since_vacc, 0)
       ) %>%
       mutate(counterfactual_label = factor(counterfactual_label,
                                            labels_to_display)) %>%
@@ -287,7 +329,7 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
           sensitivity_value_avg,
           delta_deaths,
           delta_deaths_perpop,
-          baseline_cumulative_deaths_avg,
+          baseline_cumulative_deaths_since_vacc,
           delta_deaths_perreported ) %>%
       plyr::rename(
         c(
@@ -295,7 +337,7 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
            "delta_deaths" = "Deaths averted",
            "sensitivity_value_avg" = paste0("Average ", parameter_names[unique(deaths_averted_detail$sen)]),
            "delta_deaths_perpop" = "Deaths averted per 10,000",
-           "baseline_cumulative_deaths_avg" = "Baseline deaths",
+           "baseline_cumulative_deaths_since_vacc" = "Baseline deaths",
            "delta_deaths_perreported" = "Averted/baseline"
         )
       )
