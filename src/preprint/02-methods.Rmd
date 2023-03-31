@@ -22,7 +22,7 @@ We made one change to the model used by [@watsonoliverj.COVID19LMICReports2022]:
 As the documentation for older models does not cover the parameters for booster vaccines or efficacy vs the Omicron strain, we report central estimates of efficacies in Table \@ref(tab:vaccine-efficacy).
 
 ```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated')}
-knitr::kable(
+kbl(
   data.frame(
     'Doses' = c(
       '1 dose (fresh)', 
@@ -50,7 +50,7 @@ knitr::kable(
 ```
 
 ```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy')}
-knitr::kable(
+kbl(
   data.frame(
     'Vaccine type' = c('mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA', 'mRNA'), 
     'Doses' = c('1', '2', '1', '2', '1', '2', '3'),
