@@ -14,9 +14,14 @@ devtools::install_github(
 )
 
 
-# Generate vaccination timelines -----
+# Generate vaccination timelines and input data -----
 ord_runs <- lapply(
   list(
+    "parameters_vaccines",
+    "input_excess_mortality",
+    "input_jhu",
+    "input_sequencing",
+    "input_vaccinations",
     "generate_production_counterfactual",
     "generate_vaccine_counterfactual"
   ),
@@ -26,10 +31,43 @@ ord_runs <- lapply(
   }
 )
 
+# Generate Rt fits -----
+
+date <- '2023-01-01'
+
+iso3cs <- c("USA", "GBR")
+
+rt_params_lists <- lapply(iso3cs, function(iso3c){
+  list(
+      iso3c = iso3c
+      date = date,
+      samples = 32*3, #how many random samples to generate and fit
+      seed = FALSE, #Set a seed, useful for debugging
+      parallel = TRUE,
+      #Should we build the required documentation+data for the fit
+      document = TRUE,
+      fit_cases = FALSE #issues with this, don't have time to fix them.
+      # #Fitting parameters (leave as blank to use defaults in fitting_params.Rds)
+      # initial_infections_interval = c(5, 500),
+      # n_particles = 10,
+      # k = 14,
+      # rt_interval = c(0.5, 10)
+    )
+})
+
+for (rt_params in rt_params_lists) {
+  rt_id <- orderly::orderly_run(
+    "lmic_reports_rt_optimise",
+    parameters = rt_params)
+
+  orderly::orderly_commit(rt_id)
+}
 
 # Generate and plot infection timelines -----
 
-tasks <- list('generate_counterfactuals', 'deaths_averted_plot_timeline')
+tasks <- list(
+  "generate_counterfactuals",
+  "deaths_averted_plot_timeline")
 
 parameter_sets <- list(
     list(
