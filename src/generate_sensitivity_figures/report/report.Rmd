@@ -189,7 +189,7 @@ deaths_averted_table <- function(sensitivities, quantiles, dates) {
     })   
   }
 
-deaths_averted_plot <- function(sen, quantities, dates)  {
+deaths_averted_plot <- function(sen, quantiles, dates)  {
 
   das <- join_counterfactual_tables_horizontal(sen, quantiles)
   for (last_date_to_display in dates) {

@@ -79,8 +79,8 @@ vaccine_efficacy %>% kbl(
 We made one change to the model used by [@watsonoliverj.COVID19LMICReports2022]: by default, vaccination was assumed to reduce onward transmission by 50%, regardless of whether the dose was fresh or waned. We modified this to the schedule shown in Table \@ref(tab:onward). These represented an average between the estimates of [@eyreImpactSARSCoV2Vaccination2021a] for effectiveness at blocking onward transmission of Alpha and Delta and the estimate of [@tanInfectiousnessSARSCoV2Breakthrough2023] for effectiveness of the vaccine at blocking onward transmission of Omicron, as the period of the simulation included both Delta and Omicron waves.
 
 ```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated')}
-
-vaccine_onward_protection <- data.frame(
+vaccine_onward_protection <- 
+  data.frame(
     'Doses' = c(
       '1 dose (fresh)', 
       '2 doses (fresh)', 
@@ -105,7 +105,7 @@ vaccine_onward_protection %>% kbl(
   linesep = "",
   caption = 'Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated',
   centering = TRUE
-  )
+)
 ```
 
 
