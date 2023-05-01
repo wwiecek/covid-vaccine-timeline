@@ -1,6 +1,26 @@
 ##Set-up VEs for Vaccine Types
 ves_by_type <- read_csv("vaccine_efficacy_groups.csv") %>%
   mutate(dose = if_else(dose == "Partial", "First", "Second"))
+
+# Add a special "UK" platform that is (currently) a 66-34 mix of mRNA and adenovirus for does 1 and 2
+# and mRNA for booster
+
+uk_platform <- ves_by_type %>%
+  filter(vaccine_type %in% c('mRNA', "Adenovirus")) %>%
+  pivot_wider( names_from = vaccine_type, values_from = efficacy) %>%
+  mutate( efficacy = case_when(
+    dose %in% c('First', 'Second') ~ 0.5*mRNA + 0.5*Adenovirus, # 66-34 mix of mRNA and adenovirus
+    dose == 'Booster' ~ mRNA) # mRNA for booster
+  ) %>% 
+  mutate(vaccine_type = "GBR") %>%
+  select(-mRNA, -Adenovirus)
+
+ves_by_type <- ves_by_type %>%
+  rbind(
+    uk_platform
+  ) %>%
+  arrange(vaccine_type, variant, endpoint, dose)
+
 #assumed numbers, booster restores efficacy NOTE Ideally we'd find better numbers, might be too many categories
 master_ves <- tribble(
   ~Variant, ~Dose, ~Endpoint, ~Efficacy,
@@ -81,20 +101,24 @@ ves_by_type <- ves_by_type %>%
   arrange(vaccine_type, variant, endpoint, dose)
 
 #overwrite with omicron data for boosters where possible
-ves_by_type <- ves_by_type %>%
-  mutate(
-    efficacy = case_when(
-      vaccine_type == "mRNA" & dose == "booster" & endpoint == "Infection" & variant == "Omicron" ~
-        0.65, #https://www.nejm.org/doi/full/10.1056/NEJMoa2119451
-      vaccine_type == "mRNA" & dose == "booster" & endpoint == "Hospitalisation" & variant == "Omicron" ~
-        0.82, #https://www.sciencedirect.com/science/article/pii/S0264410X22005230
-      vaccine_type == "Whole Virus" & dose == "booster" & endpoint == "Hospitalisation" & variant == "Omicron" ~
-        0.80, #evidence suggest that its similar to mRNA so we'll keep them the same
-      #https://doi.org/10.1016/S2214-109X(22)00112-7 #Not the right variant but presumably will be lower?
-      #some evidence that it's much higher https://www.medrxiv.org/content/10.1101/2022.03.22.22272769v1#:~:text=Two%20doses%20of%20either%20vaccine,%3A%2067.8%25%2C%2079.2%25).
-      TRUE ~ efficacy
-    )
-  )
+# ves_by_type <- ves_by_type %>%
+#   mutate(
+#     efficacy = case_when(
+#       vaccine_type == "mRNA" & dose == "Booster" & endpoint == "Infection" & variant == "Omicron" ~
+#         0.65, #https://www.nejm.org/doi/full/10.1056/NEJMoa2119451
+#       vaccine_type == "mRNA" & dose == "Booster" & endpoint == "Hospitalisation" & variant == "Omicron" ~
+#         0.82, #https://www.sciencedirect.com/science/article/pii/S0264410X22005230
+#       vaccine_type == "GBR" & dose == "Booster" & endpoint == "Infection" & variant == "Omicron" ~
+#         0.65, #mRNA boosters
+#       vaccine_type == "GBR" & dose == "Booster" & endpoint == "Hospitalisation" & variant == "Omicron" ~
+#         0.82, #mRNA boosters
+#       vaccine_type == "Whole Virus" & dose == "Booster" & endpoint == "Hospitalisation" & variant == "Omicron" ~
+#         0.80, #evidence suggest that its similar to mRNA so we'll keep them the same
+#       #https://doi.org/10.1016/S2214-109X(22)00112-7 #Not the right variant but presumably will be lower?
+#       #some evidence that it's much higher https://www.medrxiv.org/content/10.1101/2022.03.22.22272769v1#:~:text=Two%20doses%20of%20either%20vaccine,%3A%2067.8%25%2C%2079.2%25).
+#       TRUE ~ efficacy
+#     )
+#   )
 #subvariant data where possible
 
 ##Fit Waning Curves
@@ -216,11 +240,16 @@ fit_curve <- function(df) {
         upper$fV_2_i <- NULL
         par$fV_2_i <- NULL
       }
-      if((variant == "Wild" & platform == "mRNA") |
-         (variant == "Wild" & platform == "Adenovirus") |
+      if((variant == "Wild" & platform %in% c("mRNA", "Adenovirus")) |
          (variant == "Delta" & platform %in% c("mRNA", "Johnson&Johnson")) |
          (variant == "Omicron" & platform == "Johnson&Johnson")){
         lower$fV_2_i <- 0.0001
+      } else if (
+        variant == "Wild" & platform == "GBR"
+        ){
+        lower$fV_2_i <- 0.0001
+        par$fV_2_d <- 0.41
+        par$fV_2_i <- 0.41
       } else if (
         (variant %in% c("Delta", "Omicron") & platform %in% c("Subunit"))      ){
         lower$fV_2_i <- 0.0001
@@ -302,8 +331,8 @@ fit_curve <- function(df) {
         par$bV_3_i <- NULL
       }
       if((variant == "Omicron" & platform == "Johnson&Johnson") |
-         (variant %in% c("Delta", "Wild") & platform == "mRNA") |
-         (variant == "Wild" & platform == "Adenovirus")){
+         (variant %in% c("Delta", "Wild") & platform %in% c("mRNA", "GBR")) |
+         (variant == "Wild" & platform %in% c("Adenovirus", "GBR"))){
         lower$bV_3_i <- 0.00001
       } else if(
         (variant %in% c("Delta" ) & platform == "Whole Virus")
@@ -615,8 +644,10 @@ random_efficacies <- random_efficacies %>%
 #empty environment of everything not relevant
 rm(list = setdiff(ls(), c("N_samples", "random_efficacies")))
 
+# Use platform weighted average of efficacies
+
 sample_vaccine_efficacies <- function(n, platforms){
-  if("mRNA" %in% platforms){
+  if(("mRNA" %in% platforms) | ("GBR" %in% platforms)){
     booster_platform <- "mRNA"
   } else {
     booster_platform <- "Whole Virus"

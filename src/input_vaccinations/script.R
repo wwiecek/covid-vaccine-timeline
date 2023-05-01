@@ -15,8 +15,14 @@ who_vacc_meta <- import_who_vaccination_meta()
 
 owid <- import_owid()
 
-#determine the vaccine platforms used in each country
-platforms_df <- get_platforms(iso3cs, vacc_types, vdm, who_vacc, who_vacc_meta)
+# Approximation: set USA to 100% mRNA, and set GBR to a custom platform
+# which we adjust to 64% Adenovirus 33% mRNA in parameters_vaccines
+
+platforms_df <- data.frame(
+  iso3c = c('USA', 'GBR'),
+  mRNA = c(TRUE, FALSE),
+  GBR = c(FALSE, TRUE)
+  )
 
 ## Modifications for single dose Vaccines
 #we will treat as only a single dose, more suitable

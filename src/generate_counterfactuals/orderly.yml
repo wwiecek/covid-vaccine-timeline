@@ -160,19 +160,21 @@ resources:
 #           other-data.csv: data.csv
 #
 depends:
-  generate_vaccine_counterfactual:
-    id: latest
-    use:
-      counterfactual_timelines/no_vaccines.Rds: counterfactual_timelines/no_vaccines.Rds
-      counterfactual_timelines/owid_raw.Rds: counterfactual_timelines/owid_raw.Rds
-      counterfactual_timelines/30_days_sooner.Rds: counterfactual_timelines/30_days_sooner.Rds
-      counterfactual_timelines/60_days_sooner.Rds: counterfactual_timelines/60_days_sooner.Rds
-      counterfactual_timelines/90_days_sooner.Rds: counterfactual_timelines/90_days_sooner.Rds
-  lmic_reports_rt_optimise:
-    id: latest(parameter:iso3c == "USA")
-      model_fits/excess_mortality/USA.Rds: excess_out.Rds
-      model_fits/reported_deaths/USA.Rds: reported_out.Rds
-  lmic_reports_rt_optimise:
-    id: latest(parameter:iso3c == "GBR")
-      model_fits/excess_mortality/GBR.Rds: excess_out.Rds
-      model_fits/reported_deaths/GBR.Rds: reported_out.Rds
+  - generate_vaccine_counterfactual:
+      id: latest
+      use:
+        counterfactual_timelines/no_vaccines.Rds: counterfactual_timelines/no_vaccines.Rds
+        counterfactual_timelines/owid_raw.Rds: counterfactual_timelines/owid_raw.Rds
+        counterfactual_timelines/30_days_sooner.Rds: counterfactual_timelines/30_days_sooner.Rds
+        counterfactual_timelines/60_days_sooner.Rds: counterfactual_timelines/60_days_sooner.Rds
+        counterfactual_timelines/90_days_sooner.Rds: counterfactual_timelines/90_days_sooner.Rds
+  - lmic_reports_rt_optimise:
+      id: latest(parameter:iso3c == "USA")
+      use:
+        model_fits/excess_mortality/USA.Rds: excess_out.Rds
+        model_fits/reported_deaths/USA.Rds: reported_out.Rds
+  - lmic_reports_rt_optimise:
+      id: latest(parameter:iso3c == "GBR")
+      use:
+        model_fits/excess_mortality/GBR.Rds: excess_out.Rds
+        model_fits/reported_deaths/GBR.Rds: reported_out.Rds

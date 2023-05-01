@@ -126,13 +126,13 @@ differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "
 
 ```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to vaccine duration"), echo=FALSE}
 
-deaths_averted_plots <- deaths_averted_plot('veis', percentiles, last_dates_to_display)
+deaths_averted_plots <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to_display)
 
 ```
 
 ```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to vaccine efficacy"), echo=FALSE}
 
-deaths_averted_plots <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to_display)
+deaths_averted_plots <- deaths_averted_plot('veis', percentiles, last_dates_to_display)
 
 ```
 
@@ -141,9 +141,9 @@ deaths_averted_plots <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to
 deaths_averted_plots <- deaths_averted_plot('dur_Rs', percentiles, last_dates_to_display)
 ```
 
-```{r vaccinated-plot-vei, fig.align="center", fig.cap=c("Vaccinated, sensitivity to vaccine duration"), echo=FALSE}
+```{r vaccinated-plot-vei, fig.align="center", fig.cap=c("Effective vaccinated, sensitivity to vaccine duration"), echo=FALSE}
 
-deaths_averted_plots <- vaccinated_plot('dur_Vs', percentiles, last_dates_to_display[2])
+deaths_averted_plots <- vaccinated_plot('dur_Vs', percentiles, last_dates_to_display[3])
 
 ```
 

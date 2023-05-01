@@ -1,5 +1,8 @@
-# Use this master script to generate all of the results
+# Use this master script to generate epidemic model fits for USA and UK
+# It is quite slow
+# After this script, run 'run-counterfactuals.R' to update the report
 # see README for details
+
 
 # Packages ------
 devtools::install_github("mrc-ide/nimue")
@@ -14,32 +17,33 @@ devtools::install_github(
 )
 
 
-# Generate vaccination timelines and input data -----
-ord_runs <- lapply(
+# Generate Rt fits -----
+
+cm <- orderly::orderly_run("parameters_vaccines", echo = FALSE)
+orderly::orderly_commit(cm)
+
+date <- '2023-01-01'
+
+rt_ord_runs <- lapply(
   list(
-    "parameters_vaccines",
     "input_excess_mortality",
     "input_jhu",
-    "input_sequencing",
-    "input_vaccinations",
-    "generate_production_counterfactual",
-    "generate_vaccine_counterfactual"
+    "input_vaccinations"
   ),
   function(x) {
-    cm <- orderly::orderly_run(x)
+    cm <- orderly::orderly_run(x, parameters = list(date = date), echo = FALSE)
     orderly::orderly_commit(cm)
   }
 )
 
-# Generate Rt fits -----
-
-date <- '2023-01-01'
+seq_id <- orderly::orderly_run("input_sequencing", parameters = list(date = date, gisaid = FALSE), echo=FALSE)
+orderly::orderly_commit(seq_id)
 
 iso3cs <- c("USA", "GBR")
 
 rt_params_lists <- lapply(iso3cs, function(iso3c){
   list(
-      iso3c = iso3c
+      iso3c = iso3c,
       date = date,
       samples = 32*3, #how many random samples to generate and fit
       seed = FALSE, #Set a seed, useful for debugging
@@ -58,46 +62,8 @@ rt_params_lists <- lapply(iso3cs, function(iso3c){
 for (rt_params in rt_params_lists) {
   rt_id <- orderly::orderly_run(
     "lmic_reports_rt_optimise",
-    parameters = rt_params)
+    parameters = rt_params,
+    echo = FALSE)
 
   orderly::orderly_commit(rt_id)
 }
-
-# Generate and plot infection timelines -----
-
-tasks <- list(
-  "generate_counterfactuals",
-  "deaths_averted_plot_timeline")
-
-parameter_sets <- list(
-    list(
-      excess=FALSE, 
-      boosters=TRUE,
-      double_boosters = FALSE
-    ),
-    list(
-      excess=TRUE, 
-      boosters=TRUE,
-      double_boosters = FALSE
-    ),
-    list(
-      excess=TRUE, 
-      boosters=TRUE,
-      double_boosters = TRUE
-    ) 
-  )
-
-ord_runs <- lapply(
-  tasks,
-  function(task) {
-    lapply(
-      parameter_sets,
-      function(params) {
-        cm <- orderly::orderly_run(task, parameters = params)
-        orderly::orderly_commit(cm)
-      })
-  }
-)
-
-preprint <- orderly::orderly_run("preprint")
-orderly::orderly_commit(preprint)

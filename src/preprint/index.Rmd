@@ -385,15 +385,15 @@ vaccinated_plot <- function(sen, quantiles, dates)  {
                                            labels_to_display))
 
     single_timeseries_plot <- ggplot(zoomed_deaths_averted, aes(x = date)) +
-      geom_line(aes(y = baseline_vaccinated_perpop_avg_10/vaccinated_perpop_avg_10, colour = "10th percentile")) +
-      geom_line(aes(y = baseline_vaccinated_perpop_avg_90/vaccinated_perpop_avg_90, colour = "90th percentile")) +
+      geom_line(aes(y = vaccinated_perpop_avg_10 - baseline_vaccinated_perpop_avg_10, colour = "10th percentile")) +
+      geom_line(aes(y = vaccinated_perpop_avg_90 - baseline_vaccinated_perpop_avg_90, colour = "90th percentile")) +
       geom_ribbon(
-        aes(ymin = averted_deaths_perpop_025_10, ymax = averted_deaths_perpop_975_10),
+        aes(ymin = vaccinated_perpop_025_10-baseline_vaccinated_perpop_avg_10, ymax = vaccinated_perpop_975_10-baseline_vaccinated_perpop_avg_10),
         alpha = 0.5,
         fill = colour_10
       ) +
       geom_ribbon(
-        aes(ymin = averted_deaths_perpop_025_90, ymax = averted_deaths_perpop_975_90),
+        aes(ymin = vaccinated_perpop_025_90-baseline_vaccinated_perpop_avg_90, ymax = vaccinated_perpop_975_90-baseline_vaccinated_perpop_avg_90),
         alpha = 0.4,
         fill = colour_90
       ) +
@@ -405,7 +405,7 @@ vaccinated_plot <- function(sen, quantiles, dates)  {
           paste0("90th percentile ", parameter_names[sen], sep=' ')),
         values = c(colour_10, colour_90)
       ) +
-      labs(x = "Date", y = "Effective number of fully vaccinated people per 10 000 population", color = "Colour")
+      labs(x = "Date", y = "Effective number of fully vaccinated baseline/fully vaccinated counterfactual", color = "Colour")
 
 
     plot(single_timeseries_plot) 

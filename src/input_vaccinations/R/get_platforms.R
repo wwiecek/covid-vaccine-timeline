@@ -84,6 +84,7 @@ types_to_platforms <- function(vaccine_types){
     vaccine_types %in% c("Janssen - Ad26.COV 2-S", "Johnson&Johnson") ~ "Single-Dose",
     vaccine_types %in% c("Valneva - VLA2001") ~ "Whole Virus",
     vaccine_types %in% c("Unknown Vaccine") ~ as.character(NA),
+    vaccine_types %in% c("GBR") ~ "GBR",
     TRUE ~ vaccine_types
   )
 }

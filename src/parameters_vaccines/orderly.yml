@@ -50,4 +50,4 @@ artefacts:
 packages:
   - tidyverse
   - odin
-
+  - tidyr
