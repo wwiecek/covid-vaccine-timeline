@@ -336,15 +336,15 @@ deaths_averted_plot <- function(sen, quantiles, dates)  {
                                            labels_to_display))
 
     single_timeseries_plot <- ggplot(zoomed_deaths_averted, aes(x = date)) +
-      geom_line(aes(y = averted_deaths_perpop_avg_10, colour = "10th percentile")) +
-      geom_line(aes(y = averted_deaths_perpop_avg_90, colour = "90th percentile")) +
+      geom_line(aes(y = -1*averted_deaths_perpop_avg_10, colour = "10th percentile")) +
+      geom_line(aes(y = -1*averted_deaths_perpop_avg_90, colour = "90th percentile")) +
       geom_ribbon(
-        aes(ymin = averted_deaths_perpop_025_10, ymax = averted_deaths_perpop_975_10),
+        aes(ymin = -1*averted_deaths_perpop_025_10, ymax = -1*averted_deaths_perpop_975_10),
         alpha = 0.5,
         fill = colour_10
       ) +
       geom_ribbon(
-        aes(ymin = averted_deaths_perpop_025_90, ymax = averted_deaths_perpop_975_90),
+        aes(ymin = -1*averted_deaths_perpop_025_90, ymax = -1*averted_deaths_perpop_975_90),
         alpha = 0.4,
         fill = colour_90
       ) +
