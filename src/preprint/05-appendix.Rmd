@@ -9,10 +9,10 @@ BIBLIOGRAPHY
 
 ```{r reported-deaths-averted-table, echo=FALSE}
 
-differences_table <- deaths_averted_table_single(load_deaths_averted_table( excess = FALSE ))
+differences_table <- deaths_averted_table_single(load_deaths_averted_table( excess = TRUE ))
 
 differences_table %>%
-  kbl(booktabs=TRUE, centering = TRUE, caption = "Averted deaths calculated on the basis of a model fit to reported deaths") %>%
+  kbl(booktabs=TRUE, centering = TRUE, caption = "Averted deaths calculated on the basis of a model fit to excess deaths") %>%
   pack_rows("United Kingdom to April 2021", 1, 3) %>%
   pack_rows("United Kingdom to July 2021", 4, 6) %>%
   pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
@@ -24,7 +24,7 @@ differences_table %>%
 ```
 
 ```{r reported-deaths-averted-plot, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario"), echo=FALSE}
-deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
+deaths_averted = readRDS("data/deaths_averted_detail.Rds")
 
 zoomed_deaths_averted = deaths_averted %>%
   filter(date > as.Date("2020-09-01") & date <= primary_last_date) %>%

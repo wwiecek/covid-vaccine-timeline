@@ -136,7 +136,8 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
 
   # format the counter factual run
   baseline_deaths <- squire.page::nimue_format(baseline, c("deaths", "infections", "vaccinated_first_dose",
-        "vaccinated_second_dose", "vaccinated_second_waned", "N", "R"), date_0 = date_start,
+        "vaccinated_second_dose", "vaccinated_second_waned",  "vaccinated_booster_dose",
+       "vaccinated_booster_waned", "N", "R"), date_0 = date_start,
       reduce_age = reduce_age) %>%
     dplyr::distinct() %>%
     tidyr::pivot_wider(names_from = .data$compartment, values_from = .data$y) %>%
@@ -178,7 +179,8 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
 
       #format the counter factual run
       counter_df <- squire.page::nimue_format(counter, c("deaths", "infections", "vaccinated_first_dose",
-       "vaccinated_second_dose", "vaccinated_second_waned", "N", "R"),
+       "vaccinated_second_dose", "vaccinated_booster_dose",
+       "vaccinated_booster_waned", "vaccinated_second_waned", "N", "R"),
                                               date_0 = date_start,
                                               reduce_age = reduce_age) %>%
         dplyr::distinct() %>%
@@ -207,7 +209,7 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   )
 
   deaths_df <- dplyr::arrange(deaths_df, counterfactual,
-    N, R, replicate, vaccinated_second_dose, vaccinated_second_waned, date)
+    N, R, replicate, vaccinated_second_dose, vaccinated_second_waned, vaccinated_booster_dose, vaccinated_booster_waned, date)
 
   # and add country info
   deaths_df$country <- country

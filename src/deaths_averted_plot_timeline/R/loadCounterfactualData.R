@@ -71,14 +71,11 @@ loadCounterfactualDataSingle <-
     dplyr::summarise(
       baseline_infections = sum(infections),
       baseline_deaths = sum(deaths),
-      baseline_vaccinated = sum(vaccinated_second_dose),
-      baseline_vaccinated_second_waned = sum(vaccinated_second_waned),
+      baseline_total_vaccinated = sum(vaccinated_second_dose + vaccinated_booster_dose),
+       # - vaccinated_second_waned - vaccinated_booster_waned),
       baseline_recovered = sum(R),
-      baseline_N = mean(N),
-      baseline_percent_susceptible = ((baseline_N - baseline_recovered) *
-        (1 - 0.55*(baseline_vaccinated/baseline_N - baseline_vaccinated_second_waned/baseline_N)
-           - 0.05*baseline_vaccinated_second_waned/baseline_N)/baseline_N)
-      )  %>%
+      baseline_N = mean(N)
+    ) %>%
     dplyr::ungroup() %>%
     dplyr::group_by_at(grouping_base_without_date) %>%
     dplyr::mutate(
@@ -150,12 +147,10 @@ loadCounterfactualDataSingle <-
     dplyr::summarise(
       infections = sum(infections),
       deaths = sum(deaths),
-      vaccinated = sum(vaccinated_second_dose),
-      vaccinated_second_waned = sum(vaccinated_second_waned),
+      total_vaccinated = sum(vaccinated_second_dose + vaccinated_booster_dose), 
+        # - vaccinated_second_waned - vaccinated_booster_waned),
       recovered = sum(R),
-      N  = mean(N),
-      percent_susceptible = ((N - recovered) * (1 - 0.55*(vaccinated/N
-       - vaccinated_second_waned/N) - 0.05*(vaccinated_second_waned/N))/N)
+      N  = mean(N)
     ) %>%
     dplyr::ungroup() %>%
     dplyr::group_by_at(grouping_without_date) %>%

@@ -81,10 +81,10 @@ Table \@ref(tab:deaths-averted-table) shows the number of deaths averted by each
 
 ```{r deaths-averted-table, echo=FALSE}
 
-differences_table <- deaths_averted_table_single(load_deaths_averted_table())
+differences_table <- deaths_averted_table_single(load_deaths_averted_table( excess = FALSE))
 
 differences_table %>%
-  kbl(booktabs=TRUE, centering = TRUE, caption = "DJ5 Averted deaths") %>%
+  kbl(booktabs=TRUE, centering = TRUE, caption = "DJ5 Averted deaths, based on reported deaths") %>%
   pack_rows("United Kingdom to April 2021", 1, 3) %>%
   pack_rows("United Kingdom to July 2021", 4, 6) %>%
   pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
@@ -99,7 +99,7 @@ differences_table %>%
 Figure \@ref(fig:deaths-averted-plot) shows the number of deaths per day under each counterfactual scenario compared to the baseline. Also shown is the interval containing 95% of the counterfactual simulation trajectories. Figure \@ref{cumulative-deaths} shows cumulative deaths under the baseline and counterfactual scenarios.
 
 ```{r deaths-averted-plot, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario"), echo=FALSE}
-deaths_averted = readRDS("data/deaths_averted_detail.Rds")
+deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
 
 zoomed_deaths_averted = deaths_averted %>%
   filter(date > as.Date("2020-09-01") & date <= primary_last_date) %>%

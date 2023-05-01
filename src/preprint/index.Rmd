@@ -105,13 +105,7 @@ join_counterfactual_tables_horizontal <- function(sensitivity, quantiles) {
                quant = quant,
                averted_deaths_perpop_avg = averted_deaths_avg / pop10k,
                averted_deaths_perpop_025 = averted_deaths_025 / pop10k,
-               averted_deaths_perpop_975 = averted_deaths_975 / pop10k,
-               vaccinated_perpop_avg = (vaccinated_avg - vaccinated_second_waned_avg) / pop10k,
-               vaccinated_perpop_025 = (vaccinated_025 - vaccinated_second_waned_025) / pop10k,
-               vaccinated_perpop_975 = (vaccinated_975 - vaccinated_second_waned_975) / pop10k,
-               baseline_vaccinated_perpop_avg = (baseline_vaccinated_avg - baseline_vaccinated_second_waned_avg) / pop10k,
-               baseline_vaccinated_perpop_025 = (baseline_vaccinated_025 - baseline_vaccinated_second_waned_025) / pop10k,
-               baseline_vaccinated_perpop_975 = (baseline_vaccinated_975 - baseline_vaccinated_second_waned_975) / pop10k)
+               averted_deaths_perpop_975 = averted_deaths_975 / pop10k)
 
       return(cf_table)
     })
@@ -385,15 +379,18 @@ vaccinated_plot <- function(sen, quantiles, dates)  {
                                            labels_to_display))
 
     single_timeseries_plot <- ggplot(zoomed_deaths_averted, aes(x = date)) +
-      geom_line(aes(y = vaccinated_perpop_avg_10 - baseline_vaccinated_perpop_avg_10, colour = "10th percentile")) +
-      geom_line(aes(y = vaccinated_perpop_avg_90 - baseline_vaccinated_perpop_avg_90, colour = "90th percentile")) +
+      geom_line(aes(y = (total_vaccinated_avg_10 - baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_10), colour = "10th percentile")) +
+      geom_line(aes(y = (total_vaccinated_avg_90 - baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_90), colour = "90th percentile")) +
       geom_ribbon(
-        aes(ymin = vaccinated_perpop_025_10-baseline_vaccinated_perpop_avg_10, ymax = vaccinated_perpop_975_10-baseline_vaccinated_perpop_avg_10),
+        aes(
+          ymin = (total_vaccinated_025_10-baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_10), 
+          ymax = (total_vaccinated_975_10-baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_90)),
         alpha = 0.5,
         fill = colour_10
       ) +
       geom_ribbon(
-        aes(ymin = vaccinated_perpop_025_90-baseline_vaccinated_perpop_avg_90, ymax = vaccinated_perpop_975_90-baseline_vaccinated_perpop_avg_90),
+        aes(ymin = (total_vaccinated_025_90-baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_10)
+          , ymax = (total_vaccinated_975_90-baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_90)),
         alpha = 0.4,
         fill = colour_90
       ) +
@@ -405,7 +402,7 @@ vaccinated_plot <- function(sen, quantiles, dates)  {
           paste0("90th percentile ", parameter_names[sen], sep=' ')),
         values = c(colour_10, colour_90)
       ) +
-      labs(x = "Date", y = "Effective number of fully vaccinated baseline/fully vaccinated counterfactual", color = "Colour")
+      labs(x = "Date", y = "Normalised difference in effective number of vaccinated", color = "Colour")
 
 
     plot(single_timeseries_plot) 
