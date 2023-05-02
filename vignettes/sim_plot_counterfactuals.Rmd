@@ -55,11 +55,73 @@ Feel free to skip if you already have these.
 
 ## Running orderly reports
 
-### Set the directory
+### Set the directory and parameters
 
 ```{r, echo=TRUE, eval=FALSE}
 setwd(root_path)
+date <- '2023-01-01'
 ```
+
+### Run the fits if necessary
+
+Note that running the model fits takes a long time and downloads an 8GB sequence file every time you do it. Run only if necessary.
+
+The following runs preliminary tasks for generating the model fits. It does not take too long, but `input_sequencing` downloads an 8GB sequence file every time it's run.
+
+```{r, echo=TRUE, eval=FALSE}
+cm <- orderly::orderly_run("parameters_vaccines", echo = FALSE)
+orderly::orderly_commit(cm)
+
+rt_ord_runs <- lapply(
+  list(
+    "input_excess_mortality",
+    "input_jhu",
+    "input_vaccinations"
+  ),
+  function(x) {
+    cm <- orderly::orderly_run(x, parameters = list(date = date), echo = FALSE)
+    orderly::orderly_commit(cm)
+  }
+)
+
+seq_id <- orderly::orderly_run("input_sequencing", parameters = list(date = date, gisaid = FALSE), echo=FALSE)
+orderly::orderly_commit(seq_id)
+
+```
+
+The following runs the model fits for USA and UK. It taks 3-9 hours on my m1 macbook.
+
+```{r, echo=TRUE, eval=FALSE}
+iso3cs <- c("USA", "GBR")
+
+rt_params_lists <- lapply(iso3cs, function(iso3c){
+  list(
+      iso3c = iso3c,
+      date = date,
+      samples = 32*3, #how many random samples to generate and fit
+      seed = FALSE, #Set a seed, useful for debugging
+      parallel = TRUE,
+      #Should we build the required documentation+data for the fit
+      document = TRUE,
+      fit_cases = FALSE #issues with this, don't have time to fix them.
+      # #Fitting parameters (leave as blank to use defaults in fitting_params.Rds)
+      # initial_infections_interval = c(5, 500),
+      # n_particles = 10,
+      # k = 14,
+      # rt_interval = c(0.5, 10)
+    )
+})
+
+for (rt_params in rt_params_lists) {
+  rt_id <- orderly::orderly_run(
+    "lmic_reports_rt_optimise",
+    parameters = rt_params,
+    echo = FALSE)
+
+  orderly::orderly_commit(rt_id)
+}
+```
+
 
 ### Run the simulations
 
