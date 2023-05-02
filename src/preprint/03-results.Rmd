@@ -59,7 +59,7 @@ vaccinations_table = counterfactuals %>%
   ) %>%
   plyr::rename(
     c(
-      "shifted_by" = "Counterfactual scenario"
+      "Counterfactual scenario" = "shifted_by"
     )
   ) %>%
   pivot_wider(names_from = date,
