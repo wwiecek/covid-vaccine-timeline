@@ -100,6 +100,8 @@ ves_by_type <- ves_by_type %>%
   ) %>%
   arrange(vaccine_type, variant, endpoint, dose)
 
+# I fixed a typo in the following assignment which caused the fitting routing to fail.
+
 #overwrite with omicron data for boosters where possible
 # ves_by_type <- ves_by_type %>%
 #   mutate(
@@ -428,8 +430,7 @@ fit_curve <- function(df) {
 set.seed(1000100001)
 values <-
   ves_by_type %>%
-  # filter(!((vaccine_type == 'Johnson&Johnson') & (variant == 'Omicron'))) %>%
-  # filter(!((vaccine_type == 'Whole Virus'))) %>%
+  filter( vaccine_type %in% c('mRNA', "GBR")) %>%
   group_by(vaccine_type, dose, variant) %>%
   group_split() %>%
   map(fit_curve)
