@@ -130,13 +130,6 @@ collection of predefined counterfactuals. If you are looking to alter the counte
 simulated, you can edit this file.
 
 ```{r, echo=TRUE, eval=FALSE}
-get_baseline_production_id <- orderly::orderly_run("get_baseline_production",
-                                                   echo = FALSE 
-)
-orderly::orderly_commit(get_baseline_production_id)
-```
-
-```{r, echo=TRUE, eval=FALSE}
 generate_production_counterfactual_id <- orderly::orderly_run("generate_production_counterfactual",
                                                           parameters = list(
                                                               shift_by = 60,
@@ -157,19 +150,46 @@ orderly::orderly_commit(generate_vaccine_counterfactual_id)
 
 There are two counterfactual models available; a newer one with booster doses and explicit modelling of omicron and an older one with neither of these. The older models results differ somewhat from the newer model's results, so it may be of interest in understanding what the results are sensitive to.
 
-For the new model, to generate a counterfacutual simulation, run the following. The parameter `excess` controls whether the baseline course of infection was fit to confirmed cases or excess deaths. The parameter `lowtransmission` controls whether the relative risk of onward transmission for vaccinated individuals is set to 0.5, for consistency with the older model, or to 0.78 for consistency with published data. Unless you're investigating the impact of this parameter, you should set it to false.
+For the new model, to generate a counterfacutual simulation, run the following. The parameter `excess` controls whether the baseline course of infection was fit to confirmed cases or excess deaths, `boosters` controls whether booster doses are included in the simulation or set to 0 and `double_boosters` runs a counterfactual where the rate of booster uptake for the US is similar to the uptake in the UK. We run the simulation with three different parameter sets in order to generate the report.
 
 ```{r, echo=TRUE, eval=FALSE}
-generate_counterfactuals_id <- orderly::orderly_run("generate_counterfactuals",
-                                                   parameters = list(
-                                                        excess = TRUE,
-                                                        lowtransmission = FALSE
-                                                   ), echo = FALSE
+
+tasks <- list(
+  "generate_counterfactuals",
+  "deaths_averted_plot_timeline")
+
+parameter_sets <- list(
+    list(
+      excess=FALSE, 
+      boosters=TRUE,
+      double_boosters = FALSE
+    ),
+    list(
+      excess=TRUE, 
+      boosters=TRUE,
+      double_boosters = FALSE
+    ),
+    list(
+      excess=TRUE, 
+      boosters=TRUE,
+      double_boosters = TRUE
+    ) 
+  )
+
+ord_runs <- lapply(
+  tasks,
+  function(task) {
+    lapply(
+      parameter_sets,
+      function(params) {
+        cm <- orderly::orderly_run(task, parameters = params, echo = FALSE)
+        orderly::orderly_commit(cm)
+      })
+  }
 )
-orderly::orderly_commit(generate_counterfactuals_id)
 ```
 
-To run the older model, use the following command instead:
+To run the older model, use the following command instead. Note that the older model is not integrated with the preprint pipeline.
 
 ```{r, echo=TRUE, eval=FALSE}
 generate_counterfactuals_old_id <- orderly::orderly_run("generate_counterfactuals_oldfits",
@@ -180,21 +200,16 @@ generate_counterfactuals_old_id <- orderly::orderly_run("generate_counterfactual
 orderly::orderly_commit(generate_counterfactuals_old_id)
 ```
 
-### Create the plots
+### Generate the report
 
-Plots for the counterfactual simulations can be generated with the following task. Here, the parameters `excess` and `lowtransmission` determine which counterfactual simulation is plotted. The task will use the most recent counterfactual simulation for which the values of both parameters matches; if there is no simulation that matches both parameters, it will fail.
+To generate the report, run the following
 
 ```{r, echo=TRUE, eval=FALSE}
-d_a_plot_id <- orderly::orderly_run("deaths_averted_plot_timeline",
-  parameters = list(
-      excess = TRUE,
-      lowtransmission = FALSE
-  )
-)
-orderly::orderly_commit(d_a_plot_id)
+preprint <- orderly::orderly_run("preprint", echo = FALSE)
+orderly::orderly_commit(preprint)
 ```
 
-To create plots for the older simulation, use
+For the older simulation, plots can be generated with
 
 ```{r, echo=TRUE, eval=FALSE}
 d_a_plot_old_id <- orderly::orderly_run("deaths_averted_plot_timeline_oldfits",
