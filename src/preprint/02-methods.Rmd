@@ -50,7 +50,7 @@ sampling_dists %>% kbl(
 sampling_dists <- data.frame(
     'Country' = c('USA', 'UK'), 
     'Platforms' = c(
-      '100% mRNA', '50% adenovirus, 50% mRNA (100% mRNA for booster doses)'))
+      '100\\% mRNA', '50\\% adenovirus and 50\\% mRNA (100\\% mRNA for booster doses)'))
 
 sampling_dists %>% kbl(
   booktabs = TRUE,

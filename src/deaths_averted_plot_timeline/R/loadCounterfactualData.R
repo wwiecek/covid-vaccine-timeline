@@ -178,7 +178,7 @@ loadCounterfactualDataSingle <-
   counterfactual_data %>%
     dplyr::summarise(
       dplyr::across(
-        .cols = dplyr::ends_with(c("deaths", "infections", "vaccinated", "susceptible", "waned", "value")),
+        .cols = dplyr::ends_with(c("deaths", "infections", "vaccinated", "susceptible", "waned", "value", "N")),
         .fns = list(
           avg = ~median(.x, na.rm = TRUE),
           `025` = ~quantile(.x, probs = 0.025, na.rm = TRUE),
