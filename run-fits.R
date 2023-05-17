@@ -3,8 +3,6 @@
 # After this script, run 'run-counterfactuals.R' to update the report
 # see README for details
 
-# WARNING: this script downloads an 8GB file every time you run it
-
 
 # Packages ------
 devtools::install_github("mrc-ide/nimue")

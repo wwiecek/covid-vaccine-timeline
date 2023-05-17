@@ -1,9 +1,332 @@
 BIBLIOGRAPHY
 
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 
-# (APPENDIX) Appendix {-}
+## Appendix A - Vaccine manufacturing in 2020
+### Manufacturing constraints
 
-# Sensitivity
+If vaccines were approved earlier, production capacity would probably have been a major constraint on the number of doses delivered at the beginning of the mass vaccination campaign. As mentioned in the main text, hypothesising the extent to which production is a binding constraint is complicated by the fact that new manufacturing capacity (or expansion of existing capacity) was put in place in anticipation of regulatory approval. Therefore it is likely that an earlier approval would have led the vaccine makers to expand production faster. In our base case model we ignore this, making our assumption on available doses a conservative one. 
+
+While we model the United States and the United Kingdom using separate epidemiological models, we do not differentiate between countries when it comes to manufacturing capacity, reasoning that if a country was able to approve a vaccine earlier it would jump to the front of the vaccine deliveries queue. We also ignore Astrazeneca vaccine production since the production of Pfizer and Moderna vaccines would likely be enough to satisfy demand [we may want to revise this last point].
+
+To estimate the potential number of vaccines that would have been available throughout 2020, we used information about the actual manufacturing timelines. We assume that in 2020 Moderna produced 20 million doses and Pfizer/BioNTech 50 million. Additionally, we know Moderna was producing 500,000 doses a day at the time their vaccine was authorised and assume Pfizer/BioNTech was producing 1 million doses a day at the time they got authorization.. These numbers, combined with estimates of scale-up dates, give us a possible function of daily vaccine production over 2020.
+
+We assume a linear scale-up of production from March to July, followed by constant production until two weeks before authorization by FDA. (This is obviously conservative with regards to hypotheticals of earlier approvals.) At this point, we assume companies already knew that they would most likely get authorization and were able to do another linear scale-up to a production level they would maintain until the end of the year. After the end of 2020 we assume production is unconstrained, i.e. it is as if infinite vaccines were available each day since 01-01-2021. This does not matter much since even with a 90 day shift of vaccination series the production constraint stops being binding before the end of 2020.
+
+[please say what we assume after end of 2020 (and that it’s not so important because this constraint won’t bind in 2021—although we will expand on that point below)]
+
+Specifically, we assume Pfizer/BioNTech started working on scale up from their announced partnership on March 17th and Moderna from March 23rd. The start of mass production in July (for calculations we use July 31st) was assumed based on reports that Pfizer might have been ready to mass produce by then and Moderna getting into partnership with Catalent in June to do their fill-and-finish processing with estimated start at the beginning of Q3. Time of vaccine authorization is December 11th Pfizer/BioNTech, and December 18th for Moderna meaning another scale up in manufacturing starts on November 27th for Pfizer and December 4th for Moderna.
+
+### Binding of production constraint
+
+We assume that if a country approved vaccines sufficiently earlier they would essentially have all manufactured vaccines available for themselves. This is illustrated in Figure ???. In the case of the United Kingdom this means that in all scenarios of earlier vaccination the production constraint does not bind at all, since the amount of vaccines is very large compared with their population size. In the case of the United States the production only binds in the case when the vaccination is shifted by 90 days.
+
+# Appendix B - Supplementary methods
+
+## Baseline model
+
+To model alternative vaccination timelines, we took an existing compartmental model that simulated the COVID-19 pandemic through 2020 and 2021 including the impact of vaccinations (the "baseline model") and re-ran the simulation freezing all parameters except the vaccination timelines (the "counterfactual models").
+
+The baseline pandemic model used the model behind [@watsonoliverj.COVID19LMICReports2022]. This model is implemented in open source R packages Squire [@hoganWithincountryAgebasedPrioritisation2021, @walkerImpactCOVID19Strategies2020, @watsonLeveragingCommunityMortality2021] and SirCOVID [@baguelinSircovidSIRModel2022]. An older version of this model is described in detail in the supplementary material of [@walkerImpactCOVID19Strategies2020], and details of many parameters -- again, for an older version of the model -- can be found in the supplementary material of [@watsonGlobalImpactFirst2022]. Additional incomplete information about the parametrisation of the version of the model we used can be found at [COVID-19 LMIC Reports documentation](https://web.archive.org/web/20221230232942/https://mrc-ide.github.io/global-lmic-reports/parameters.html) [@watsonoliverj.COVID19LMICReports2022], and more up-to-date but less complete model structure can be found in the [Nimue documentation](https://web.archive.org/web/20221230232915/https://mrc-ide.github.io/nimue/index.html) [@winskillNimue]. Here we will describe the model in broad terms.
+
+The baseline model is an age-stratified SEIRD model. In addition to classifying the population by infection status, the model also classifies people by vaccination status: they may be unvaccinated, vaccinated with 1 dose, vaccinated with 2 doses, vaccinated with 2 doses with waned protection, vaccinated 3 doses and vaccinated with 3 doses with waned protection. People are vaccinated according to vaccination dosage data from Our World in Data [@mathieuCoronavirusPandemicCOVID192020] together with a model of vaccine prioritisation. They progress to "waned" classes according to an assumed rate of waning of vaccine-derived immunity, which is itself time and dose-number-dependent. The model accounts for separate modes of vaccine action (infection blocking vs disease blocking), variant-dependent efficacy of vaccine and naturally derived immunity and age-dependent vaccination strategies. 
+
+The model assumes homogenous mixing of the population. It models different kinds of infection -- "severe" and "non-severe" -- which have different age-dependent probabilities of progressing to recovery or death. Individuals who have recovered are assumed to be fully protected by natural immunity for an exponentially random duration duration which is, on average, around 250 days. Individuals who have been vaccinated have different levels of protection at different points in time depending on the dominant strain, and unless they receive additional doeses then protection is considered to have waned after an exponentially random period of time (on average, around 150 days). Vaccinated individuals are also considered to have a reduced likelihood of onward transmission, which also fades when the vaccine protection wanes.
+
+The model features a mix of deterministic parameters and random parameters. We run an ensemble of simulations for each country, sampling the random parameters at the start of each run from pre-defined distributions. The initial number of cases seeding the pandemic in the country and the time series of reproduction numbers of infections in a fully susceptible population $R_t$ is then fit to the observed course of deaths during the time period associated with the simulation. 
+
+The distributions of random parameters is given in Table \@ref(tab:trajectory-sampling-parameters). Parameters are sampled from each distribution independently except for the duration of vaccine-derived immunity, which is dependent on vaccine efficacy. 100 sets of parameters are sampled, and epidemic trajectories simulated for each. 95% intervals in our results refer to percentiles among the set of 100 sampled trajectories, so a 95% interval for deaths averted is the pair of numbers given by the 2.5th and the 97.5th percentile of deaths averted among all sampled trajectories. Note that the distributions given here are not exact representations of the models sampling distributions, which involve additional truncation steps.
+
+The model of [@watsonoliverj.COVID19LMICReports2022] also samples probabilities of hospitalisation and mechanical ventilation for each trajectory, but these play no role in our analysis not already captured by the infection fatality rate, and so we haven't reported on the relevant parameters here. 
+
+The shape parameters $\alpha_e^P, \beta_e^P$ that appear in Table \@ref(tab:trajectory-sampling-parameters) are the shape parameters associated with a beta distribution with mean $\mu_e^P$ and variance $0.005$. The mean $\mu_e^P$ is determined by estimating the efficacy of each vaccine platform $P$ against each variant (see Table \@ref(tab:vaccine-efficacy)). The mean vaccine durations are determined according to models of antibody decay, and are dependent on the sampled vaccine efficacies $\mu_e^P$ [@watsonoliverj.COVID19LMICReports2022].
+
+
+```{r trajectory-sampling-parameters, tidy=FALSE, echo=FALSE, escape=FALSE, caption=c('Pandemic trajectory sampling distributions')}
+
+sampling_dists <- data.frame(
+    'Parameter' = c('Vaccine efficacy $V$', 'Vaccine duration $D$', 'Infection fatality rate with treatment $F$'), 
+    'Distribution' = c(
+      '$V\\sim \\mathrm{Beta}(\\alpha_{e}^P, \\beta_{e}^P), P\\sim U(\\{\\mathrm{vaccine platforms}\\})$', 
+      '$\\frac{1}{\\mathrm{Gamma}(\\alpha_{d}, \\beta_d)}$',
+      '$F = \\mathrm{rescale}(X,f_{min}, f_{med}, f_{max})\\quad X\\sim \\mathrm{Beta}(2,2)$'
+      ))
+
+sampling_dists %>% kbl(
+  booktabs = TRUE,
+  linesep = "",
+  caption = 'Distributions from which parameters are sampled. The parameters $\\alpha_e^P, \\beta_e^P$ are shape parameters for vaccine platform $P$ with associated dominant strain dependent efficacy $e$ (see text for additional details). The parameters $\\alpha_d, \\beta_d$ are shape and rate parameters for distribution of vaccine durations, determined by fitting an antibody decay curve to vaccine efficacies. $\\mathrm{rescale}(\\cdot, f_{min}, f_{med}, f_{max})$ is a function that maps $0$ to $f_{min}$, $0.5$ to $f_{med}$ and $1$ to $f_{max}$, linearly interpolating between each. $f_{min}, f_{med}, f_{max}$ are respectively the minimum, median, and maximum estimates of age-adjusted infection fatality.',
+  centering = TRUE,
+  escape = FALSE
+)
+```
+
+```{r vaccine-platforms, tidy=FALSE, echo=FALSE, caption=c('Vaccine platforms for each country')}
+
+sampling_dists <- data.frame(
+    'Country' = c('USA', 'UK'), 
+    'Platforms' = c(
+      'mRNA, single dose, subunit', 'adenovirus, mRNA'))
+
+sampling_dists %>% kbl(
+  booktabs = TRUE,
+  linesep = "",
+  caption = 'Vaccine platforms used by each country.',
+  centering = TRUE,
+  escape = FALSE
+)
+```
+
+
+```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy')}
+
+vaccine_efficacy <- read.csv('vaccine_efficacy_groups.csv')
+
+vaccine_efficacy %>% kbl(
+  booktabs = TRUE,
+  linesep = "",
+  col.names = c('Vaccine type', 'Doses', 'Strain', 'Protection against infection'),
+  caption = 'Model parameters - central estimates of vaccine efficacy',
+  centering = TRUE
+)
+```
+
+
+We made one change to the model used by [@watsonoliverj.COVID19LMICReports2022]: by default, vaccination was assumed to reduce onward transmission by 50%, regardless of whether the dose was fresh or waned. We modified this to the schedule shown in Table \@ref(tab:onward). These represented an average between the estimates of [@eyreImpactSARSCoV2Vaccination2021a] for effectiveness at blocking onward transmission of Alpha and Delta and the estimate of [@tanInfectiousnessSARSCoV2Breakthrough2023] for effectiveness of the vaccine at blocking onward transmission of Omicron, as the period of the simulation included both Delta and Omicron waves.
+
+```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated')}
+vaccine_onward_protection <- 
+  data.frame(
+    'Doses' = c(
+      '1 dose (fresh)', 
+      '2 doses (fresh)', 
+      '2 doses (waned)',
+      '3 doses (fresh)',
+      '3 doses (waned stage 1)',
+      '3 doses (waned stage 2)'
+      ),
+    'Protection from onward transmission' = c(
+      '27%', 
+      '27%', 
+      '0%',
+      '30%',
+      '10%',
+      '5%'
+      )
+    )
+
+vaccine_onward_protection %>% kbl(
+  booktabs = TRUE,
+  col.names = c('Doses', 'Protection from onward transmission'),
+  linesep = "",
+  caption = 'Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated',
+  centering = TRUE
+)
+```
+
+
+## Vaccine production
+
+To produce counterfactual vaccine dosage timeseries, we suppose that vaccine approcal is brought forward by a number of days (we test approval coming 30, 60 and 90 day sooner). However, if approval is brought forward too much then manufacturers might have a harder time maintaining supply than they would have in the situation that actually played out. We model this by ... (see Tomas' entry in the shared doc)
+
+Plots can currently be found in [Vaccine production model]
+
+# Appendix C - Supplementary Results
+
+## Vaccinations under counterfactual scenarios
+
+Figure \@ref(fig:cumul-vacc-cfacts) shows the cumulative vaccinations for the counterfactual scenarios we investigate. The baseline scenario is the actual vaccination timeline, while the other scenarios are the same timeline but with vaccines administered 30, 60 or 90 days sooner.
+
+```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("DJ4 Cumulative vaccine counterfactuals"), echo=FALSE}
+baseline = readRDS("data/owid_raw.Rds")
+sooner_30 = readRDS("data/30_days_sooner.Rds")
+sooner_60 = readRDS("data/60_days_sooner.Rds")
+sooner_90 = readRDS("data/90_days_sooner.Rds")
+
+counterfactuals = bind_rows(baseline, sooner_30, sooner_60, sooner_90) %>%
+  filter(date <= primary_last_date)
+
+dj4 = ggplot() +
+  geom_line(data = counterfactuals,
+            aes(x = as.Date(date),
+                y = total_vacc,
+                color = shifted_by)) +
+  facet_wrap(~country, ncol = 2, scales = "free_y") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+  scale_colour_manual(
+    labels = c('30 days', '60 days', '90 days', 'baseline'),
+    values = c(alpha(colour_counterfactual, 0.33), alpha(colour_counterfactual, 0.66), colour_counterfactual, colour_baseline)
+  ) +
+  labs(x = "Date",
+       y = "Cumulative vaccinations",
+       color = "Vaccinations starting sooner by:")
+
+plot(dj4)
+```
+
+Table \@ref(tab:vaccinations-table) shows the actual vaccinations administered on 2021-01-01, 2021-04-01 and 2021-07-01 alongside the administration numbers for the counterfactual scenarios we investigate.
+
+
+```{r vaccinations-table, caption=c("Vaccinations administered under baseline and counterfactual scenarios"), echo=FALSE}
+vaccinations_table = counterfactuals %>%
+  filter(date %in% c(
+    as.Date('2021-01-01'),
+    as.Date('2021-04-01'),
+    as.Date('2021-07-01')
+  )) %>%
+  select(country, date, total_vacc, shifted_by) %>%
+  mutate(
+    total_vacc = format(total_vacc,
+                        big.mark = ",",
+                        trim = TRUE),
+    shifted_by = mapvalues(
+      shifted_by,
+      from = c("baseline", "30", "60", "90"),
+      to = c(
+        "Baseline",
+        "Vaccines 30 days sooner",
+        "Vaccines 60 days sooner",
+        "Vaccines 90 days sooner"
+      )
+    )
+  ) %>%
+  plyr::rename(
+    c(
+      "shifted_by" = "Counterfactual scenario"
+    )
+  ) %>%
+  pivot_wider(names_from = date,
+              values_from = total_vacc) %>%
+  replace(is.na(.), '0') %>%
+  arrange(country) %>%
+  select(-country)
+
+vaccinations_table %>%
+  kbl(booktabs=TRUE, centering = TRUE, caption = "Total vaccinations at sample dates") %>%
+  pack_rows("United Kingdom", 1, 4) %>%
+  pack_rows("United States", 5, 8)
+
+```
+
+## Impact of counterfactual vaccination scenarios
+
+Table \@ref(tab:deaths-averted-table) shows the number of deaths averted by each counterfactual scenario. The number of deaths averted is calculated as the difference between the number of deaths under the baseline scenario and the number of deaths under the counterfactual scenario. The number of deaths averted is shown as the average number of deaths averted, as well as the interval that contains 95% of simulation trajectories (see Section [Methods] for details on how simulation trajectories are sampled). The number of deaths averted is also shown as the average number of deaths averted per 10,000 people in each country.
+
+```{r deaths-averted-table, echo=FALSE}
+
+differences_table <- deaths_averted_table_single(load_deaths_averted_table( excess = FALSE))
+
+differences_table %>%
+  kbl(booktabs=TRUE, centering = TRUE, caption = "DJ5 Averted deaths, based on reported deaths") %>%
+  pack_rows("United Kingdom to April 2021", 1, 3) %>%
+  pack_rows("United Kingdom to July 2021", 4, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
+  pack_rows("United States to April 2021", 10, 12) %>%
+  pack_rows("United States to July 2021", 13, 15) %>%
+  pack_rows("United States to Jan 2022", 16, 18) %>%
+  kable_styling(font_size = 7)
+
+```
+
+
+Figure \@ref(fig:deaths-averted-plot) shows the number of deaths per day under each counterfactual scenario compared to the baseline. Also shown is the interval containing 95% of the counterfactual simulation trajectories. Figure \@ref{cumulative-deaths} shows cumulative deaths under the baseline and counterfactual scenarios.
+
+```{r deaths-averted-plot, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario"), echo=FALSE}
+deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
+
+zoomed_deaths_averted = deaths_averted %>%
+  filter(date > as.Date("2020-09-01") & date <= primary_last_date) %>%
+  filter(counterfactual %in% cfacts_to_display) %>%
+  mutate(counterfactual_label = mapvalues(
+    counterfactual,
+    from = cfacts_to_display,
+    to = labels_to_display
+  )) %>%
+  mutate(counterfactual_label = factor(counterfactual_label,
+                                       labels_to_display)) %>%
+  left_join(population, by = "iso3c") %>%
+  mutate(
+    deaths_025_perpop = deaths_025 / pop10k,
+    deaths_975_perpop = deaths_975 / pop10k,
+    baseline_deaths_avg_perpop = baseline_deaths_avg / pop10k,
+    deaths_avg_perpop = deaths_avg / pop10k,
+    cumulative_deaths_025_perpop = cumulative_deaths_025 / pop10k,
+    cumulative_deaths_975_perpop = cumulative_deaths_975 / pop10k,
+    baseline_cumulative_deaths_avg_perpop = baseline_cumulative_deaths_avg / pop10k,
+    cumulative_deaths_avg_perpop = cumulative_deaths_avg / pop10k,
+  )
+  
+baseline_color <- "#2C3E50" # dark blue
+counterfactual1_color <- "#E74C3C" # red
+counterfactual2_color <- "#27AE60" # green
+counterfactual3_color <- "#F1C40F" # yellow
+
+single_timeseries_plot = ggplot(data = zoomed_deaths_averted,
+                                aes(x = as.Date(date),
+                                    y = deaths_avg_perpop,
+                                    color = counterfactual)) +
+  geom_line() +
+  geom_ribbon(
+    aes(ymin = deaths_025_perpop, ymax = deaths_975_perpop, fill = counterfactual),
+    alpha = 0.2,
+    color = NA,
+    show.legend = FALSE
+  ) +
+  geom_line(aes(y = baseline_deaths_avg_perpop, colour = "baseline")) +
+  facet_wrap( ~ country) +
+  scale_colour_manual(
+    aesthetics = c("fill", "colour"),
+    labels = c('30 days', '60 days', '90 days', 'baseline'),
+    values = c(
+      counterfactual1_color,
+      counterfactual2_color,
+      counterfactual3_color,
+      baseline_color
+    )
+  ) +
+  labs(x = "Date", y = "Daily Deaths per 10 000 people", color = "Earlier vaccines by:")
+
+plot(single_timeseries_plot)
+
+
+```
+
+
+```{r cumulative-deaths, fig.align="center", fig.cap=c("Cumulative deaths per scenario"), echo=FALSE}
+cumulative_deaths_plot = ggplot(zoomed_deaths_averted,
+                                aes(x = as.Date(date),
+                                    y = cumulative_deaths_avg_perpop,
+                                    color = counterfactual)) +
+  geom_line() +
+  geom_ribbon(
+    aes(ymin = cumulative_deaths_025_perpop, ymax = cumulative_deaths_975_perpop, fill = counterfactual),
+    alpha = 0.2,
+    color = NA,
+    show.legend = FALSE
+  ) +
+  geom_line(aes(y = baseline_cumulative_deaths_avg_perpop, colour = "baseline")) +
+  facet_wrap( ~ country) +
+  scale_colour_manual(
+    aesthetics = c("fill", "colour"),
+    labels = c('30 days', '60 days', '90 days', 'baseline'),
+    values = c(
+      counterfactual1_color,
+      counterfactual2_color,
+      counterfactual3_color,
+      baseline_color
+    )
+  ) +
+  labs(x = "Date", y = "Cumulative Deaths per 10 000 people", color = "Earlier vaccines by:")
+  
+
+plot(cumulative_deaths_plot)
+```
+
+# Appendix D - Sensitivity
 
 ## Baseline fit to reported deaths instead of excess deaths
 
