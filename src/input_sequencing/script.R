@@ -36,12 +36,10 @@ if(gisaid){
   rm(omicron_sequences)
 } else {
   #get open data from next strain
-  options(timeout = max(1000, getOption("timeout")))
-  download.file("https://data.nextstrain.org/files/ncov/open/metadata.tsv.gz",
-                "next_strain.gz")
+  options(timeout=60*5)
+  download.file("https://data.nextstrain.org/files/ncov/open/metadata.tsv.gz","metadata.tsv")
   #read in chunkwise and simplify
-  metadata <- gzfile("next_strain.gz")
-  sequence_df <- read_tsv_chunked(metadata, chunk_size = 5000, callback = DataFrameCallback$new(function(x, pos){
+  sequence_df <- read_tsv_chunked("metadata.tsv", chunk_size = 5000, callback = DataFrameCallback$new(function(x, pos){
     group_by(x, date, country, Nextstrain_clade) %>%
       summarise(
         count = n(),
@@ -53,7 +51,7 @@ if(gisaid){
       .groups = "drop"
     ) %>%
     rename(clade = Nextstrain_clade)
-  unlink("next_strain.gz")
+  #unlink("next_strain.gz")
 }
 
 #convert clades to variants

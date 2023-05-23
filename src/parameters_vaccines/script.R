@@ -100,8 +100,6 @@ ves_by_type <- ves_by_type %>%
   ) %>%
   arrange(vaccine_type, variant, endpoint, dose)
 
-# I fixed a typo in the following assignment which caused the fitting routing to fail.
-
 #overwrite with omicron data for boosters where possible
 # ves_by_type <- ves_by_type %>%
 #   mutate(
@@ -342,6 +340,58 @@ fit_curve <- function(df) {
         lower$bV_2_i <- 0.001
       }
     }
+
+    if(dose %in% c("First","Second","Booster") & variant %in% c("Delta","Omicron","Wild") & platform %in% c("Adenovirus","GBR","Johnson&Johnson","Subunit","Whole Virus")){
+        if(platform != "Whole Virus"){
+          if(dose == "Second" & variant == "Wild" & platform == "Adenovirus"){
+            factor <- 1
+          } else if(dose == "Second" & variant %in% c("Delta","Omicron","Wild") & platform %in% c("GBR","Subunit")){ 
+            factor <- 1
+          } else if(dose == "Second" & variant %in% c("Wild") & platform %in% c("Johnson&Johnson")){ 
+            factor <- 1
+          } else {
+            factor <- 2
+          }
+          par$w_p <- par$w_p*factor
+          par$fV_2_d <- par$fV_2_d*factor
+          par$fV_2_i <- par$fV_2_i*factor
+          lower$w_p <- lower$w_p*factor
+          lower$fV_2_d <- lower$fV_2_d*factor
+          lower$fV_2_i <- lower$fV_2_i*factor
+          upper$w_p <- upper$w_p*factor
+          upper$fV_2_d <- upper$fV_2_d*factor
+          upper$fV_2_i <- upper$fV_2_i*factor 
+        } else {
+          if(dose=="Second"&variant=="Wild"&platform=="Whole Virus"){
+            factor <- 2
+            par$w_p <- par$w_p*factor
+            par$fV_2_d <- par$fV_2_d*factor
+            par$fV_2_i <- par$fV_2_i*factor
+          } else {
+            factor <- 2
+            par$w_1 <- par$w_1*factor
+            par$w_2 <- par$w_2*factor
+            par$bV_2_d <- par$bV_2_d*factor
+            par$bV_3_d <- par$bV_3_d*factor
+            par$bV_2_i <- par$bV_2_i*factor
+            par$bV_3_i <- par$bV_3_i*factor 
+          }
+          lower$w_1 <- lower$w_1*factor
+          lower$w_2 <- lower$w_2*factor
+          lower$bV_2_d <- lower$bV_2_d*factor
+          lower$bV_3_d <- lower$bV_3_d*factor
+          lower$bV_2_i <- lower$bV_2_i*factor
+          lower$bV_3_i <- lower$bV_3_i*factor
+          upper$w_1 <- upper$w_1*factor
+          upper$w_2 <- upper$w_2*factor
+          upper$bV_2_d <- upper$bV_2_d*factor
+          upper$bV_3_d <- upper$bV_3_d*factor
+          upper$bV_2_i <- upper$bV_2_i*factor
+          upper$bV_3_i <- upper$bV_3_i*factor
+
+        }
+    }
+
     res <- optim(unlist(par), fn = err_func, method = "L-BFGS-B", lower = lower, upper = upper)
     if(res$convergence != 0){
       stop(res$message)
@@ -430,7 +480,8 @@ fit_curve <- function(df) {
 set.seed(1000100001)
 values <-
   ves_by_type %>%
-  filter( vaccine_type %in% c('mRNA', "GBR")) %>%
+  # filter(!((vaccine_type == 'Johnson&Johnson') & (variant == 'Omicron'))) %>%
+  # filter(!((vaccine_type == 'Whole Virus'))) %>%
   group_by(vaccine_type, dose, variant) %>%
   group_split() %>%
   map(fit_curve)
