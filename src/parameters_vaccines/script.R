@@ -234,7 +234,7 @@ fit_curve <- function(df) {
       }
       lower = list(w_p = 1/(3*365), fV_2_d = 0.001, fV_2_i = 0)
       upper = list(w_p = 1/30, fV_2_d = parameter_hospitalisation, fV_2_i = parameter_infection)
-      par = list(w_p = 3/365, fV_2_d = parameter_hospitalisation/5, fV_2_i = parameter_infection/10)
+      par = list(w_p = 1/365, fV_2_d = parameter_hospitalisation/2, fV_2_i = parameter_infection/2)
       if(parameter_infection == 0){
         lower$fV_2_i <- NULL
         upper$fV_2_i <- NULL
