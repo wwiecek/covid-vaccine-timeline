@@ -17,3 +17,6 @@ remote
 _book
 _bookdown_files
 src/input_sequencing/metadata.tsv
+
+/report.*
+!/report.md
