@@ -79,6 +79,46 @@ differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How woul
 
 ```
 
+## Counterfactual scenario: what if vaccine demand was lower?
+
+Here, we examine the effect of vaccine demand being 5% or 10% lower. We assume that lower demand leads to slower adoption of vaccines - i.e. with 5% lower demand, it takes 5% longer to reach the same level of vaccination coverage, starting from the first day of the vaccination campaign.
+
+```{r deaths-averted-table-doubleboost, echo=FALSE, results='asis'}
+differences_table <- deaths_averted_table_single(
+    load_deaths_averted_table(
+      table_path = "data/d95_deaths_averted_detail.Rds")
+  )
+
+differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How would outcomes change if vaccination demand were 5% lower?") %>%
+  pack_rows("United Kingdom to April 2021", 1, 3) %>%
+  pack_rows("United Kingdom to July 2021", 4, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
+  pack_rows("United States to April 2021", 10, 12) %>%
+  pack_rows("United States to July 2021", 13, 15) %>%
+  pack_rows("United States to Jan 2022", 16, 18) %>%
+  kable_styling(font_size = 7)
+
+
+```
+
+```{r deaths-averted-table-doubleboost, echo=FALSE, results='asis'}
+differences_table <- deaths_averted_table_single(
+    load_deaths_averted_table(
+      table_path = "data/d90_deaths_averted_detail.Rds")
+  )
+
+differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How would outcomes change if vaccination demand were 10% lower") %>%
+  pack_rows("United Kingdom to April 2021", 1, 3) %>%
+  pack_rows("United Kingdom to July 2021", 4, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
+  pack_rows("United States to April 2021", 10, 12) %>%
+  pack_rows("United States to July 2021", 13, 15) %>%
+  pack_rows("United States to Jan 2022", 16, 18) %>%
+  kable_styling(font_size = 7)
+
+
+```
+
 ## Sensitivity to parametric estimates
 
 ```{r deaths-averted-table-vei, echo=FALSE, results='asis'}

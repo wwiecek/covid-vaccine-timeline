@@ -236,7 +236,7 @@ fit_curve <- function(df) {
       }
       lower = list(w_p = 1/(3*365), fV_2_d = 0.001, fV_2_i = 0)
       upper = list(w_p = 1/30, fV_2_d = parameter_hospitalisation, fV_2_i = parameter_infection)
-      par = list(w_p = 1/365, fV_2_d = parameter_hospitalisation/2, fV_2_i = parameter_infection/2)
+      par = list(w_p = 3/365, fV_2_d = parameter_hospitalisation/5, fV_2_i = parameter_infection/10)
       if(parameter_infection == 0){
         lower$fV_2_i <- NULL
         upper$fV_2_i <- NULL
@@ -247,11 +247,11 @@ fit_curve <- function(df) {
          (variant == "Omicron" & platform == "Johnson&Johnson")){
         lower$fV_2_i <- 0.0001
       } else if (
-        variant == "Wild" & platform == "GBR"
+        variant %in% c("Wild","Omicron") & platform == "GBR"
         ){
         lower$fV_2_i <- 0.0001
-        par$fV_2_d <- 0.41
-        par$fV_2_i <- 0.41
+        par$fV_2_d <- 0.45
+        par$fV_2_i <- 0.45
       } else if (
         (variant %in% c("Delta", "Omicron") & platform %in% c("Subunit"))      ){
         lower$fV_2_i <- 0.0001
@@ -342,9 +342,12 @@ fit_curve <- function(df) {
         lower$bV_2_i <- 0.001
       }
     }
-    res <- optim(unlist(par), fn = err_func, method = "L-BFGS-B", lower = lower, upper = upper)
+    res <- optim(unlist(par), fn = err_func, method = 'L-BFGS-B', lower = unlist(lower), upper = unlist(upper), control=list(trace=1, maxit=100, factr=1e13))
     if(res$convergence != 0){
+      print(res$par)
       stop(res$message)
+    } else {
+      print(res$par)
     }
     if(dose == "Second" & variant %in% c("Wild") & platform %in% c("Subunit")){
       lower$fV_2_i <- 0

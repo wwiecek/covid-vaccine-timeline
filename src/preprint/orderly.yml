@@ -176,7 +176,11 @@ resources:
 
 depends:
   - deaths_averted_plot_timeline:
-      id: latest((parameter:excess == TRUE) && (parameter:boosters == TRUE) && (parameter:double_boosters == FALSE) && (parameter:lowtransmission == FALSE))
+      id: latest(
+      (parameter:excess == TRUE) && 
+      (parameter:boosters == TRUE) && 
+      (parameter:double_boosters == FALSE) && 
+      (parameter:lowtransmission == FALSE))
       use:
         data/deaths_averted_summary.Rds: deaths_averted_summary.Rds
         data/deaths_averted_detail.Rds: deaths_averted_detail.Rds
@@ -187,7 +191,11 @@ depends:
         data/deaths_averted_dur_Rs_10_detail.Rds: deaths_averted_dur_Rs_10_detail.Rds
         data/deaths_averted_dur_Rs_90_detail.Rds: deaths_averted_dur_Rs_90_detail.Rds
   - deaths_averted_plot_timeline:
-      id: latest((parameter:excess == FALSE) && (parameter:boosters == TRUE) && (parameter:double_boosters == FALSE) && (parameter:lowtransmission == FALSE))
+      id: latest(
+      (parameter:excess == FALSE) && 
+      (parameter:boosters == TRUE) && 
+      (parameter:double_boosters == FALSE) && 
+      (parameter:lowtransmission == FALSE))
       use:
         data/reported_deaths_averted_summary.Rds: deaths_averted_summary.Rds
         data/reported_deaths_averted_detail.Rds: deaths_averted_detail.Rds
@@ -198,9 +206,23 @@ depends:
         data/reported_deaths_averted_dur_Rs_10_detail.Rds: deaths_averted_dur_Rs_10_detail.Rds
         data/reported_deaths_averted_dur_Rs_90_detail.Rds: deaths_averted_dur_Rs_90_detail.Rds
   - deaths_averted_plot_timeline:
-      id: latest((parameter:excess == TRUE) && (parameter:boosters == TRUE) && (parameter:double_boosters == TRUE) && (parameter:lowtransmission == FALSE))
+      id: latest(
+      (parameter:excess == TRUE) && 
+      (parameter:boosters == TRUE) && 
+      (parameter:double_boosters == TRUE) && 
+      (parameter:lowtransmission == FALSE))
       use:
         data/doubleboost_deaths_averted_detail.Rds: deaths_averted_detail.Rds
+  - deaths_averted_plot_timeline:
+      id: latest(
+      (parameter:demand == 0.95))
+      use:
+        data/d95_deaths_averted_detail.Rds: deaths_averted_detail.Rds
+  - deaths_averted_plot_timeline:
+      id: latest(
+      (parameter:demand == 0.9))
+      use:
+        data/d90_deaths_averted_detail.Rds: deaths_averted_detail.Rds
   - generate_production_counterfactual:
       id: latest
       use:

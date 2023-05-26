@@ -36,20 +36,32 @@ tasks <- list(
 
 parameter_sets <- list(
     list(
-      excess=FALSE, 
-      boosters=TRUE,
+      excess = FALSE, 
+      boosters = TRUE,
       double_boosters = FALSE
     ),
     list(
-      excess=TRUE, 
-      boosters=TRUE,
+      excess = TRUE, 
+      boosters = TRUE,
       double_boosters = FALSE
     ),
     list(
-      excess=TRUE, 
-      boosters=TRUE,
+      excess = TRUE, 
+      boosters = TRUE,
       double_boosters = TRUE
-    ) 
+    ),
+    list(
+      excess = FALSE, 
+      boosters = TRUE,
+      double_boosters = FALSE,
+      demand = 0.95
+    ),
+    list(
+      excess = FALSE, 
+      boosters = TRUE,
+      double_boosters = FALSE,
+      demand = 0.90
+    )
   )
 
 ord_runs <- lapply(

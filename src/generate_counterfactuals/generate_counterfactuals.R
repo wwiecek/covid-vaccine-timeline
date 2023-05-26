@@ -226,6 +226,20 @@ update_parameters <- function(out, iso3c) {
         out$parameters$booster_doses <- out$parameters$booster_doses*50.5/23.4
       }
     }
+
+  if (demand){
+    rep_seq <- rep(1, length(out$parameters$primary_doses))
+    rep_seq[seq(1, length(rep_seq), round(1/demand))] <- 2
+    out$parameters$primary_doses <- rep(out$parameters$primary_doses, rep_seq)[1:length(out$parameters$primary_doses)]
+    out$parameters$primary_doses[seq(1, length(rep_seq), round(1/demand))] <- 0
+
+    if(boosters) {
+      rep_seq <- rep(1, length(out$parameters$booster_doses))
+      rep_seq[seq(1, length(rep_seq), round(1/demand))] <- 2
+      out$parameters$booster_doses <- rep(out$parameters$booster_doses, rep_seq)[1:length(out$parameters$booster_doses)]
+      out$parameters$booster_doses[seq(1, length(rep_seq), round(1/demand))] <- 0
+    }
+  }
   return(out)
 }
 
