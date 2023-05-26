@@ -49,17 +49,18 @@ The shape parameters $\alpha_e^P, \beta_e^P$ that appear in Table \@ref(tab:traj
 ```{r trajectory-sampling-parameters, tidy=FALSE, echo=FALSE, escape=FALSE, caption=c('Pandemic trajectory sampling distributions')}
 
 sampling_dists <- data.frame(
-    'Parameter' = c('Vaccine efficacy $V$', 'Vaccine duration $D$', 'Infection fatality rate with treatment $F$'), 
+    'Parameter' = c('Vaccine efficacy $V$', 'Vaccine duration $D$', 'Infection fatality rate with treatment $F$', 'Natural immunity duration $R$'), 
     'Distribution' = c(
-      '$V\\sim \\mathrm{Beta}(\\alpha_{e}^P, \\beta_{e}^P), P\\sim U(\\{\\mathrm{vaccine platforms}\\})$', 
+      '$V\\sim \\mathrm{Beta}(\\alpha_{e}^P, \\beta_{e}^P), P = \\mathrm{vaccine\\; platform})$', 
       '$\\frac{1}{\\mathrm{Gamma}(\\alpha_{d}, \\beta_d)}$',
-      '$F = \\mathrm{rescale}(X,f_{min}, f_{med}, f_{max})\\quad X\\sim \\mathrm{Beta}(2,2)$'
+      '$F = \\mathrm{rescale}(X,f_{min}, f_{med}, f_{max})\\quad X\\sim \\mathrm{Beta}(2,2)$',
+      '$R = \\mathrm{Gamma}(20, 4/73)$'
       ))
 
 sampling_dists %>% kbl(
   booktabs = TRUE,
   linesep = "",
-  caption = 'Distributions from which parameters are sampled. The parameters $\\alpha_e^P, \\beta_e^P$ are shape parameters for vaccine platform $P$ with associated dominant strain dependent efficacy $e$ (see text for additional details). The parameters $\\alpha_d, \\beta_d$ are shape and rate parameters for distribution of vaccine durations, determined by fitting an antibody decay curve to vaccine efficacies. $\\mathrm{rescale}(\\cdot, f_{min}, f_{med}, f_{max})$ is a function that maps $0$ to $f_{min}$, $0.5$ to $f_{med}$ and $1$ to $f_{max}$, linearly interpolating between each. $f_{min}, f_{med}, f_{max}$ are respectively the minimum, median, and maximum estimates of age-adjusted infection fatality.',
+  caption = 'Distributions from which parameters are sampled. The parameters $\\alpha_e^P, \\beta_e^P$ are shape parameters for vaccine platform $P$ with associated efficacy $e$ (see text for additional details). The parameters $\\alpha_d, \\beta_d$ are shape and rate parameters for distribution of vaccine durations, determined by fitting an antibody decay curve to vaccine efficacies. $\\mathrm{rescale}(\\cdot, f_{min}, f_{med}, f_{max})$ is a function that maps $0$ to $f_{min}$, $0.5$ to $f_{med}$ and $1$ to $f_{max}$, linearly interpolating between each. $f_{min}, f_{med}, f_{max}$ are respectively the minimum, median, and maximum estimates of age-adjusted infection fatality.',
   centering = TRUE,
   escape = FALSE
 )
@@ -404,15 +405,15 @@ differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How woul
 
 ## Counterfactual scenario: what if vaccine demand was lower?
 
-Here, we examine the effect of vaccine demand being 5% or 10% lower. We assume that lower demand leads to slower adoption of vaccines - i.e. with 5% lower demand, it takes 5% longer to reach the same level of vaccination coverage, starting from the first day of the vaccination campaign.
+Here, we examine the effect of people deciding to adopt vaccination at a slower rate. We consider vaccine uptake being 5% (Table \@ref(tab:deaths-averted-table-d95)) or 10% (Table \@ref(tab:deaths-averted-table-d90)) slower. We implemented a reduced demand-induced slowdown by inserting an additional day with 0 vaccinations every $\\frac{1}{\\text{demand reduction}}$ days.  
 
-```{r deaths-averted-table-doubleboost, echo=FALSE, results='asis'}
+```{r deaths-averted-table-d95, echo=FALSE, results='asis'}
 differences_table <- deaths_averted_table_single(
     load_deaths_averted_table(
       table_path = "data/d95_deaths_averted_detail.Rds")
   )
 
-differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How would outcomes change if vaccination demand were 5% lower?") %>%
+differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How would outcomes change if vaccination demand were 5\\% lower?") %>%
   pack_rows("United Kingdom to April 2021", 1, 3) %>%
   pack_rows("United Kingdom to July 2021", 4, 6) %>%
   pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
@@ -424,13 +425,13 @@ differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How woul
 
 ```
 
-```{r deaths-averted-table-doubleboost, echo=FALSE, results='asis'}
+```{r deaths-averted-table-d90, echo=FALSE, results='asis'}
 differences_table <- deaths_averted_table_single(
     load_deaths_averted_table(
       table_path = "data/d90_deaths_averted_detail.Rds")
   )
 
-differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How would outcomes change if vaccination demand were 10% lower") %>%
+differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How would outcomes change if vaccination demand were 10\\% lower") %>%
   pack_rows("United Kingdom to April 2021", 1, 3) %>%
   pack_rows("United Kingdom to July 2021", 4, 6) %>%
   pack_rows("United Kingdom to Jan 2022", 7, 9) %>%

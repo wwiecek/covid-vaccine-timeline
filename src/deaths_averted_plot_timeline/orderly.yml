@@ -200,12 +200,7 @@ sources:
 
 depends:
   generate_counterfactuals:
-    id: latest(
-    (parameter:excess == excess) && 
-    (parameter:lowtransmission == lowtransmission) && 
-    (parameter:boosters == boosters) && 
-    (parameter:double_boosters == double_boosters) &&
-    (parameter:demand == demand))
+    id: latest((parameter:excess == excess) && (parameter:lowtransmission == lowtransmission) && (parameter:boosters == boosters) &&  (parameter:double_boosters == double_boosters) && (parameter:demand == demand))
     use:
       Baseline.Rds: counterfactual_data/Baseline.Rds
       counterfactual_simulation.Rds: counterfactual_data/counterfactual_simulation.Rds

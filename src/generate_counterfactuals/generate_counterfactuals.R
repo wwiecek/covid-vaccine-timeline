@@ -93,6 +93,8 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   # generate_draws
   attr(out, "class") <- c("rt_optimised",class(out))
 
+  out <- update_parameters(out, iso3c)
+
   #Set up the baseline results
   baseline <- squire.page::generate_draws(out, t_end)
   #create the fitting plot if needed
@@ -132,8 +134,6 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     # We need to add this class so that the nimue_format utility knows it's a booster sim
   attr(baseline, "class") <- c("lmic_booster_nimue_simulation",class(baseline))
 
-  baseline <- update_parameters(baseline, iso3c)
-
   # format the counter factual run
   baseline_deaths <- squire.page::nimue_format(baseline, c("deaths", "infections", "vaccinated_first_dose",
         "vaccinated_second_dose", "vaccinated_second_waned",  "vaccinated_booster_dose",
@@ -170,7 +170,6 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     if(!is.null(counterfactual[[counterIndex]])){
 
       cf_out <- update_counterfactual(out, counterfactual[[counterIndex]])
-      cf_out <- update_parameters(cf_out, iso3c)
 
       counter <- squire.page::generate_draws(out = cf_out, t_end)
 
@@ -229,15 +228,15 @@ update_parameters <- function(out, iso3c) {
 
   if (demand){
     rep_seq <- rep(1, length(out$parameters$primary_doses))
-    rep_seq[seq(1, length(rep_seq), round(1/demand))] <- 2
+    rep_seq[seq(1, length(rep_seq), round(1/(1-demand)))] <- 2
     out$parameters$primary_doses <- rep(out$parameters$primary_doses, rep_seq)[1:length(out$parameters$primary_doses)]
-    out$parameters$primary_doses[seq(1, length(rep_seq), round(1/demand))] <- 0
+    out$parameters$primary_doses[seq(1, length(rep_seq), round(1/(1-demand)))] <- 0
 
     if(boosters) {
       rep_seq <- rep(1, length(out$parameters$booster_doses))
-      rep_seq[seq(1, length(rep_seq), round(1/demand))] <- 2
+      rep_seq[seq(1, length(rep_seq), round(1/(1-demand)))] <- 2
       out$parameters$booster_doses <- rep(out$parameters$booster_doses, rep_seq)[1:length(out$parameters$booster_doses)]
-      out$parameters$booster_doses[seq(1, length(rep_seq), round(1/demand))] <- 0
+      out$parameters$booster_doses[seq(1, length(rep_seq), round(1/(1-demand)))] <- 0
     }
   }
   return(out)
