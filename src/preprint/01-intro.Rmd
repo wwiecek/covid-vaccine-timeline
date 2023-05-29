@@ -17,7 +17,7 @@ Our epidemiological modelling approach simplifies many relevant real-world facto
 [^1]:  The model we use could also estimate reductions in infections. Similarly, we could estimate reductions in hospitalisations or severe cases. However, for simplicity we focus only on mortality, since the relative reductions in all outcomes can be thought of as roughly comparable, and averting deaths is typically main variable that is of interest to public health decision makers.
 
 
-```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("DJ4 Cumulative vaccine counterfactuals"), echo=FALSE}
+```{r baseline-vacc-death, fig.align="center", fig.cap=c("Baseline characteristics"), echo=FALSE}
 
 baseline_vaccination = readRDS("data/owid_raw.Rds") %>% 
   mutate(daily_vaccination = first_doses + second_doses + third_doses) %>% 
