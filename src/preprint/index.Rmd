@@ -408,26 +408,21 @@ vaccinated_plot <- function(sen, quantiles, dates)  {
         to = labels_to_display
       )) %>%
       mutate(counterfactual_label = factor(counterfactual_label,
-                                           labels_to_display)) %>%
-      group_by(country) %>%
-      mutate(
-        vac_norm_10 = max(baseline_total_vaccinated_avg_10),
-        vac_norm_90 = max(baseline_total_vaccinated_avg_90)
-        )
+                                           labels_to_display))
 
     single_timeseries_plot <- ggplot(zoomed_deaths_averted, aes(x = date)) +
-      geom_line(aes(y = (N_avg_10-total_vaccinated_avg_10)/(N_avg_10-baseline_total_vaccinated_avg_10), colour = "10th percentile")) +
-      geom_line(aes(y = (N_avg_10-total_vaccinated_avg_90)/(N_avg_10-baseline_total_vaccinated_avg_90), colour = "90th percentile")) +
+      geom_line(aes(y = (total_vaccinated_avg_10 - baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_10), colour = "10th percentile")) +
+      geom_line(aes(y = (total_vaccinated_avg_90 - baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_90), colour = "90th percentile")) +
       geom_ribbon(
         aes(
-          ymin = (N_avg_10-total_vaccinated_025_10)/(N_avg_10-baseline_total_vaccinated_avg_10), 
-          ymax = (N_avg_10-total_vaccinated_975_10)/(N_avg_10-baseline_total_vaccinated_avg_10)),
+          ymin = (total_vaccinated_025_10-baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_10), 
+          ymax = (total_vaccinated_975_10-baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_90)),
         alpha = 0.5,
         fill = colour_10
       ) +
       geom_ribbon(
-        aes(ymin = (N_avg_10-total_vaccinated_025_90)/(N_avg_10-baseline_total_vaccinated_avg_90)
-          , ymax = (N_avg_10-total_vaccinated_975_90)/(N_avg_10-baseline_total_vaccinated_avg_90)),
+        aes(ymin = (total_vaccinated_025_90-baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_10)
+          , ymax = (total_vaccinated_975_90-baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_90)),
         alpha = 0.4,
         fill = colour_90
       ) +
@@ -439,7 +434,7 @@ vaccinated_plot <- function(sen, quantiles, dates)  {
           paste0("90th percentile ", parameter_names[sen], sep=' ')),
         values = c(colour_10, colour_90)
       ) +
-      labs(x = "Date", y = "Unvaccinated in counterfactual/unvaccinated in baseline", color = "Colour")
+      labs(x = "Date", y = "Normalised difference in effective number of vaccinated", color = "Colour")
 
 
     plot(single_timeseries_plot) 

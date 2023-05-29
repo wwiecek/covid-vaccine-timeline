@@ -51,3 +51,4 @@ packages:
   - tidyverse
   - odin
   - tidyr
+  - lbfgsb3c

@@ -100,8 +100,6 @@ ves_by_type <- ves_by_type %>%
   ) %>%
   arrange(vaccine_type, variant, endpoint, dose)
 
-# I fixed a typo in the following assignment which caused the fitting routing to fail.
-
 #overwrite with omicron data for boosters where possible
 # ves_by_type <- ves_by_type %>%
 #   mutate(
@@ -247,11 +245,11 @@ fit_curve <- function(df) {
          (variant == "Omicron" & platform == "Johnson&Johnson")){
         lower$fV_2_i <- 0.0001
       } else if (
-        variant == "Wild" & platform == "GBR"
+        variant %in% c("Wild","Omicron") & platform == "GBR"
         ){
         lower$fV_2_i <- 0.0001
-        par$fV_2_d <- 0.41
-        par$fV_2_i <- 0.41
+        par$fV_2_d <- 0.45
+        par$fV_2_i <- 0.45
       } else if (
         (variant %in% c("Delta", "Omicron") & platform %in% c("Subunit"))      ){
         lower$fV_2_i <- 0.0001
@@ -342,9 +340,12 @@ fit_curve <- function(df) {
         lower$bV_2_i <- 0.001
       }
     }
-    res <- optim(unlist(par), fn = err_func, method = "L-BFGS-B", lower = lower, upper = upper)
+    res <- optim(unlist(par), fn = err_func, method = 'L-BFGS-B', lower = unlist(lower), upper = unlist(upper), control=list(trace=1, maxit=100, factr=1e13))
     if(res$convergence != 0){
+      print(res$par)
       stop(res$message)
+    } else {
+      print(res$par)
     }
     if(dose == "Second" & variant %in% c("Wild") & platform %in% c("Subunit")){
       lower$fV_2_i <- 0
@@ -430,7 +431,8 @@ fit_curve <- function(df) {
 set.seed(1000100001)
 values <-
   ves_by_type %>%
-  filter( vaccine_type %in% c('mRNA', "GBR")) %>%
+  # filter(!((vaccine_type == 'Johnson&Johnson') & (variant == 'Omicron'))) %>%
+  # filter(!((vaccine_type == 'Whole Virus'))) %>%
   group_by(vaccine_type, dose, variant) %>%
   group_split() %>%
   map(fit_curve)

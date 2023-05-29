@@ -1,117 +1,74 @@
----
-output:
-  pdf_document: default
-  html_document: default
----
 # Methods
 
-## Baseline model
+## Vaccinations and mortality under status quo
+Figures 1 and 2 show daily vaccination rates and cumulative number of deaths attributable to COVID in the US and the UK[^2]. Between the start and the end of 2021 (that is, within roughly a year of mass vaccination campaigns), 470,000 deaths occurred in the US and 75,000 in the UK, more than doubling the death tolls compared to 2020. 200,000 (US) and 52,000 (UK) of these occurred in the first quarter of 2021, as the vaccinations were picking up speed. In both countries the daily vaccinations only levelled off in early summer of 2021, due to distribution capacity lagging behind demand.
 
-To model alternative vaccination timelines, we took an existing compartmental model that simulated the COVID-19 pandemic through 2020 and 2021 including the impact of vaccinations (the "baseline model") and re-ran the simulation freezing all parameters except the vaccination timelines (the "counterfactual models").
+What share of those deaths could have been averted if mass vaccination campaigns started earlier, thanks to earlier approval of the first available vaccines (Pfizer and Moderna in both countries, plus AstraZeneca vaccine in the UK)? One way to address this question is to use counterfactual simulations from epidemiological models. 
 
-The baseline pandemic model used the model behind [@watsonoliverj.COVID19LMICReports2022]. This model is implemented in open source R packages Squire [@hoganWithincountryAgebasedPrioritisation2021, @walkerImpactCOVID19Strategies2020, @watsonLeveragingCommunityMortality2021] and SirCOVID [@baguelinSircovidSIRModel2022]. An older version of this model is described in detail in the supplementary material of [@walkerImpactCOVID19Strategies2020], and details of many parameters -- again, for an older version of the model -- can be found in the supplementary material of [@watsonGlobalImpactFirst2022]. Additional incomplete information about the parametrisation of the version of the model we used can be found at [COVID-19 LMIC Reports documentation](https://web.archive.org/web/20221230232942/https://mrc-ide.github.io/global-lmic-reports/parameters.html) [@watsonoliverj.COVID19LMICReports2022], and more up-to-date but less complete model structure can be found in the [Nimue documentation](https://web.archive.org/web/20221230232915/https://mrc-ide.github.io/nimue/index.html) [@winskillNimue]. Here we will describe the model in broad terms.
+Watson et al. have previously calculated that vaccinations (compared to the hypothetical lack of vaccination) have averted up to 20 million deaths worldwide including up to 2 million deaths in the US and up to 0.5 million deaths in the UK in their first year of use[^3][^4]. According to that calculation, vaccines prevented approximately 2-3 deaths for each death that occurred. In the last three months of 2020, about 150,000 COVID-19-related deaths occurred in the US and about 40,000 in the UK. Therefore a simplistic parallel argument (assuming two lives saved for each death) would suggest that 100,000 lives could have been saved in that period in these two countries alone if vaccines were available. 
 
-The baseline model is an age-stratified SEIRD model. In addition to classifying the population by infection status, the model also classifies people by vaccination status: they may be unvaccinated, vaccinated with 1 dose, vaccinated with 2 doses, vaccinated with 2 doses with waned protection, vaccinated 3 doses and vaccinated with 3 doses with waned protection. People are vaccinated according to vaccination dosage data from Our World in Data [@mathieuCoronavirusPandemicCOVID192020] together with a model of vaccine prioritisation. They progress to "waned" classes according to an assumed rate of waning of vaccine-derived immunity, which is itself time and dose-number-dependent. The model accounts for separate modes of vaccine action (infection blocking vs disease blocking), variant-dependent efficacy of vaccine and naturally derived immunity and age-dependent vaccination strategies. Simulation begins from 
+However, any back-of-envelope calculation on health impacts of accelerating vaccines ignores crucial and obvious epidemiological factors which determine the degree of success of mass vaccination campaigns. First, the reduction in risk is not immediate. It takes time to distribute vaccines and for the vaccinated individuals to develop immunity. Second, even taking the above into account, the impact is not uniform over time due to the risk of infection changing. While for COVID-19 it was not a realistic hope to achieve herd immunity using mass vaccination, epidemiological effects of the vaccine (i.e. breaking transmission) still mean that the impacts are different depending on changes in effective reproductive number of the virus: in other words, whether the vaccinations occur before, during or after a wave of infections. Third, due to gradual waning of immunity and endemic nature of COVID-19, mass vaccination leads to a possibility of a “rebound” in infections and deaths in subsequent waves.
 
-The model assumes homogenous mixing of the population. It models different kinds of infection -- "severe" and "non-severe" -- which have different age-dependent probabilities of progressing to recovery or death. Individuals who have recovered are assumed to be fully protected by natural immunity for an exponentially random duration duration which is, on average, around 250 days. Individuals who have been vaccinated have different levels of protection at different points in time depending on the dominant strain, and unless they receive additional doeses then protection is considered to have waned after an exponentially random period of time (on average, around 150 days). Vaccinated individuals are also considered to have a reduced likelihood of onward transmission, which also fades when the vaccine protection wanes.
+Therefore to address our research question, we use an epidemiological model, one which is a slight modification of the model used by Watson et al. which adds … [^5].  However, before turning to the model, we first consider the design of the counterfactual scenarios.
 
-The model features a mix of deterministic parameters and random parameters. We run an ensemble of simulations for each country, sampling the random parameters at the start of each run from pre-defined distributions. The initial number of cases seeding the pandemic in the country and the time series of reproduction numbers of infections in a fully susceptible population $R_t$ is then fit to the observed course of deaths during the time period associated with the simulation. 
+## Vaccine trials and approvals 
 
-The distributions of the random parameters -- vaccine efficacy, vaccine duration and infection fatality rate with treatment -- are given in Table \@ref(tab:trajectory-sampling-parameters). Parameters are sampled from each distribution independently except for the duration of vaccine-derived immunity, which is dependent on vaccine efficacy. 100 sets of parameters are sampled, and epidemic trajectories simulated for each. 95% intervals in our results refer to percentiles among the set of 100 sampled trajectories, so a 95% interval for deaths averted is the pair of numbers given by the 2.5th and the 97.5th percentile of deaths averted among all sampled trajectories. Note that the distributions given here are not exact representations of the models sampling distributions, which involve additional truncation steps.
+In building the counterfactual scenarios we look at the cases of Pfizer and Moderna vaccines, which were the two main vaccines approved both in the United States and United Kingdom. While the UK also championed development and approval of the AstraZeneca vaccine, including it would not change our calculation, for reasons we’ll outline below. 
 
-The model of [@watsonoliverj.COVID19LMICReports2022] also samples probabilities of hospitalisation and mechanical ventilation for each trajectory, but these play no role in our analysis not already captured by the infection fatality rate, and so we haven't reported on the relevant parameters here. 
+Vaccine development during the pandemic was unusually fast. For the vaccines we discuss it took about nine months from the start of first human trials to vaccine authorizations. Phase II trials, which is the first stage at which using the HCT approach could be thought feasible, began roughly in May 2020[^6]. 
+Following that milestone, to approve a vaccine, safety and efficacy data would be needed. In considering the accelerated approval timelines, we make two claims: (1) the same safety data could have been generated earlier, by starting large safety trials earlier; and (2) efficacy data could have been generated by HCT or some other means.
 
-The shape parameters $\alpha_e^P, \beta_e^P$ that appear in Table \@ref(tab:trajectory-sampling-parameters) are the shape parameters associated with a beta distribution with mean $\mu_e^P$ and variance $0.005$. The mean $\mu_e^P$ is determined by estimating the efficacy of each vaccine platform $P$ against each variant (see Table \@ref(tab:vaccine-efficacy)). In the US, we assumed that 100% of vaccines administered used the mRNA platform (data indicates that 90% of vaccines administered in the US were of this type [@mathieuCoronavirusPandemicCOVID192020]), while in the United Kingdom we assumed that 50% of first and second doses used of the adenovirus platform (as manufactured by Oxford/AstraZenecca) and 50% used the mRNA platform [@ukdepartmentofhealthandsocialcareOneYearAnniversary2022]. We assumed third doses were 100% mRNA for both countries. The mean vaccine durations are determined according to models of antibody decay, and are dependent on the sampled vaccine efficacies $\mu_e^P$ [@watsonoliverj.COVID19LMICReports2022].
+In autumn of 2020 the FDA guidance requested that the majority of trial participants need to have at least two months of safety data from the second dose of a vaccine. Given 3-4 weeks between doses, an optimistic timeline in which safety assessment could be completed without compromising on this rule is late August 2020, roughly three months before Moderna and Pfizer requested emergency use authorisation for their vaccines[^7]. This places a potential approval (conditional on proving efficacy) sometime in September. 
 
+The second component of vaccine trial length is testing efficacy. With an HCT, testing only takes up to eight weeks (administration of two doses, followed by two weeks’ wait to build up immune response, followed by about two weeks of exposure and measurement of response). In the case of a controlled exposure study with a manufactured challenge agent, the wait would likely be considerably longer and it’s hard to assess whether such an efficacy HCT could generate results faster than a typical field trial. On the other hand, an alternative such as a natural exposure trial (which does not require manufacturing a challenge agent) could have been completed by September 2020[^8][^9]. 
 
+While we frame our hypothetical timeline for generating efficacy data in terms of conducting an HCT, it’s important to note that accelerating development timelines also seem feasible without using HCTs, e.g. simply by investing in larger trials much earlier in the pandemic. Therefore, these counterfactual approval timelines do not have to correspond to any particular trial design: our objective here is primarily to crudely identify a realistic range of counterfactual approval dates. With this in mind, we choose three illustrative counterfactual approvals scenarios, where vaccinations occur 30, 60, or 90 days earlier.
 
+## Hypothesising vaccination rates
 
-```{r trajectory-sampling-parameters, tidy=FALSE, echo=FALSE, escape=FALSE, caption=c('Pandemic trajectory sampling distributions')}
+Obviously approving vaccines faster is only beneficial if they can be distributed in sufficient numbers and people are willing to take them. Therefore, to derive the time-course of vaccinations under our hypothetical vaccine approval timelines, we consider demand, production, and distribution constraints over time. In all cases we start from the observed vaccination rates (partially and fully vaccinated) based on Our World in Data (Mathieu et al. 2020). We then make the following adjustments to create counterfactual scenarios:
 
-sampling_dists <- data.frame(
-    'Parameter' = c('Vaccine efficacy $V$', 'Vaccine duration $D$', 'Infection fatality rate with treatment $F$', 'Natural immunity duration $R$'), 
-    'Distribution' = c(
-      '$V\\sim \\mathrm{Beta}(\\alpha_{e}^P, \\beta_{e}^P), P = \\mathrm{vaccine\\; platform})$', 
-      '$\\frac{1}{\\mathrm{Gamma}(\\alpha_{d}, \\beta_d)}$',
-      '$F = \\mathrm{rescale}(X,f_{min}, f_{med}, f_{max})\\quad X\\sim \\mathrm{Beta}(2,2)$',
-      '$R = \\mathrm{Gamma}(20, 4/73)$'
-      ))
+**Demand.** It is possible that under the hypothetical accelerated approval timelines the demand for the vaccine would have decreased in the short term due to higher vaccine hesitancy. (add details here on how high hesitancy was in late 2020 in the UK, the US; then talk about trend throughout 2020). However, in the early part of the mass vaccination campaign the distribution and production factors were by far much stronger binding constraints. Once mass vaccination is underway, additional safety and effectiveness data can be derived quickly through a combination of real world data and post-approval phase 4 studies (cite first effectiveness estimates from early 2021 here, point out that you only need 4-8 weeks to publish them). Therefore in our base case we assume no differences to demand, but we conduct an additional sensitivity analysis with lower demand later.
 
-sampling_dists %>% kbl(
-  booktabs = TRUE,
-  linesep = "",
-  caption = 'Distributions from which parameters are sampled. The parameters $\\alpha_e^P, \\beta_e^P$ are shape parameters for vaccine platform $P$ with associated efficacy $e$ (see text for additional details). The parameters $\\alpha_d, \\beta_d$ are shape and rate parameters for distribution of vaccine durations, determined by fitting an antibody decay curve to vaccine efficacies. $\\mathrm{rescale}(\\cdot, f_{min}, f_{med}, f_{max})$ is a function that maps $0$ to $f_{min}$, $0.5$ to $f_{med}$ and $1$ to $f_{max}$, linearly interpolating between each. $f_{min}, f_{med}, f_{max}$ are respectively the minimum, median, and maximum estimates of age-adjusted infection fatality.',
-  centering = TRUE,
-  escape = FALSE
-)
-```
+**Production.** We used publicly available information on manufacturing of Pfizer and Moderna vaccines. We assumed a simple linear scale-up of production between March and July 2020 and then constant daily production until the end of 2020 to match the total reported production numbers (Appendix A)[^10]. In the case of the United States the production only binds in the case when the vaccination is shifted by 90 days.
 
-```{r vaccine-platforms, tidy=FALSE, echo=FALSE, caption=c('Vaccine platforms for each country')}
+**Distribution.** For the base case we assumed that distribution constraints would be unchanged for each hypothetical. 
 
-sampling_dists <- data.frame(
-    'Country' = c('USA', 'UK'), 
-    'Platforms' = c(
-      '100\\% mRNA', '50\\% adenovirus and 50\\% mRNA (100\\% mRNA for booster doses)'))
+## Vaccination and mortality model
 
-sampling_dists %>% kbl(
-  booktabs = TRUE,
-  linesep = "",
-  caption = 'Vaccine platforms used by each country.',
-  centering = TRUE,
-  escape = FALSE
-)
-```
+Details of model and methods are given in Appendix B. Here we only provide a short sketch. As mentioned, our base case model is a slight modification of the model by Watson et al., which is an age-stratified Susceptible-Exposed-Infected-Recovered/Dead (SEIRD) model. A model of this type can be considered standard for epidemiological modelling and simulation in a large population. 
 
+Crucially, the model allows for modelling of variants, distinguishes between number of doses as well as infection- and disease-blocking effects of vaccines, and includes waning of (natural and vaccine-induced) immunity. The model includes vaccine prioritisation strategies but mixing of groups is homogeneous across ages. Two types of infections, severe and non-severe, are distringuished and assigned age-specific probabilities, together with probabilities of progressing to death[^11].
 
-```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy')}
+Speed of waning of immunity (the rate at which people transition to an appropriate model compartment) depends on the number of doses received. The length of natural immunity is, on average, 250 days.
 
-vaccine_efficacy <- read.csv('vaccine_efficacy_groups.csv')
+Because the counterfactual reductions in deaths crucially depend on characteristics of the vaccine, following Watson et al., we draw 100 sets of parameters of vaccine efficacy and duration. Then, for each set, we calibrate the base case model by fitting it to observed mortality (confirmed cases), derived from … (see also footnote 2),  and vaccination data from Our World In Data [ref], estimating the initial number of infections and reproduction number of the virus over time. For model calibration, we use the period from first available death data to 1 January 2022. For each such calibration we then simulate counterfactuals and calculate the (averted) numbers of deaths under each of them. Therefore for every model-derived quantity we report in this paper, we give both the mean and 95% interval, calculated over the 100 simulations. 
 
-vaccine_efficacy %>% kbl(
-  booktabs = TRUE,
-  linesep = "",
-  col.names = c('Vaccine type', 'Doses', 'Strain', 'Protection against infection'),
-  caption = 'Model parameters - central estimates of vaccine efficacy',
-  centering = TRUE
-)
-```
+## Sensitivity analysis
+There are many reasons why the model that we use may not adequately capture the impacts of earlier availability of vaccines.  
+First, the SEIRD model is based on an idealisation of transmission and vaccination dynamics and there may be features of the true pandemic dynamics that are not adequately captured by this model, but are critical for counterfactual modelling. For example, non-homogeneous mixing (changes in contact rates or behavioural adjustment in reaction to infection risks) may impact counterfactual reductions in mortality. Moreover, the model depends on many parametric assumptions, and most of these parameters are only identified with substantial uncertainty.
 
+With this in mind, we examine the overall estimate’s sensitivity to five assumptions:
 
-We made one change to the model used by [@watsonoliverj.COVID19LMICReports2022]: by default, vaccination was assumed to reduce onward transmission by 50%, regardless of whether the dose was fresh or waned. We modified this to the schedule shown in Table \@ref(tab:onward). These represented an average between the estimates of [@eyreImpactSARSCoV2Vaccination2021a] for effectiveness at blocking onward transmission of Alpha and Delta and the estimate of [@tanInfectiousnessSARSCoV2Breakthrough2023] for effectiveness of the vaccine at blocking onward transmission of Omicron, as the period of the simulation included both Delta and Omicron waves.
+* **Cutoff dates for analysis:** A major source of variation in the estimates of deaths under accelerated vaccine timelines is the degree of the “rebound effect” which we mentioned earlier. In particular, if we continue the simulation until a winter peak is reached, we sometimes see more deaths under the counterfactual than the baseline. This happens because when people receive vaccines earlier, their effects also wane faster. The size of this rebound has a substantial impact on the overall estimated benefits of accelerated vaccine timelines. Therefore in reporting counterfactual scenarios we calculate health impacts up to 1 July 2021, 1 April 2021, and 1 January 2022.
 
-```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated')}
-vaccine_onward_protection <- 
-  data.frame(
-    'Doses' = c(
-      '1 dose (fresh)', 
-      '2 doses (fresh)', 
-      '2 doses (waned)',
-      '3 doses (fresh)',
-      '3 doses (waned stage 1)',
-      '3 doses (waned stage 2)'
-      ),
-    'Protection from onward transmission' = c(
-      '27%', 
-      '27%', 
-      '0%',
-      '30%',
-      '10%',
-      '5%'
-      )
-    )
+* **Fitting the model to excess deaths rather than reported deaths:** We believe that the excess deaths figure is more likely to capture the impact of the pandemic than deaths reported to be due to COVID-19, because we think underreporting bias is likely to be more important than the uncertainty that arises from the fact that we can’t directly attribute excess deaths to COVID-19. To examine the impact of this assumption, we also report results for an alternative pandemic model fit to reported deaths rather than excess deaths
 
-vaccine_onward_protection %>% kbl(
-  booktabs = TRUE,
-  col.names = c('Doses', 'Protection from onward transmission'),
-  linesep = "",
-  caption = 'Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated',
-  centering = TRUE
-)
-```
+* **Variation in vaccine efficacy:** We examine the sensitivity of the estimates to the efficacy of the vaccine against infection. This has an impact through two channels - first, increasing the dosage of a less effective vaccine will reduce infections by a comparatively smaller amount. Second, by making the vaccines less important in determining how many people are infected, it may reduce the rebound effect due to waning efficacy
+Variation in duration of protection and duration of natural immunity: A vaccine that remains effective for longer is likely to show a smaller rebound effect. Conversely, if the natural immunity duration is longer, reducing the number of people who acquire natural immunity at the first peak is likely to increase the rebound effect at the second peak.
 
+* **Decreased vaccination demand due to vaccine hesitancy:** [need to make an assumption for this, see pg 2-3 of this doc]
 
-## Vaccine production
-
-To produce counterfactual vaccine dosage timeseries, we suppose that vaccine approcal is brought forward by a number of days (we test approval coming 30, 60 and 90 day sooner). However, if approval is brought forward too much then manufacturers might have a harder time maintaining supply than they would have in the situation that actually played out. We model this by ... (see Tomas' entry in the shared doc)
-
-Plots can currently be found in [Vaccine production model]
+[^2]: All descriptives and modelling use data from …, collected in … . These numbers of confirmed cases are typically a bit higher than some of the revised estimates currently available online. Additionally, for alternative modelling specification we use excess mortality data from …, which we will discuss below. Unless otherwise stated, by COVID-19 deaths we mean confirmed deaths, not excess deaths. 
+[^3]: This type of estimate crucially depends on the assumptions of individual and policy responses, since prolonging a pandemic could manifest not just as additional deaths but also in continued lockdowns or people choosing to avoid contacts. However, it highlights the benefits of vaccinations are huge.
+[^4]:[Add text on https://www.thelancet.com/journals/lanpub/article/PIIS2468-2667(22)00337-1/fulltext]
+[^5]: However, as we will discuss in more detail below, the number of both modelled (status quo) and counterfactual (no vaccines) deaths in our modified model is similar to the original Watson et al. paper: …
+[^6]: The division into typical three phases of clinical research is in this case a blurry one, since to expedite testing drug developers “merged” phases into single studies. What’s relevant to us here, however, is pinpointing the moment in time when developers would consider generating efficacy and effectiveness data for their candidate vaccines. We (roughly) settle on May 2020.
+[^7]: There are many arguments for why safety testing could be completed sooner or later than September 2020. On one hand, large-scale vaccine safety testing did not necessitate completion of phase 1/2 studies and it could have feasibly begun around April or even earlier. On the other hand, the three-month timeline is very ambitious and would have required several improvements to the already efficiently compressed trial timelines.
+[^8]: The statistic for development of a challenge agent sometimes provided by experts is of a six-month wait, but seemingly this figure is grounded less in an up-to-date feasibility assessment and more in generalising from historical experience. [1DS COLLEAGUES TO ADD REFERENCES HERE]
+[^9]: COVID HCTs, from the viewpoint of feasibility, risks, and value of information (on efficacy) provided have been extensively discussed elsewhere. Natural exposure trials were discussed by Eyal and Lipsitch (2021). For general study design, see [1DS COLLEAGUES TO ADD 2-3 REFERENCES HERE]
+Eyal, N., and Lipsitch, M. (2021), ‘Testing SARS-CoV-2 Vaccine Efficacy through Deliberate Natural Viral Exposure’, Clinical Microbiology and Infection, 27(3), 372–7.
+[^10]: This is a conservative assumption, since production capacity was partially determined by the predicted date of regulatory approval. In other words, it is reasonable to believe that earlier approvals would have resulted in more doses being produced in 2020. However, given complexity of the vaccine supply chains early in the pandemic this may be a realistic assumption. See for example Bown and Bollky, Kominers and Tabarrok.
+Bown, C.P. and Bollyky, T.J. (2022) ‘How COVID‐19 vaccine supply chains emerged in the midst of a pandemic’, The World Economy, 45(2), pp. 468–522. Available at: https://doi.org/10.1111/twec.13183.
+Kominers, S.D. and Tabarrok, A. (2022) ‘Vaccines and the COVID-19 pandemic: lessons from failure and success’, Oxford Review of Economic Policy, 38(4), pp. 719–741. Available at: https://doi.org/10.1093/oxrep/grac036.
+[^11]: For the US we assumed that doses used were mRNA. For the UK we assumed that 50% of initial vaccinations (first two doses) were Astrazeneca and 50% were mRNA. For booster doses in both cases we assumed that mRNA vaccines were used. To do this, we use the average of vaccine efficacy parameters for AZ and mRNA. While there are no exact statistics of vaccine use in the UK broken down by manufacturer, the government press release a year on from the start of vaccinations supports this assumption (ref)
