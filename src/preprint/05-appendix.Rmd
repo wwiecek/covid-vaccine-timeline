@@ -405,7 +405,7 @@ differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How woul
 
 ## Counterfactual scenario: what if vaccine demand was lower?
 
-Here, we examine the effect of people deciding to adopt vaccination at a slower rate. We consider vaccine uptake being 5% (Table \@ref(tab:deaths-averted-table-d95)) or 10% (Table \@ref(tab:deaths-averted-table-d90)) slower. We implemented a reduced demand-induced slowdown by inserting an additional day with 0 vaccinations every $\\frac{1}{\\text{demand reduction}}$ days.  
+Here, we examine the effect of lower vaccination demand. We consider vaccine demand to be 5% (Table \@ref(tab:deaths-averted-table-d95)) or 10% (Table \@ref(tab:deaths-averted-table-d90)) lower. We implemented this by asuming that daily vacinations were reduced by the respective amount. 
 
 ```{r deaths-averted-table-d95, echo=FALSE, results='asis'}
 differences_table <- deaths_averted_table_single(

@@ -226,21 +226,10 @@ update_parameters <- function(out, iso3c) {
       }
     }
 
-  if (demand){
-    rep_seq <- rep(1, length(out$parameters$primary_doses))
-    rep_seq[seq(1, length(rep_seq), round(1/(1-demand)))] <- 2
-    out$parameters$primary_doses <- rep(out$parameters$primary_doses, rep_seq)[1:length(out$parameters$primary_doses)]
-    out$parameters$primary_doses[seq(1, length(rep_seq), round(1/(1-demand)))] <- 0
-
-    if(boosters) {
-      rep_seq <- rep(1, length(out$parameters$booster_doses))
-      rep_seq[seq(1, length(rep_seq), round(1/(1-demand)))] <- 2
-      out$parameters$booster_doses <- rep(out$parameters$booster_doses, rep_seq)[1:length(out$parameters$booster_doses)]
-      out$parameters$booster_doses[seq(1, length(rep_seq), round(1/(1-demand)))] <- 0
-    }
-  }
   return(out)
 }
+
+# Updates for counterfactuals only
 
 update_counterfactual <- function(out, counterfactual){
 
@@ -257,6 +246,16 @@ update_counterfactual <- function(out, counterfactual){
     out$parameters$booster_doses <- 0
     out$parameters$tt_booster_doses <- 0
   }
+
+
+  if (demand){
+    out$parameters$primary_doses <- demand*out$parameters$primary_doses
+
+    if(boosters) {
+      out$parameters$booster_doses <- demand*out$parameters$booster_doses
+    }
+  }
+
   return(out)
 }
 
