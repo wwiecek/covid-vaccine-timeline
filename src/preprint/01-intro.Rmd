@@ -69,4 +69,37 @@ plot(fig1)
 
 ```
 
+```{r model-fit-deaths, fig.align="center", fig.cap=c("Model fit to mortality data"), echo=FALSE}
+deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
+data_for_plot3 = deaths_averted %>% 
+  filter(counterfactual == 'owid_raw') %>% 
+  select(iso3c, date, country, deaths_avg, baseline_deaths_avg) %>% 
+  left_join(population, by = "iso3c") %>% 
+  mutate(
+    deaths_perpop = deaths_avg / pop10k,
+    baseline_deaths_perpop = baseline_deaths_avg / pop10k
+  ) %>% 
+  pivot_longer(cols = c(deaths_perpop, baseline_deaths_perpop),
+               names_to = "type")
 
+fig3 = ggplot() +
+  geom_line(data = data_for_plot3,
+            aes(x = as.Date(date),
+                y = value,
+                color = type)) +
+  facet_wrap(~iso3c, 
+             ncol = 2, 
+             scales = "free_y", labeller = as_labeller(c(
+               "GBR" = "United Kingdom",
+               "USA" = "United States"
+             ))) +
+  scale_colour_manual(
+    labels = c('Real deaths', 'Modelled deaths (baseline)'),
+    values = c(colour_baseline, colour_counterfactual)
+  ) +
+  labs(x = "Date",
+       y = "Deaths per 10,000",
+       color = "Type:")
+  
+plot(fig3)
+```
