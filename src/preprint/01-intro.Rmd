@@ -17,3 +17,89 @@ Our epidemiological modelling approach simplifies many relevant real-world facto
 [^1]:  The model we use could also estimate reductions in infections. Similarly, we could estimate reductions in hospitalisations or severe cases. However, for simplicity we focus only on mortality, since the relative reductions in all outcomes can be thought of as roughly comparable, and averting deaths is typically main variable that is of interest to public health decision makers.
 
 
+```{r baseline-vacc-death, fig.align="center", fig.cap=c("Baseline characteristics"), echo=FALSE}
+
+baseline_vaccination = readRDS("data/owid_raw.Rds") %>% 
+  mutate(daily_vaccination = first_doses + second_doses + third_doses) %>% 
+  mutate(daily_vaccination = rollmean(daily_vaccination, k = 7, fill = NA)) %>% 
+  select(iso3c, date, daily_vaccination)
+
+deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
+first_date = as.Date("2020-12-15")
+last_date = as.Date("2022-01-01")
+population <- data.frame(
+  iso3c = c("GBR", "USA"),
+  pop10k = c(67081000, 331501080) / 10000
+)
+
+data_for_plot = deaths_averted %>% 
+  filter(counterfactual == "owid_raw") %>% 
+  select(iso3c, date, country, baseline_deaths_avg) %>% 
+  left_join(baseline_vaccination, by = c("iso3c", "date")) %>% 
+  left_join(population, by = "iso3c") %>% 
+  filter(date <= last_date & date >= first_date ) %>% 
+  mutate(
+    deaths = baseline_deaths_avg / pop10k,
+    vaccinations = ifelse(is.na(daily_vaccination), 0, daily_vaccination / pop10k)
+  ) %>% 
+  pivot_longer(cols = c(deaths, vaccinations),
+               names_to = "type") %>% 
+  mutate(type = factor(type, c("vaccinations", "deaths")))
+
+fig1 = ggplot() +
+  geom_line(data = data_for_plot,
+            aes(x = as.Date(date),
+                y = value,
+                color = iso3c)) +
+  facet_wrap(~type, 
+             ncol = 2, 
+             scales = "free_y", labeller = as_labeller(c(
+               "deaths" = "Daily deaths per 10,000 people",
+               "vaccinations" = str_wrap("Daily vaccinations per 10,000 people (7-day moving average)", width = 40)
+             ))) +
+  scale_colour_manual(
+    labels = c('United Kingdom', 'United States'),
+    values = c(colour_baseline, colour_counterfactual)
+  ) +
+  labs(x = "Date",
+       y = "",
+       color = "Country:")
+
+plot(fig1)
+
+```
+
+```{r model-fit-deaths, fig.align="center", fig.cap=c("Model fit to mortality data"), echo=FALSE}
+deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
+data_for_plot3 = deaths_averted %>% 
+  filter(counterfactual == 'owid_raw') %>% 
+  select(iso3c, date, country, deaths_avg, baseline_deaths_avg) %>% 
+  left_join(population, by = "iso3c") %>% 
+  mutate(
+    deaths_perpop = deaths_avg / pop10k,
+    baseline_deaths_perpop = baseline_deaths_avg / pop10k
+  ) %>% 
+  pivot_longer(cols = c(deaths_perpop, baseline_deaths_perpop),
+               names_to = "type")
+
+fig3 = ggplot() +
+  geom_line(data = data_for_plot3,
+            aes(x = as.Date(date),
+                y = value,
+                color = type)) +
+  facet_wrap(~iso3c, 
+             ncol = 2, 
+             scales = "free_y", labeller = as_labeller(c(
+               "GBR" = "United Kingdom",
+               "USA" = "United States"
+             ))) +
+  scale_colour_manual(
+    labels = c('Real deaths', 'Modelled deaths (baseline)'),
+    values = c(colour_baseline, colour_counterfactual)
+  ) +
+  labs(x = "Date",
+       y = "Deaths per 10,000",
+       color = "Type:")
+  
+plot(fig3)
+```

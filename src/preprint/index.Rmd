@@ -111,7 +111,7 @@ join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
           ) %>%
           ungroup() %>%
           group_by(iso3c, counterfactual) %>%
-          mutate(
+          dplyr::mutate(
             baseline_cumulative_deaths_since_vacc = cumsum(baseline_deaths_since_vacc)
           ) %>%
           ungroup() %>%
@@ -176,7 +176,7 @@ load_deaths_averted_table <-
       ) %>%
       ungroup() %>%
       group_by(iso3c, counterfactual) %>%
-      mutate(
+      dplyr::mutate(
         baseline_cumulative_deaths_since_vacc = cumsum(baseline_deaths_since_vacc)
       ) %>%
       ungroup() %>%
