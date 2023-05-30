@@ -1,3 +1,22 @@
+```{r lives-saved-data, echo=FALSE}
+differences_table <- load_deaths_averted_table( excess = FALSE) %>% 
+  filter(date == "2022-01-01") %>% 
+  select(iso3c, counterfactual, cumulative_averted_deaths_avg) 
+
+saved30 = differences_table %>% filter(counterfactual == "30_days_sooner") %>% 
+  summarize(averted_deaths = -sum(cumulative_averted_deaths_avg)) %>% 
+  pull(averted_deaths)
+saved60 = differences_table %>% filter(counterfactual == "60_days_sooner") %>% 
+  summarize(averted_deaths = -sum(cumulative_averted_deaths_avg)) %>% 
+  pull(averted_deaths)
+saved90 = differences_table %>% filter(counterfactual == "90_days_sooner") %>% 
+  summarize(averted_deaths = -sum(cumulative_averted_deaths_avg)) %>% 
+  pull(averted_deaths)
+
+expected_lives_saved = 0.06*saved30 + 0.03*saved60 + 0.01*saved90
+expected_lives_saved_formatted = format(signif(expected_lives_saved, 2), big.mark = ",", scientific = FALSE)
+
+```
 # Discussion
 
 Overall, using an epidemiological model we find large health benefits from accelerating availability of vaccines, both in the UK and the US. In our main period of interest, from the start of vaccination up to 1 July 2021, these reductions range on average from 1.4 up to 6.7 lives saved per 10,000 people, depending on country and amount of acceleration of vaccination schedule (30-90 days). These are obviously large numbers, corresponding to 45,000-150,000 lives saved in two countries alone in the modelled period or, correspondingly, 15-50% reduction in total death toll from COVID-19 in the modelled periods[^13]. However, our results are uncertain and sensitive to the model, as is typical of epidemiological modelling studies.
@@ -6,7 +25,7 @@ Overall, using an epidemiological model we find large health benefits from accel
 
 [Expand into a paragraph: related to model limitations is add a point that the model is very sensitive to excess deaths vs confirmed deaths choice, and these have also changed over time (a lot). More generally, we show that there is a lot of sensitivity in this model.]
 
-Does this large health gain justify investing more into additional trials? Firstly, let's assume that going into Phase II COVID vaccine developers predicted a 33% chance of success[^14]. Secondly, let’s assume a clinical trial innovation has a 6% chance of accelerating approval by 30 days, 3% by 60 days or 1% by 90 days. In expectation this gives 4,600 lives saved in two countries. If implementing this innovation for all leading vaccine candidates cost 100 million USD, that's still about 20,000 USD per life saved, ignoring other health and economic benefits and the fact that a vaccine is a global public good. If we were to factor these in, the benefits would have likely been orders of magnitude larger.
+Does this large health gain justify investing more into additional trials? Firstly, let's assume that going into Phase II COVID vaccine developers predicted a 33% chance of success[^14]. Secondly, let’s assume a clinical trial innovation has a 6% chance of accelerating approval by 30 days, 3% by 60 days or 1% by 90 days. In expectation this gives `r expected_lives_saved_formatted` lives saved in two countries. If implementing this innovation for all leading vaccine candidates cost 100 million USD, that's still about 20,000 USD per life saved, ignoring other health and economic benefits and the fact that a vaccine is a global public good. If we were to factor these in, the benefits would have likely been orders of magnitude larger.
 
 The 100 million cost quoted here is just a rough estimate. Cost of the Pfizer and Moderna trials was ... . The cost of the first human challenge trial in the UK was ... . What is even more uncertain are the probabilities of acceleration that we assumed in the above example (6%, 3%, and 1%). While technically feasible, it's hard to see a clear path to regulatory approval based on a human challenge study alone.
 
