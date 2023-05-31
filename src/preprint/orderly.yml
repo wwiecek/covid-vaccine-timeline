@@ -109,6 +109,7 @@ packages:
   - systemfonts
   - rticles
   - bookdown
+  - zoo
 
 
 # Source files, in addition to the script.  Typically these will

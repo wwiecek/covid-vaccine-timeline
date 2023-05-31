@@ -226,6 +226,19 @@ update_parameters <- function(out, iso3c) {
       }
     }
 
+  if (iso3c == "GBR") {
+    # add in 2.68 million vaccinations over the 33 between approval and the start of the data series
+    out$parameters$primary_doses <- c(
+      0, 
+      rep((2680000-out$parameters$primary_doses[2])/33,33), 
+      out$parameters$primary_doses[2:length(out$parameters$primary_doses)])
+    out$parameters$tt_primary_doses <- c(
+      0,
+      out$parameters$tt_primary_doses[2]-seq(33,1),
+      out$parameters$tt_primary_doses[2:length(out$parameters$tt_primary_doses)])
+
+  }
+
   return(out)
 }
 
