@@ -1,19 +1,213 @@
-# Results
+```{r vaccinations-table, caption=c("Vaccinations administered under baseline and counterfactual scenarios"), echo=FALSE}
+baseline = readRDS("data/owid_raw.Rds")
+sooner_30 = readRDS("data/30_days_sooner.Rds")
+sooner_60 = readRDS("data/60_days_sooner.Rds")
+sooner_90 = readRDS("data/90_days_sooner.Rds")
 
-Numbers of vaccine doses distributed under the base case and counterfactual models are given in Table 1 and Figure 1. Focusing on our chosen period of up to 1 July 2021, we find 10% increase in the US in the doses administered and corresponding 20% increase for the UK, under the most optimistic scenario of vaccines being available 90 days earlier. However, the differences are much larger in the earlier periods. For example, up to 1 April 2021, the corresponding increases are 115% and 70%, respectively.
+counterfactuals = bind_rows(baseline, sooner_30, sooner_60, sooner_90) %>%
+  filter(date <= primary_last_date)
 
-In our main period of interest, up to 1 July 2021, our results suggest that for the UK accelerating availability of vaccines would have averted between 9,000 (assuming 30-day acceleration; lower 95% bound is 6,000) and 45,000 (90-day acceleration; upper 95% bound is 60,000) deaths. This translates to 1.4-6.7 deaths averted per 10,000 or XX% reduction in total burden of deaths in the period between start of vaccinations and 1 July 2021.
+vaccinations_table = counterfactuals %>%
+  filter(date %in% c(
+    as.Date('2021-01-01'),
+    as.Date('2021-04-01'),
+    as.Date('2021-07-01')
+  )) %>%
+  select(country, date, total_vacc, shifted_by) %>%
+  mutate(
+    total_vacc = format(total_vacc,
+                        big.mark = ",",
+                        trim = TRUE),
+    shifted_by = mapvalues(
+      shifted_by,
+      from = c("baseline", "30", "60", "90"),
+      to = c(
+        "Baseline",
+        "Vaccines 30 days sooner",
+        "Vaccines 60 days sooner",
+        "Vaccines 90 days sooner"
+      )
+    )
+  ) %>%
+  plyr::rename(
+    c(
+      "shifted_by" = "Counterfactual scenario"
+    )
+  ) %>%
+  pivot_wider(names_from = date,
+              values_from = total_vacc) %>%
+  replace(is.na(.), '0') %>%
+  arrange(country) %>%
+  select(-country)
 
-In the US, corresponding numbers of deaths averted are 51,000 (lower 95% bound of 42,000) and 131,000 (upper 95% bound of 180,000) for 30-day and 90-day acceleration respectively. This gives a range of 1.6-4.0 deaths averted per 10,000  or XX% reduction in total burden of deaths in the period between start of vaccinations and 1 July 2021.
+vaccinations_table %>%
+  kbl(booktabs=TRUE, centering = TRUE, caption = "Total vaccinations at sample dates") %>%
+  pack_rows("United Kingdom", 1, 4) %>%
+  pack_rows("United States", 5, 8)
 
-As these numbers suggest, the simulations for the UK are typically more sensitive to how much earlier the vaccines become available, likely due to larger number of doses administered per person (also including a higher uptake of boosters: about 50% in the UK compared to only about 25% in the US up to 1 January 2022) and no binding constraints on vaccine availability in the UK even under the most optimistic scenario, unlike in the US. We also noted that while the simulations in the US are affected by the acceleration facter a bit less, within each counterfactual they are more uncertain. 
+```
+```{r deaths-averted-table, echo=FALSE}
 
-**Cut-off dates for calculation of deaths averted.** If we extend the modelled period up to 1 January 2022, the average number of deaths averted generally increases (12-61k for the UK, 31-137k for the US; the ranges represent 30-day to 90-day accelerations). However, uncertainty increases too, particularly for the US, where due to the “rebound” effect the number of deaths can even increase under some trajectories when compared to status quo[^12].
+differences_table <- deaths_averted_table_single(load_deaths_averted_table( excess = FALSE))
 
-**Using excess deaths.** If using the excess deaths the effects show similar trends, but are generally smaller, sometimes by as much as a third. This diminished effect is somewhat to be expected, since excess deaths measure also includes non-COVID-attributable deaths and may therefore be less sensitive to increasing vaccination.
+differences_table %>%
+  kbl(booktabs=TRUE, centering = TRUE, caption = "DJ5 Averted deaths, based on reported deaths") %>%
+  pack_rows("United Kingdom to April 2021", 1, 3) %>%
+  pack_rows("United Kingdom to July 2021", 4, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
+  pack_rows("United States to April 2021", 10, 12) %>%
+  pack_rows("United States to July 2021", 13, 15) %>%
+  pack_rows("United States to Jan 2022", 16, 18) %>%
+  kable_styling(font_size = 7)
 
-**Varying duration of natural immunity [work in progress—Witold].** In both countries, the estimates of deaths averted showed little sensitivity to the estimated duration of natural immunity (Supplementary Table 11. The estimates of deaths averted in the UK was also relatively insensitive to the estimated vaccine efficacy, though the estimate in the US was more sensitive to this value (it is worth noting that in the case of the US the model explored captured a wider range of variation in vaccine efficacy) - see Supplementary Table 9. Note that for long-run estimates of deaths averted in the US (up to Jan 2022), higher estimates of vaccine efficacy were associated with much greater uncertainty over the number of deaths averted. This may be due to the fact that, given a more effective vaccine, waning immunity will have a larger impact on the end results.
-The estimate of long-run deaths averted in the US was extremely sensitive to the estimated duration of
-vaccine derived immunity, with a difference of 14 days in this parameter estimate yielding long-run estimates of deaths averted that ranged from 32 255 to negative 11 456 (that is, 11 456 extra deaths) for a 30 day advance in the vaccination schedule. Notably, short estimates of vaccine duration were also associated with extreme decreases in the uncertainty over the number of deaths averted. Note that the short run estimates of deaths averted (up to July 2021) were robustly positive, but were also substantially more uncertain for longer estimates of the duration of vaccine protection
+```
 
-[^12]: In our main period of interest, up to 1 July 2021, our results suggest that for the UK accelerating availability of vaccines would have averted between 6,000 (assuming 30-day acceleration; lower 95% bound is 5,000) and 30,000 (90-day acceleration; upper 95% bound is 31,000) deaths. This translates to 0.9-4.5 deaths averted per 10,000. In the US, corresponding numbers of deaths averted are 39,000 (lower 95% bound of 13,000) and 120,000 (upper 95% bound of 161,000) for 30-day and 90-day acceleration respectively. This gives a range of 1.2-3.6 deaths averted per 10,000.
+```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("DJ4 Cumulative vaccine counterfactuals"), echo=FALSE}
+baseline = readRDS("data/owid_raw.Rds")
+sooner_30 = readRDS("data/30_days_sooner.Rds")
+sooner_60 = readRDS("data/60_days_sooner.Rds")
+sooner_90 = readRDS("data/90_days_sooner.Rds")
+
+counterfactuals = bind_rows(baseline, sooner_30, sooner_60, sooner_90) %>%
+  filter(date <= primary_last_date)
+
+dj4 = ggplot() +
+  geom_line(data = counterfactuals,
+            aes(x = as.Date(date),
+                y = total_vacc,
+                color = shifted_by)) +
+  facet_wrap(~country, ncol = 2, scales = "free_y") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+  scale_colour_manual(
+    labels = c('30 days', '60 days', '90 days', 'baseline'),
+    values = c(alpha(colour_counterfactual, 0.33), alpha(colour_counterfactual, 0.66), colour_counterfactual, colour_baseline)
+  ) +
+  labs(x = "Date",
+       y = "Cumulative vaccinations",
+       color = "Vaccinations starting sooner by:")
+
+plot(dj4)
+```
+```{r model-fit-deaths, fig.align="center", fig.cap=c("Model fit to mortality data"), echo=FALSE}
+deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
+data_for_plot3 = deaths_averted %>% 
+  filter(counterfactual == 'owid_raw') %>% 
+  select(iso3c, date, country, deaths_avg, baseline_deaths_avg) %>% 
+  left_join(population, by = "iso3c") %>% 
+  mutate(
+    deaths_perpop = deaths_avg / pop10k,
+    baseline_deaths_perpop = baseline_deaths_avg / pop10k
+  ) %>% 
+  pivot_longer(cols = c(deaths_perpop, baseline_deaths_perpop),
+               names_to = "type")
+
+fig3 = ggplot() +
+  geom_line(data = data_for_plot3,
+            aes(x = as.Date(date),
+                y = value,
+                color = type)) +
+  facet_wrap(~iso3c, 
+             ncol = 2, 
+             scales = "free_y", labeller = as_labeller(c(
+               "GBR" = "United Kingdom",
+               "USA" = "United States"
+             ))) +
+  scale_colour_manual(
+    labels = c('Real deaths', 'Modelled deaths (baseline)'),
+    values = c(colour_baseline, colour_counterfactual)
+  ) +
+  labs(x = "Date",
+       y = "Deaths per 10,000",
+       color = "Type:")
+  
+plot(fig3)
+```
+```{r deaths-averted-plot, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario"), echo=FALSE}
+deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
+
+zoomed_deaths_averted = deaths_averted %>%
+  filter(date > as.Date("2020-09-01") & date <= primary_last_date) %>%
+  filter(counterfactual %in% cfacts_to_display) %>%
+  mutate(counterfactual_label = mapvalues(
+    counterfactual,
+    from = cfacts_to_display,
+    to = labels_to_display
+  )) %>%
+  mutate(counterfactual_label = factor(counterfactual_label,
+                                       labels_to_display)) %>%
+  left_join(population, by = "iso3c") %>%
+  mutate(
+    deaths_025_perpop = deaths_025 / pop10k,
+    deaths_975_perpop = deaths_975 / pop10k,
+    baseline_deaths_avg_perpop = baseline_deaths_avg / pop10k,
+    deaths_avg_perpop = deaths_avg / pop10k,
+    cumulative_deaths_025_perpop = cumulative_deaths_025 / pop10k,
+    cumulative_deaths_975_perpop = cumulative_deaths_975 / pop10k,
+    baseline_cumulative_deaths_avg_perpop = baseline_cumulative_deaths_avg / pop10k,
+    cumulative_deaths_avg_perpop = cumulative_deaths_avg / pop10k,
+  )
+  
+baseline_color <- "#2C3E50" # dark blue
+counterfactual1_color <- "#E74C3C" # red
+counterfactual2_color <- "#27AE60" # green
+counterfactual3_color <- "#F1C40F" # yellow
+
+single_timeseries_plot = ggplot(data = zoomed_deaths_averted,
+                                aes(x = as.Date(date),
+                                    y = deaths_avg_perpop,
+                                    color = counterfactual)) +
+  geom_line() +
+  geom_ribbon(
+    aes(ymin = deaths_025_perpop, ymax = deaths_975_perpop, fill = counterfactual),
+    alpha = 0.2,
+    color = NA,
+    show.legend = FALSE
+  ) +
+  geom_line(aes(y = baseline_deaths_avg_perpop, colour = "baseline")) +
+  facet_wrap( ~ country) +
+  scale_colour_manual(
+    aesthetics = c("fill", "colour"),
+    labels = c('30 days', '60 days', '90 days', 'baseline'),
+    values = c(
+      counterfactual1_color,
+      counterfactual2_color,
+      counterfactual3_color,
+      baseline_color
+    )
+  ) +
+  labs(x = "Date", y = "Daily Deaths per 10 000 people", color = "Earlier vaccines by:")
+
+plot(single_timeseries_plot)
+```
+
+# Estimated mortality reductions
+
+Numbers of vaccine doses distributed under the base case and counterfactual models are given in Table \@ref(tab:vaccinations-table) and Figure \@ref(fig:cumul-vacc-cfacts). Focusing on our chosen period of up to 1 July 2021, we find 9% increase in the US in the doses administered and corresponding 20% increase for the UK, under the most optimistic scenario of vaccines being available 90 days earlier. However, the differences are much larger in the earlier periods. For example, up to 1 April 2021, the corresponding increases are 115% and 68%, respectively.
+
+Model fit is presented in Figure \@ref(fig:cumul-vacc-cfacts) and comparison of counterfactual scenarios over time in Figure \@ref(fig:model-fit-deaths). We summarise cumulative reductions in mortality in Table \@ref(tab:deaths-averted-table). In our main period of interest, up to 1 July 2021, our model suggests that for the UK accelerating availability of vaccines would have averted between 3,600 (assuming 30-day acceleration; lower 95% bound is 2,000) and 39,000 (90-day acceleration; upper 95% bound is 52,000) deaths. This translates to 0.5-5.8 deaths averted per 10,000 individuals or 5-44% reduction in total burden of deaths in the period between start of vaccinations and 1 July 2021. As a reminder, lower and upper bounds correspond to uncertainty in vaccine parameters.
+
+In the US, corresponding numbers of deaths averted are 51,000 (lower 95% bound of 42,000) and 131,000 (upper 95% bound of 180,000) for 30-day and 90-day acceleration respectively. This gives a range of 1.6-4.0 deaths averted per 10,000 or 13-30% reduction in total burden of deaths in the period between start of vaccinations and 1 July 2021.
+
+As these numbers suggest, the simulations for the UK are typically more sensitive to how much earlier the vaccines become available, likely due to higher vaccine uptake in the UK than in the US (also uptake of boosters: about 50% in the UK compared to only about 25% in the US up to 1 January 2022) and no binding constraints on vaccine availability in the UK even under the most optimistic scenario, unlike in the US. 
+
+On the other hand, reductions in the UK are generally lower than in the US. This is likely due to the fact that benefits of vaccination are biggest if mass vaccination precedes rise in cases (for illustration see Fig S6 in Więcek et al. 2022). In the UK numbers of cases were already rapidly rising in winter 2020 and at the lower end of speed-up counterfactuals (30 days) only a small proportion of cases would be averted, because a small proportion of population would have been vaccinated before epidemic peak (see Figure \@ref(fig:deaths-averted-plot)). 
+
+We also noted that while the simulations in the US are affected by the acceleration factor a bit less, within each counterfactual they are more uncertain. This is possibly also explained by the timing of epidemic peaks. Whereas in the UK the crucial parameter is timing of mass vaccination compared to epidemic peak, in the US the deaths are spread more evenly over time and therefore more sensitive to vaccine parameters such as efficacy or duration of protection.
+
+## Results of alternative model specifications
+
+Detailed results for alternative model specifications are in Appendix D and sensitivity to model parameters in Appendix C. Here we summarise our main findings.
+
+**Cut-off dates for calculation of deaths averted.** If we extend the modelled period up to 1 January 2022, the average number of deaths averted generally increases (-3,000 to 46,000 for the UK, 31,000 to 137,000 for the US; the ranges represent 30-day to 90-day accelerations). However, uncertainty increases too and we see a considerable “rebound” effect, where the number of deaths can even increase under some trajectories when compared to the status quo. This is because the model is very sensitive to duration of protection.
+
+**Using excess deaths. **If using the excess deaths the effects show similar trends, but are generally smaller, sometimes by as much as a third. This diminished effect is somewhat to be expected, since excess deaths measure also includes non-COVID-attributable deaths and may therefore be less sensitive to increasing vaccination.[^16]
+
+**Additional counterfactual analysis considering booster uptake. **Noting differences between the UK and the US (also in the extent variability in results), which had widely different levels of uptake of boosters in the considered period, we conducted an additional analysis, where we increased the uptake of third doses in the US to the same level as in the UK. However, we found that this modification does not account for the differences between the countries. 
+
+**Decreased vaccination demand due to vaccine hesitancy. **If demand for vaccines was lower under the counterfactual scenario, the mortality reductions still persist, although they are diminished at the lower end of acceleration (30 days counterfactual): with 10% we estimate 2,400-37,000 deaths averted in the UK (compared to 3.6-39 thousand range holding demand constant) up to 1 July 2021 and 41,000-115,000 in the US (compared to 51-131k range), with the range corresponding to three counterfactuals (30, 60, 90 days). However, if the decreased demand continued past summer, the mortality reductions would be much smaller.
+
+**Sensitivity to misspecified vaccine parameters. **See Appendix C for details. Typically misspecifying vaccine efficacy (first two doses), DVI, or DNI led to decrease in estimated benefits, sometimes by a considerable margin (one-third or even half of the reductions seen under the base case), but in a few cases we also saw increases in benefits. Overall these results suggest large sensitivity to parameter misspecification. 
+
+[^16]: In our main period of interest, up to 1 July 2021, our results suggest that for the UK accelerating availability of vaccines would have averted between 6,000 (assuming 30-day acceleration; lower 95% bound is 5,000) and 30,000 (90-day acceleration; upper 95% bound is 31,000) deaths. This translates to 0.9-4.5 deaths averted per 10,000. In the US, corresponding numbers of deaths averted are 39,000 (lower 95% bound of 13,000) and 120,000 (upper 95% bound of 161,000) for 30-day and 90-day acceleration respectively. This gives a range of 1.2-3.6 deaths averted per 10,000.
+
+
