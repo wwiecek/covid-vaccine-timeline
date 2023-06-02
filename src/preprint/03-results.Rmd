@@ -43,11 +43,13 @@ vaccinations_table = counterfactuals %>%
   select(-country)
 
 vaccinations_table %>%
-  kbl(booktabs=TRUE, centering = TRUE, caption = "Total vaccinations under baseline and counterfactual scenarios") %>%
+  kbl(booktabs=TRUE, centering = TRUE, caption = "Total vaccinations under baseline and counterfactual scenarios"),
+      align=c("l", "r", "r", "r")) %>%
   pack_rows("United Kingdom", 1, 4) %>%
   pack_rows("United States", 5, 8)
 
 ```
+
 ```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("Cumulative vaccinations under baseline and counterfactual scenarios"), echo=FALSE}
 baseline = readRDS("data/owid_raw.Rds")
 sooner_30 = readRDS("data/30_days_sooner.Rds")
