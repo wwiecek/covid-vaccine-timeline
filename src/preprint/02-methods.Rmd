@@ -5,22 +5,43 @@ baseline_vaccination = readRDS("data/owid_raw.Rds") %>%
   mutate(daily_vaccination = rollmean(daily_vaccination, k = 7, fill = NA)) %>% 
   select(iso3c, date, daily_vaccination)
 
-deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
-first_date = as.Date("2020-12-15")
+
+model_fits_reported_GBR = readRDS("data/model_fits_reported_GBR.Rds")
+deaths_UK = model_fits_reported_GBR$inputs$data
+model_fits_reported_USA = readRDS("data/model_fits_reported_USA.Rds")
+deaths_USA = model_fits_reported_USA$inputs$data
+
+first_date = as.Date("2020-12-01")
+first_date_vacc = as.Date("2020-12-08")
 last_date = as.Date("2022-01-01")
 population <- data.frame(
   iso3c = c("GBR", "USA"),
   pop10k = c(67081000, 331501080) / 10000
 )
 
-data_for_plot = deaths_averted %>% 
-  filter(counterfactual == "owid_raw") %>% 
-  select(iso3c, date, country, baseline_deaths_avg) %>% 
+df_uk = data.frame(date = seq(first_date, last_date, 1)) %>% 
+  left_join(deaths_UK, by = c("date" = "date_start")) %>% 
+  fill(deaths, .direction = "up") %>% 
+  fill(iso, .direction = "updown") %>% 
+  mutate(deaths_daily = deaths / 7) %>% 
+  mutate(deaths_smoothed = rollmean(deaths_daily, k = 7, fill = NA, align = "right"))
+
+df_us = data.frame(date = seq(first_date, last_date, 1)) %>% 
+  left_join(deaths_USA, by = c("date" = "date_start")) %>% 
+  fill(deaths, .direction = "up") %>% 
+  fill(iso, .direction = "updown") %>% 
+  mutate(deaths_daily = deaths / 7) %>% 
+  mutate(deaths_smoothed = rollmean(deaths_daily, k = 7, fill = NA, align = "right"))
+
+deaths_reported = bind_rows(df_uk, df_us) %>% 
+  mutate(iso3c = iso)
+
+data_for_plot = deaths_reported %>% 
   left_join(baseline_vaccination, by = c("iso3c", "date")) %>% 
   left_join(population, by = "iso3c") %>% 
-  filter(date <= last_date & date >= first_date ) %>% 
+  filter(date <= last_date & date >= first_date_vacc & !is.na(deaths) ) %>% 
   mutate(
-    deaths = baseline_deaths_avg / pop10k,
+    deaths = deaths_smoothed / pop10k,
     vaccinations = ifelse(is.na(daily_vaccination), 0, daily_vaccination / pop10k)
   ) %>% 
   pivot_longer(cols = c(deaths, vaccinations),
