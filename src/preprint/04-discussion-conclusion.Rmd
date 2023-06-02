@@ -1,6 +1,6 @@
 ```{r lives-saved-data, echo=FALSE}
 differences_table <- load_deaths_averted_table( excess = FALSE) %>% 
-  filter(date == "2022-01-01") %>% 
+  filter(date == "2021-07-01") %>% 
   select(iso3c, counterfactual, cumulative_averted_deaths_avg) 
 
 saved30 = differences_table %>% filter(counterfactual == "30_days_sooner") %>% 
@@ -13,7 +13,9 @@ saved90 = differences_table %>% filter(counterfactual == "90_days_sooner") %>%
   summarize(averted_deaths = -sum(cumulative_averted_deaths_avg)) %>% 
   pull(averted_deaths)
 
-expected_lives_saved = 0.06*saved30 + 0.03*saved60 + 0.01*saved90
+success_probability = 0.33
+
+expected_lives_saved = success_probability*(0.06*saved30 + 0.03*saved60 + 0.01*saved90)
 expected_lives_saved_formatted = format(signif(expected_lives_saved, 2), big.mark = ",", scientific = FALSE)
 
 ```
