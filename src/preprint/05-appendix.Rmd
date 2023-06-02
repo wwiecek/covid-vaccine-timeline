@@ -6,6 +6,11 @@ output:
   html_document: default
 ---
 
+
+# (APPENDIX) Supplementary material {-}
+
+\beginsupplement
+
 # Appendix A - Vaccine manufacturing in 2020
 
 ## Manufacturing constraints

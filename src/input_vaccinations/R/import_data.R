@@ -13,7 +13,7 @@ import_vaccine_doses_by_manufacturer <- function(){
 }
 
 import_who_vaccination <- function(){
-  read_csv("https://covid19.who.int/who-data/vaccination-data.csv") %>%
+  read_csv("who_vacc.csv") %>%
     rename(iso3c = ISO3) %>%
     mutate(
       VACCINES_USED = strsplit(VACCINES_USED, ",")
@@ -26,7 +26,7 @@ import_who_vaccination_meta <- function(){
 }
 
 import_owid <- function(){
-  read_csv("https://covid.ourworldindata.org/data/owid-covid-data.csv") %>%
+  read_csv("owid-covid-data-ukaug.csv") %>%
     rename(iso3c = iso_code) %>%
     select(iso3c, date, tidyselect::contains("vacc"), tidyselect::contains("boost")) %>%
     filter(nchar(iso3c) == 3)
