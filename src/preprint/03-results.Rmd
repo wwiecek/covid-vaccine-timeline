@@ -43,7 +43,7 @@ vaccinations_table = counterfactuals %>%
   select(-country)
 
 vaccinations_table %>%
-  kbl(booktabs=TRUE, centering = TRUE, caption = "Total vaccinations under baseline and counterfactual scenarios"),
+  kbl(booktabs=TRUE, centering = TRUE, caption = "Total vaccinations under baseline and counterfactual scenarios",
       align=c("l", "r", "r", "r")) %>%
   pack_rows("United Kingdom", 1, 4) %>%
   pack_rows("United States", 5, 8)
