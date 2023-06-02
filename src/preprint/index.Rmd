@@ -15,7 +15,7 @@ output:
     citation_package: natbib
 documentclass: article
 bibliography: report.bib
-biblio-style: apalike
+biblio-style: plainnat
 header-includes:
  - \usepackage{natbib}
 description: "This is an article describing a retrospective comparison between the
