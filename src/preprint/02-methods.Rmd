@@ -1,3 +1,5 @@
+# Vaccinations and mortality under status quo
+
 ```{r baseline-vacc-death, fig.align="center", fig.cap=c("Baseline characteristics"), echo=FALSE}
 
 baseline_vaccination = readRDS("data/owid_raw.Rds") %>% 
@@ -49,9 +51,6 @@ fig1 = ggplot() +
 plot(fig1)
 
 ```
-
-# Vaccinations and mortality under status quo
-
 Figure \@ref(fig:baseline-vacc-death) shows daily vaccinations and deaths attributable to COVID in the US and the UK.[^5] Between the start and the end of 2021 (that is, within roughly a year of mass vaccination campaigns), 470,000 deaths occurred in the US and 75,000 in the UK, more than doubling the death tolls compared to 2020. 200,000 (US) and 52,000 (UK) of these occurred in the first quarter of 2021, as the vaccinations were picking up speed. Note that severity of epidemic waves was different across these two countries: the UK experienced a very sharp rise in deaths in early 2021 compared to the milder peak in late 2021. This pattern is also present but much less pronounced in the US. In both countries the daily vaccinations only levelled off in early summer of 2021, due to distribution capacity lagging behind demand. 
 
 What share of those deaths could have been averted if mass vaccination campaigns started earlier, thanks to earlier approval of the first available vaccines (those manufactured by Pfizer and Moderna in both countries, plus AstraZeneca vaccine in the UK)? One way to address this question is to use counterfactual simulations from epidemiological models. 
