@@ -135,6 +135,11 @@ join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
           dplyr::mutate(
             baseline_cumulative_deaths_since_vacc = cumsum(baseline_deaths_since_vacc)
           ) %>%
+          mutate(
+            baseline_deaths_display = format(
+              round(baseline_cumulative_deaths_since_vacc, digits = 0),
+                                             big.mark = ",")
+          ) %>% 
           ungroup() %>%
           filter(date %in% dates)
       })
@@ -200,6 +205,11 @@ load_deaths_averted_table <-
       dplyr::mutate(
         baseline_cumulative_deaths_since_vacc = cumsum(baseline_deaths_since_vacc)
       ) %>%
+      mutate(
+            baseline_deaths_display = format(
+              round(baseline_cumulative_deaths_since_vacc, digits = 0),
+                                             big.mark = ",")
+          ) %>% 
       ungroup() %>%
       filter(date %in% last_dates_to_display)
     
@@ -270,15 +280,15 @@ format_deaths_table <- function(deaths_averted_detail){
           counterfactual_label,
           delta_deaths,
           delta_deaths_perpop,
-          baseline_cumulative_deaths_since_vacc,
+          baseline_deaths_display,
           delta_deaths_perreported ) %>%
       plyr::rename(
         c(
            "counterfactual_label" = "Counterfactual scenario",
            "delta_deaths" = "Deaths averted",
-           "delta_deaths_perpop" = "Deaths averted per 10,000",
-           "baseline_cumulative_deaths_since_vacc" = "Baseline deaths",
-           "delta_deaths_perreported" = "Deaths averted per baseline death"
+           "delta_deaths_perpop" = "Per 10,000 people",
+           "baseline_deaths_display" = "Baseline deaths",
+           "delta_deaths_perreported" = "Averted/baseline"
         )
       )
     }
@@ -349,15 +359,15 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
           sensitivity_value_avg,
           delta_deaths,
           delta_deaths_perpop,
-          baseline_cumulative_deaths_since_vacc,
+          baseline_deaths_display,
           delta_deaths_perreported ) %>%
       plyr::rename(
         c(
            "counterfactual_label" = "Counterfactual scenario",
            "delta_deaths" = "Deaths averted",
            "sensitivity_value_avg" = paste0("Average ", parameter_names[unique(deaths_averted_detail$sen)]),
-           "delta_deaths_perpop" = "Deaths averted per 10,000",
-           "baseline_cumulative_deaths_since_vacc" = "Baseline deaths",
+           "delta_deaths_perpop" = "Per 10,000 people",
+           "baseline_deaths_display" = "Baseline deaths",
            "delta_deaths_perreported" = "Averted/baseline"
         )
       )
