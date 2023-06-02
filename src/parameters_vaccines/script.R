@@ -392,7 +392,7 @@ fit_curve <- function(df) {
          }
      }
 
-    res <- optim(unlist(par), fn = err_func, method = 'L-BFGS-B', lower = unlist(lower), upper = unlist(upper), control=list(trace=1, maxit=100, factr=1e13))
+    res <- optim(unlist(par), fn = err_func, method = 'L-BFGS-B', lower = unlist(lower), upper = unlist(upper), control=list(trace=1, maxit=100, factr=3e13))
     if(res$convergence != 0){
       print(res$par)
       stop(res$message)

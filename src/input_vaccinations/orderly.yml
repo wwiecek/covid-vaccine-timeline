@@ -21,6 +21,8 @@ sources:
 resources:
   - coverage_strategies.Rds
   - dominant_vaccines.Rds
+  - owid-covid-data-ukaug.csv
+  - who_vacc.csv
 
 # You must list at least one artefact that your report will generate.
 # Each artefact consists of one or more files.  The format is to list
