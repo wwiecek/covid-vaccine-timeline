@@ -48,7 +48,7 @@ vaccinations_table %>%
 ```
 ```{r deaths-averted-table, echo=FALSE}
 
-differences_table <- deaths_averted_table_single(load_deaths_averted_table( excess = FALSE))
+differences_table <- deaths_averted_table_single(load_deaths_averted_table( excess = FALSE)) %>% select(-c("Baseline deaths", "Averted/baseline"))
 
 differences_table %>%
   kbl(booktabs=TRUE, centering = TRUE, caption = "DJ5 Averted deaths, based on reported deaths") %>%
