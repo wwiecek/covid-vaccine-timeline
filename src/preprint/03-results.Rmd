@@ -57,22 +57,48 @@ sooner_90 = readRDS("data/90_days_sooner.Rds")
 counterfactuals = bind_rows(baseline, sooner_30, sooner_60, sooner_90) %>%
   filter(date <= primary_last_date)
 
-dj4 = ggplot() +
-  geom_line(data = counterfactuals,
+first_date_us = baseline %>% filter(iso3c == "USA") %>% head(1) %>% pull(date)
+first_date_uk = baseline %>% filter(iso3c == "GBR") %>% head(1) %>% pull(date)
+highlight_dates_us = c(first_date_us, first_date_us - 30, first_date_us - 60, first_date_us - 90, as.Date("2021-04-01"), as.Date("2021-07-01"))
+highlight_dates_uk = c(first_date_uk, first_date_uk - 30, first_date_uk - 60, first_date_uk - 90, as.Date("2021-04-01"), as.Date("2021-07-01"))
+
+lines = data.frame(country = c("United Kingdom", "United States"),
+                   dates = c(first_date_uk, first_date_us))
+
+breaks_fun = function(x) {
+  # Only way to distinguish US and UK is that they start at different dates :(
+  if (min(x) < as.integer(as.Date("2020-09-01"))) {
+    return(highlight_dates_uk)
+  } else {
+    return(highlight_dates_us)
+  }
+}
+
+labels_fun = function(b) {
+  format(b, "%b-%d")
+}
+
+dj4 = ggplot(data = counterfactuals,
             aes(x = as.Date(date),
                 y = total_vacc,
                 color = shifted_by)) +
-  facet_wrap(~country, ncol = 2, scales = "free_y") +
+  geom_line() +
+  facet_wrap(~country, ncol = 2, scales = "free") +
   scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+  scale_x_continuous(
+    breaks = breaks_fun,
+    labels = labels_fun
+  ) + 
   scale_colour_manual(
     labels = c('30 days', '60 days', '90 days', 'baseline'),
     values = c(alpha(colour_counterfactual, 0.33), alpha(colour_counterfactual, 0.66), colour_counterfactual, colour_baseline)
   ) +
   labs(x = "Date",
        y = "Cumulative vaccinations",
-       color = "Vaccinations starting sooner by:")
+       color = "Vaccinations starting sooner by:") +
+  theme(axis.text.x=element_text(angle = 90, hjust = 0))
 
-plot(dj4)
+print(dj4)
 ```
 Numbers of vaccine doses distributed under the base case and counterfactual models are given in Table \@ref(tab:vaccinations-table) and Figure \@ref(fig:cumul-vacc-cfacts). Focusing on our chosen period of up to 1 July 2021, we find 9% increase in the US in the doses administered and corresponding 20% increase for the UK, under the most optimistic scenario of vaccines being available 90 days earlier. However, the differences are much larger in the earlier periods. For example, up to 1 April 2021, the corresponding increases are 115% and 68%, respectively.
 
@@ -80,20 +106,36 @@ Numbers of vaccine doses distributed under the base case and counterfactual mode
 deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
 data_for_plot3 = deaths_averted %>% 
   filter(counterfactual == 'owid_raw') %>% 
-  select(iso3c, date, country, deaths_avg, baseline_deaths_avg) %>% 
+  select(iso3c, date, country, 
+         deaths_avg, 
+         deaths_025,
+         deaths_975
+  ) %>% 
+  # join by deaths reported from 02-methods
+  left_join(deaths_reported, by = c("iso3c", "date")) %>% 
   left_join(population, by = "iso3c") %>% 
+  filter(date >= first_date) %>% 
   mutate(
     deaths_perpop = deaths_avg / pop10k,
-    baseline_deaths_perpop = baseline_deaths_avg / pop10k
+    deaths_025_perpop = deaths_025 / pop10k,
+    deaths_975_perpop = deaths_975 / pop10k,
+    baseline_deaths_perpop = deaths_smoothed / pop10k
   ) %>% 
   pivot_longer(cols = c(deaths_perpop, baseline_deaths_perpop),
                names_to = "type")
 
-fig3 = ggplot() +
-  geom_line(data = data_for_plot3,
-            aes(x = as.Date(date),
+fig3 = ggplot(data = data_for_plot3,
+              aes(x = as.Date(date),
                 y = value,
-                color = type)) +
+                color = type,
+                linetype = type)) +
+  geom_line() +
+  geom_ribbon(
+    aes(ymin = deaths_025_perpop, ymax = deaths_975_perpop, fill = colour_counterfactual),
+    alpha = 0.2,
+    color = NA,
+    show.legend = FALSE
+  ) +
   facet_wrap(~iso3c, 
              ncol = 2, 
              scales = "free_y", labeller = as_labeller(c(
@@ -104,9 +146,11 @@ fig3 = ggplot() +
     labels = c('Real deaths', 'Modelled deaths (baseline)'),
     values = c(colour_baseline, colour_counterfactual)
   ) +
+  scale_linetype_manual(values = c("solid", "solid")) +
   labs(x = "Date",
-       y = "Deaths per 10,000",
-       color = "Type:")
+       y = "Daily deaths per 10,000 people",
+       color = "Type:") +
+  guides(linetype = FALSE, scale = "none")
   
 plot(fig3)
 ```

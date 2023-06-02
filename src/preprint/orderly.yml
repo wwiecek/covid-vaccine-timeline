@@ -210,6 +210,11 @@ depends:
       id: latest((parameter:demand == 0.9))
       use:
         data/d90_deaths_averted_detail.Rds: deaths_averted_detail.Rds
+  - generate_counterfactuals:
+      id: latest
+      use:
+        data/model_fits_reported_GBR.Rds: model_fits/reported_deaths/GBR.Rds
+        data/model_fits_reported_USA.Rds: model_fits/reported_deaths/USA.Rds
   - generate_production_counterfactual:
       id: latest
       use:
