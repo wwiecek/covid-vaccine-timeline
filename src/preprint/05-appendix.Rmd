@@ -6,6 +6,7 @@ output:
   html_document: default
 ---
 
+\newpage
 
 # (APPENDIX) Supplementary material {-}
 
@@ -36,6 +37,8 @@ In the US and UK, the rate of respondents who intended to be vaccinated when vac
 @Dzieciolowska2021COVID conducted a study of 2,761 health care workers in Canada in December 2020 to assess vaccine hesitancy, with 19.1% of participants indicating they were not willing to receive the COVID vaccine. Among participants who refused the vaccine, 82% indicated the novelty of the vaccine was very or somewhat important in their decision and 60% indicated that they did not have enough time to make a decision. An approval of vaccines using accelerated timelines could obviously negatively impact hesitancy rooted in vaccine novelty and feelings of needing more time to decide . However, the main hypothetical we discuss in our paper is accelerating efficacy testing and starting safety testing early. This also suggests that while the impact may be non-negligible, it may not be large.
 
 @Joshi2021Predictors found that the global average vaccine acceptance rate was 86% in March 2020, dropped to 54% in July 2020, and increased to 72% in September 2020.  By these estimates, if vaccines were approved during summer of 2020, hesitancy may have appreciably impacted uptake. However, it appears that vaccine hesitancy would likely not have impacted uptake if vaccines had been available up to 90 days earlier in the UK and US, with surveys evaluating intention to be vaccinated and trust in health authorities varying by no more than a few percentage points during this time. It is possible these trends would have been impacted by a concern among the general public for vaccines approved quickly, but these effects are difficult to quantify.
+
+\newpage
 
 # Appendix B - Supplementary methods
 
@@ -148,6 +151,8 @@ To produce counterfactual vaccine dosage timeseries, we suppose that vaccine app
 
 Plots can currently be found in [Vaccine production model]
 
+\newpage
+
 # Appendix C - Supplementary Results
 
 ## Impact of counterfactual vaccination scenarios
@@ -184,6 +189,8 @@ cumulative_deaths_plot = ggplot(zoomed_deaths_averted,
 plot(cumulative_deaths_plot)
 ```
 
+\newpage
+
 # Appendix D - Sensitivity
 
 ## Baseline fit to reported deaths instead of excess deaths
@@ -206,7 +213,7 @@ differences_table %>%
 
 ```
 
-```{r reported-deaths-averted-plot, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario"), echo=FALSE}
+```{r reported-deaths-averted-plot, fig.align="center", fig.cap=c("Reported deaths for each counerfactual scenario compared to baseline reported deaths"), echo=FALSE}
 deaths_averted = readRDS("data/deaths_averted_detail.Rds")
 
 zoomed_deaths_averted = deaths_averted %>%
@@ -340,13 +347,13 @@ differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "
   kable_styling(font_size = 7)
 
 ```
-```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to vaccine efficacy"), echo=FALSE}
+```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine efficacy"), echo=FALSE}
 deaths_averted_plots <- deaths_averted_plot('veis', percentiles, last_dates_to_display)
 ```
-```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to vaccine duration"), echo=FALSE}
+```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine duration"), echo=FALSE}
 deaths_averted_plots <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to_display)
 ```
-```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("DJ6 Daily deaths per scenario, sensitivity to natural immunity duration"), echo=FALSE}
+```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to natural immunity duration"), echo=FALSE}
 deaths_averted_plots <- deaths_averted_plot('dur_Rs', percentiles, last_dates_to_display)
 ```
 ```{r vaccinated-plot-vei, fig.align="center", fig.cap=c("Effective vaccinated, sensitivity to vaccine duration"), echo=FALSE}
@@ -358,7 +365,7 @@ Illustrated in Table \@ref(tab:deaths-averted-table-vei), Table \@ref(tab:deaths
 
 Figure \@ref(fig:prod-assumptions) shows the assumptions we made about the achievable production when vaccines were approved to be used 30, 60 and 90 days earlier.
 
-```{r prod-assumptions, fig.align="center", fig.cap=c("DJ9 Vaccine production assumptions"), echo=FALSE}
+```{r prod-assumptions, fig.align="center", fig.cap=c("Vaccine production assumptions"), echo=FALSE}
 detail_prod = readRDS("data/detail_production.Rds")
 pfizer_prod = readRDS("data/pfizer_estimated_production.Rds")
 moderna_prod = readRDS("data/moderna_estimated_production.Rds")
@@ -404,7 +411,7 @@ plot(combined_plot)
 
 Figures \@ref(fig:prod-cap-uk) and \@ref{fig:prod-cap-usa} show our assumptions about the maximum number of vaccines that could be produced each day if vaccines were approved 30, 60 and 90 days earlier.
 
-```{r prod-cap-uk, fig.align="center", fig.cap=c("DJ10 Limits from production UK"), echo=FALSE}
+```{r prod-cap-uk, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the U.K. under counterfactual and baseline scenarios"), echo=FALSE}
 production = readRDS("data/counterfactual_production.Rds")
 
 country_name = "United Kingdom"
@@ -452,7 +459,7 @@ plot(dj10)
 ```
 
 
-```{r prod-cap-usa, fig.align="center", fig.cap=c("DJ10 Limits from production UK"), echo=FALSE}
+```{r prod-cap-usa, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the U.S. under counterfactual and baseline scenarios"), echo=FALSE}
 production = readRDS("data/counterfactual_production.Rds")
 
 country_name = "United States"
