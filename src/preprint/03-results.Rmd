@@ -158,7 +158,7 @@ plot(fig3)
 ```
 ```{r deaths-averted-table, echo=FALSE}
 
-differences_table <- deaths_averted_table_single(load_deaths_averted_table( excess = FALSE))
+differences_table <- deaths_averted_table_single(load_deaths_averted_table( excess = FALSE)) %>% select(-c("Baseline deaths", "Averted/baseline"))
 
 differences_table %>%
   kbl(booktabs=TRUE, centering = TRUE, caption = "Total averted deaths under counterfactual scenarios, based on reported deaths") %>%
