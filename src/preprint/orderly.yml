@@ -210,11 +210,6 @@ depends:
       id: latest((parameter:demand == 0.9))
       use:
         data/d90_deaths_averted_detail.Rds: deaths_averted_detail.Rds
-  - generate_counterfactuals:
-      id: latest
-      use:
-        data/model_fits_reported_GBR.Rds: model_fits/reported_deaths/GBR.Rds
-        data/model_fits_reported_USA.Rds: model_fits/reported_deaths/USA.Rds
   - generate_production_counterfactual:
       id: latest
       use:
@@ -229,3 +224,11 @@ depends:
         data/30_days_sooner.Rds: counterfactual_timelines/30_days_sooner.Rds
         data/60_days_sooner.Rds: counterfactual_timelines/60_days_sooner.Rds
         data/90_days_sooner.Rds: counterfactual_timelines/90_days_sooner.Rds
+  - lmic_reports_rt_optimise:
+      id: latest((parameter:iso3c == "GBR"))
+      use:
+        data/model_fits_reported_GBR.Rds: reported_out.Rds
+  - lmic_reports_rt_optimise:
+      id: latest((parameter:iso3c == "USA"))
+      use:
+        data/model_fits_reported_USA.Rds: reported_out.Rds
