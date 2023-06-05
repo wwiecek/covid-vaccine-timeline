@@ -58,11 +58,6 @@ artefacts:
   - data:
       description: Indices corresponding to the replicates with extreme values of parameters of interest
       filenames: counterfactual_data/quantile_replicates.Rds
-  # - data:
-  #     description: Model fits for each country
-  #     filenames:
-  #       - model_fits/reported_deaths/USA.Rds
-  #       - model_fits/reported_deaths/GBR.Rds
 
 # An optional name to describe the report in more detail than its
 # directory name (which must be short) but less detail than
