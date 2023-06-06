@@ -20,11 +20,11 @@ If vaccines were approved earlier, production capacity would probably have been 
 
 While we model the United States and the United Kingdom using separate epidemiological models, we do not differentiate between countries when it comes to manufacturing capacity, reasoning that if a country was able to approve a vaccine earlier it would jump to the front of the vaccine deliveries queue. We also ignore Astrazeneca vaccine production since the production of Pfizer and Moderna vaccines are enough to satisfy demand in the UK in the initial phase of vaccinations. (As a conservative assumption, we still assume that vaccine effectiveness in the UK is a mix of mRNA vaccines and the one manufactured by AstraZeneca.)
 
-To estimate the potential number of vaccines that would have been available throughout 2020, we used information about the actual manufacturing timelines. We assume that in 2020 Moderna produced 20 million doses[^21] and Pfizer/BioNTech produced 50 million[^22]. Additionally, we know Moderna was producing 500,000 doses a day at the time their vaccine was authorised[^23] and assume Pfizer/BioNTech was producing 1 million doses a day at the time they received authorization[^24]. These numbers, combined with estimates of scale-up dates, give us a possible function of daily vaccine production over 2020.
+To estimate the potential number of vaccines that would have been available throughout 2020, we used information about the actual manufacturing timelines. We assume that in 2020 Moderna produced 20 million doses and Pfizer/BioNTech produced 50 million [@NPR2020How, @Pfizer2020Pfizer]. Additionally, we know Moderna was producing 500,000 doses a day at the time their vaccine was authorised and assume Pfizer/BioNTech was producing 1 million doses a day at the time they received authorization [@NPR2020How][^21]. These numbers, combined with estimates of scale-up dates, give us a possible function of daily vaccine production over 2020.
 
-We assume a linear scale-up of production from March to July, followed by constant production until two weeks before authorization by the FDA. Specifically, we assume Pfizer/BioNTech started working on scale up from their announced partnership on March 17th[^25] and Moderna from March 23rd[^26]. The start of mass production in July (for calculations we use July 31st) was assumed based on reports that Pfizer might have been ready to mass produce by then[^27], with Moderna entering a partnership with Catalent in June to do their fill-and-finish processing with an estimated start at the beginning of Q3[^28]. Time of vaccine authorization was December 11th Pfizer/BioNTech[^29], and December 18th for Moderna[^30] meaning another scale up in manufacturing started on November 27th for Pfizer and December 4th for Moderna.
+We assume a linear scale-up of production from March to July, followed by constant production until two weeks before authorization by the FDA. Specifically, we assume Pfizer/BioNTech started working on scale up from their announced partnership on March 17th and Moderna from March 23rd [@Pfizer2020BioNTech, @Time2020As, @Moderna2020Edited]. The start of mass production in July (for calculations we use July 31st) was assumed based on reports that Pfizer might have been ready to mass produce by then, with Moderna entering a partnership with Catalent in June to do their fill-and-finish processing with an estimated start at the beginning of Q3 [@PfizerNDShot, @Moderna2020Moderna]. Time of vaccine authorization was December 11th Pfizer/BioNTech, and December 18th for Moderna meaning another scale up in manufacturing started on November 27th for Pfizer and December 4th for Moderna [@FDA2020FDA, @FDA2020Second].
 
-At this point, we assume companies already knew that they would most likely get authorization[^31] and were able to do another linear scale-up to a production level they would maintain until the end of the year. After the end of 2020 we assume production is unconstrained, i.e. it is as if infinite vaccines were available each day since 01-01-2021. This assumption is not important since even with a 90 day shift of vaccination series the production constraint stops being binding before the end of 2020. Additionally, we assume that if a country did approve vaccines earlier, they would nearly have all manufactured vaccines to themself. 
+At this point, we assume companies already knew that they would most likely get authorization[^22] and were able to do another linear scale-up to a production level they would maintain until the end of the year. After the end of 2020 we assume production is unconstrained, i.e. it is as if infinite vaccines were available each day since 01-01-2021. This assumption is not important since even with a 90 day shift of vaccination series the production constraint stops being binding before the end of 2020. Additionally, we assume that if a country did approve vaccines earlier, they would nearly have all manufactured vaccines to themself. 
 
 In the case of the United Kingdom this means that in all scenarios of earlier vaccination the production constraint does not bind at all, since the amount of vaccines is very large compared with their population size. In the case of the United States the production only binds in the case when the vaccination is shifted by 90 days.
 
@@ -134,7 +134,7 @@ Plots can currently be found in [Vaccine production model]
 
 ## Impact of counterfactual vaccination scenarios
 
-```{r cumulative-deaths, fig.align="center", fig.cap=c("Cumulative deaths per scenario"), echo=FALSE}
+```{r cumulative-deaths, fig.align="center", fig.cap=c("Cumulative deaths under baseline and counterfactual scenarios"), echo=FALSE}
 cumulative_deaths_plot = ggplot(zoomed_deaths_averted,
                                 aes(x = as.Date(date),
                                     y = cumulative_deaths_avg_perpop,
@@ -482,24 +482,6 @@ To test the hypothesis that differential booster doses explain some of the diffe
 
 While we show that earlier vaccinations have large benefits to mortality in infections waves occurring close to the vaccination campaign, and our best guess is that earlier vaccinations yield large benefits to mortality overall, we are substantially less certain of the latter conclusion. Due to uncertainty about the effects of early vaccination on followup waves, we are substantially uncertain about the overall size and sign of the mortality benefit for COVID-19. Furthermore, future pandemics (or even followup waves of COVID-19) are going to differ from the period we studied, and the overall benefits of accelerated vaccinations are likely to be sensitive to these differences.
 
-[^21]: [https://www.npr.org/sections/health-shots/2020/12/17/947628608/how-will-moderna-meet-the-demand-for-its-covid-19-vaccine](https://www.npr.org/sections/health-shots/2020/12/17/947628608/how-will-moderna-meet-the-demand-for-its-covid-19-vaccine)
+[^21]: This is an estimate based on them producing 2.5 times more than Moderna in 2020 but getting faster approval and  running at full speed longer.
 
-[^22]: [https://www.pfizer.com/news/press-release/press-release-detail/pfizer-and-biontech-celebrate-historic-first-authorization](https://www.pfizer.com/news/press-release/press-release-detail/pfizer-and-biontech-celebrate-historic-first-authorization)
-
-[^23]: [https://www.npr.org/sections/health-shots/2020/12/17/947628608/how-will-moderna-meet-the-demand-for-its-covid-19-vaccine](https://www.npr.org/sections/health-shots/2020/12/17/947628608/how-will-moderna-meet-the-demand-for-its-covid-19-vaccine)
-
-[^24]: This is an estimate based on them producing 2.5 times more than Moderna in 2020 but getting faster approval and  running at full speed longer.
-
-[^25]: [https://www.pfizer.com/news/press-release/press-release-detail/pfizer-and-biontech-co-develop-potential-covid-19-vaccine](https://www.pfizer.com/news/press-release/press-release-detail/pfizer-and-biontech-co-develop-potential-covid-19-vaccine)
-
-[^26]: [https://time.com/5807669/coronavirus-vaccine-moderna/](https://time.com/5807669/coronavirus-vaccine-moderna/),[ https://s29.q4cdn.com/435878511/files/doc_events/2020/03/30/Moderna-COVID-19-Impact-on-Trials-Transcript-(03.30.20).pdf](https://s29.q4cdn.com/435878511/files/doc_events/2020/03/30/Moderna-COVID-19-Impact-on-Trials-Transcript-(03.30.20).pdf)
-
-[^27]: [https://www.pfizer.com/news/articles/shot_of_a_lifetime_how_two_pfizer_manufacturing_plants_upscaled_to_produce_the_covid_19_vaccine_in_record_time](https://www.pfizer.com/news/articles/shot_of_a_lifetime_how_two_pfizer_manufacturing_plants_upscaled_to_produce_the_covid_19_vaccine_in_record_time)
-
-[^28]: [https://investors.modernatx.com/news/news-details/2020/Moderna-and-Catalent-Announce-Collaboration-for-Fill-Finish-Manufacturing-of-Modernas-COVID-19-Vaccine-Candidate/default.aspx](https://investors.modernatx.com/news/news-details/2020/Moderna-and-Catalent-Announce-Collaboration-for-Fill-Finish-Manufacturing-of-Modernas-COVID-19-Vaccine-Candidate/default.aspx)
-
-[^29]: [https://www.fda.gov/news-events/press-announcements/fda-takes-key-action-fight-against-covid-19-issuing-emergency-use-authorization-first-covid-19](https://www.fda.gov/news-events/press-announcements/fda-takes-key-action-fight-against-covid-19-issuing-emergency-use-authorization-first-covid-19)
-
-[^30]: [https://www.fda.gov/news-events/press-announcements/fda-takes-additional-action-fight-against-covid-19-issuing-emergency-use-authorization-second-covid](https://www.fda.gov/news-events/press-announcements/fda-takes-additional-action-fight-against-covid-19-issuing-emergency-use-authorization-second-covid)
-
-[^31]: They also got earlier approval in the UK.
+[^22]: They also got earlier approval in the UK.

@@ -1,6 +1,6 @@
 # Vaccinations and mortality under status quo
 
-```{r baseline-vacc-death, fig.align="center", fig.cap=c("Baseline characteristics"), echo=FALSE}
+```{r baseline-vacc-death, fig.align="center", fig.cap=c("Data on daily vaccinations and deaths in the UK and the US in 2021"), echo=FALSE, out.height="40%"}
 
 baseline_vaccination = readRDS("data/owid_raw.Rds") %>% 
   mutate(daily_vaccination = first_doses + second_doses + third_doses) %>% 
@@ -45,8 +45,8 @@ fig1 = ggplot() +
   facet_wrap(~type, 
              ncol = 2, 
              scales = "free_y", labeller = as_labeller(c(
-               "deaths" = str_wrap("Daily deaths per 10,000 people (7-day moving average)", width = 30),
-               "vaccinations" = str_wrap("Daily vaccinations per 10,000 people (7-day moving average)", width = 40)
+               "deaths" = str_wrap("Daily deaths per 10,000 people \n(7-day moving average)", width = 30),
+               "vaccinations" = str_wrap("Daily vaccinations per 10,000 people \n(7-day moving average)", width = 40)
              ))) +
   scale_colour_manual(
     labels = c('United Kingdom', 'United States'),
@@ -97,7 +97,7 @@ Crucially, we assume that available vaccines are distributed to the first countr
 
 # Vaccination and mortality model
 
-Details of epidemiological model and data are given in [Appendix B]. Here we only provide a short sketch. As mentioned, our base case model is a slight modification of the model by Watson et al., which is an age-stratified Susceptible-Exposed-Infected-Recovered/Dead (SEIRD) model [@watsonGlobalImpactFirst2022]. A model of this type can be considered standard and appropriate for epidemiological modelling and simulations in a large population. 
+Details of epidemiological model and data are given in [Appendix B - Supplementary methods]. Here we only provide a short sketch. As mentioned, our base case model is a slight modification of the model by Watson et al., which is an age-stratified Susceptible-Exposed-Infected-Recovered/Dead (SEIRD) model [@watsonGlobalImpactFirst2022]. A model of this type can be considered standard and appropriate for epidemiological modelling and simulations in a large population. 
 
 Crucially, the model allows for modelling of variants, distinguishes between number of doses as well as infection- and disease-blocking effects of vaccines, and includes waning of (natural and vaccine-induced) immunity. The model includes vaccine prioritisation strategies but mixing of groups is homogeneous across ages. Two types of infections, severe and nonsevere, are distinguished. We use age-specific probabilities for infection and death.[^14] Speed of waning of immunity (the rate at which people transition to an appropriate model compartment) depends on the number of doses received. The length of natural immunity is, on average, 250 days.
 
@@ -113,7 +113,7 @@ In addition to the base case, we report outcomes of the same model but at differ
 
 ## Sensitivity analyses
 
-We present details of various sensitivity analyses in [Appendix C]. There are many reasons why the model that we use may not adequately capture the impact of making vaccines available earlier. 
+We present details of various sensitivity analyses in [Appendix C - Supplementary Results]. There are many reasons why the model that we use may not adequately capture the impact of making vaccines available earlier. 
 
 First, the SEIRD model is based on an idealisation of transmission and vaccination dynamics and there may be features of the true pandemic dynamics that are not adequately captured by this model, but are critical for counterfactual modelling. For example, simplification of modelling of social mixing[^15] or behavioural adjustment in reaction to infection risks may impact the magnitude of counterfactual reductions in mortality. 
 
@@ -139,7 +139,7 @@ Lastly, we consider additional sensitivity analysis assuming decreased vaccinati
 
 [^11]: The statistic for development of a challenge agent sometimes provided by experts is of a six-month wait, but seemingly this figure is grounded less in an up-to-date feasibility assessment and more in generalising from historical experience. For a discussion on the challenges relating to the development of challenge agents see @Williams2023Ethics.
 
-[^12]: COVID HCTs, from the viewpoint of feasibility, risks, and value of information (on efficacy) provided have been extensively discussed elsewhere. Natural exposure trials were discussed by Eyal and Lipsitch (2021). For general study design, see @Eyal2021Testing.
+[^12]: COVID HCTs, from the viewpoint of feasibility, risks, and value of information (on efficacy) provided have been extensively discussed elsewhere. Natural exposure trials were discussed by @Eyal2021Testing.
 
 [^13]: This is a conservative assumption, since production capacity was partially determined by the predicted date of regulatory approval. In other words, it is reasonable to believe that earlier approvals would have resulted in more doses being produced in 2020. However, given complexity of the vaccine supply chains early in the pandemic this may be a realistic assumption. See for example @Bown2022How and @Kominers2022Vaccines.
 
