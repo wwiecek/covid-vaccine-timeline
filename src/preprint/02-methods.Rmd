@@ -1,5 +1,5 @@
+\newpage
 # Vaccinations and mortality under status quo
-
 ```{r baseline-vacc-death, fig.align="center", fig.cap=c("Data on daily vaccinations and deaths in the UK and the US in 2021"), echo=FALSE, out.height="40%"}
 
 baseline_vaccination = readRDS("data/owid_raw.Rds") %>% 

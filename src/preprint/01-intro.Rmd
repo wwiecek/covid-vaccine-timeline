@@ -1,3 +1,4 @@
+\newpage
 # Introduction
 
 The development and testing of vaccines for COVID-19 progressed at an unprecedented pace, with vaccinations approved in some countries within less than a year from the start of the pandemic. However, even with accelerated approvals the COVID-19 pandemic had a devastating impact on global health and economies. In the United States and United Kingdom alone, hundreds of thousands of lives were lost in the period it took to approve and complete mass vaccinations.

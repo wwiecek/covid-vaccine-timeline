@@ -54,6 +54,7 @@ The model assumes homogenous mixing of the population. It models different kinds
 
 The model features a mix of deterministic parameters and random parameters. We run an ensemble of simulations for each country, sampling the random parameters at the start of each run from pre-defined distributions. The initial number of cases seeding the pandemic in the country and the time series of reproduction numbers of infections in a fully susceptible population $R_t$ is then fit to the observed course of deaths during the time period associated with the simulation. 
 
+\newpage
 ```{r trajectory-sampling-parameters, tidy=FALSE, echo=FALSE, escape=FALSE, caption=c('Pandemic trajectory sampling distributions'), out.height="40%"}
 
 sampling_dists <- data.frame(
@@ -77,6 +78,7 @@ The distributions of random parameters is given in Table \@ref(tab:trajectory-sa
 
 The model of @watsonoliverj.COVID19LMICReports2022 also samples probabilities of hospitalisation and mechanical ventilation for each trajectory, but these play no role in our analysis not already captured by the infection fatality rate, and so we haven't reported on the relevant parameters here. 
 
+\newpage
 ```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy'), out.height="40%"}
 
 vaccine_efficacy <- read.csv('vaccine_efficacy_groups.csv')
@@ -91,6 +93,7 @@ vaccine_efficacy %>% kbl(
 ```
 The shape parameters $\alpha_e^P, \beta_e^P$ that appear in Table \@ref(tab:trajectory-sampling-parameters) are the shape parameters associated with a beta distribution with mean $\mu_e^P$ and variance $0.005$. The mean $\mu_e^P$ is determined by estimating the efficacy of each vaccine platform $P$ against each variant (see Table \@ref(tab:vaccine-efficacy)). The mean vaccine durations are determined according to models of antibody decay, and are dependent on the sampled vaccine efficacies $\mu_e^P$ [@watsonoliverj.COVID19LMICReports2022].
 
+\newpage
 ```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated'), out.height="40%"}
 vaccine_onward_protection <- 
   data.frame(
@@ -134,7 +137,7 @@ Plots can currently be found in [Vaccine production model]
 
 ## Impact of counterfactual vaccination scenarios
 
-```{r cumulative-deaths, fig.align="center", fig.cap=c("Cumulative deaths under baseline and counterfactual scenarios"), echo=FALSE, out.height="40%"}
+```{r cumulative-deaths, fig.align="center", fig.cap=c("Cumulative deaths under baseline and counterfactual scenarios. Shaded area indicates 95\\% confidence interval"), echo=FALSE, out.height="40%"}
 cumulative_deaths_plot = ggplot(zoomed_deaths_averted,
                                 aes(x = as.Date(date),
                                     y = cumulative_deaths_avg_perpop,
@@ -186,7 +189,7 @@ differences_table %>%
   kable_styling(font_size = 7)
 
 ```
-```{r reported-deaths-averted-plot, fig.align="center", fig.cap=c("Reported deaths for each counerfactual scenario compared to baseline reported deaths"), echo=FALSE, out.height="40%"}
+```{r reported-deaths-averted-plot, fig.align="center", fig.cap=c("Reported deaths for each counerfactual scenario compared to baseline reported deaths. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="40%"}
 deaths_averted = readRDS("data/deaths_averted_detail.Rds")
 
 zoomed_deaths_averted = deaths_averted %>%
@@ -221,6 +224,7 @@ plot(single_timeseries_plot)
 ```
 Illustrated in Table \@ref(tab:reported-deaths-averted-table) and Figure \@ref(fig:reported-deaths-averted-plot).
 
+\newpage
 ## Counterfactual scenario: what if US had doubled the rate of booster uptake?
 
 ```{r deaths-averted-table-doubleboost, echo=FALSE, results='asis', out.height="40%"}
@@ -241,6 +245,7 @@ differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How woul
 ```
 Illustrated in Table \@ref(tab:deaths-averted-table-doubleboost).
 
+\newpage
 ## Counterfactual scenario: what if vaccine demand was lower?
 
 ```{r deaths-averted-table-d95, echo=FALSE, results='asis', out.height="40%"}
@@ -277,6 +282,7 @@ differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How woul
 ```
 Here, we examine the effect of lower vaccination demand. We consider vaccine demand to be 5% (Table \@ref(tab:deaths-averted-table-d95)) or 10% (Table \@ref(tab:deaths-averted-table-d90)) lower. We implemented this by asuming that daily vacinations were reduced by the respective amount. 
 
+\newpage
 ## Sensitivity to parametric estimates
 
 ```{r deaths-averted-table-vei, echo=FALSE, results='asis', out.height="35%"}
@@ -313,15 +319,15 @@ differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "
   kable_styling(font_size = 7)
 
 ```
-```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine efficacy"), echo=FALSE, out.height="35%"}
+```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine efficacy. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
 deaths_averted_plot_veis <- deaths_averted_plot('veis', percentiles, last_dates_to_display)
 plot(deaths_averted_plot_veis)
 ```
-```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine duration"), echo=FALSE, out.height="35%"}
+```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine duration. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
 deaths_averted_plot_dur_Vs <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to_display)
 plot(deaths_averted_plot_dur_Vs)
 ```
-```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to natural immunity duration"), echo=FALSE, out.height="35%"}
+```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to natural immunity duration. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
 deaths_averted_plot_dur_Rs <- deaths_averted_plot('dur_Rs', percentiles, last_dates_to_display)
 plot(deaths_averted_plot_dur_Rs)
 ```
@@ -330,6 +336,7 @@ effective_vaccinated_plot_dur_Vs <- vaccinated_plot('dur_Vs', percentiles, last_
 ```
 Illustrated in Table \@ref(tab:deaths-averted-table-vei), Table \@ref(tab:deaths-averted-table-durV), Table \@ref(tab:deaths-averted-table-durR), Figure \@ref(fig:deaths-averted-plot-vei), Figure \@ref(fig:deaths-averted-plot-durV), Figure \@ref(fig:deaths-averted-plot-durR), and Figure \@ref(fig:vaccinated-plot-vei).
 
+\newpage
 # Vaccine production model
 
 ```{r prod-assumptions, fig.align="center", fig.cap=c("Vaccine production assumptions"), echo=FALSE, out.height="40%"}
@@ -376,6 +383,7 @@ plot(combined_plot)
 ```
 Figure \@ref(fig:prod-assumptions) shows the assumptions we made about the achievable production when vaccines were approved to be used 30, 60 and 90 days earlier.
 
+\newpage
 ```{r prod-cap-uk, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the U.K. under counterfactual and baseline scenarios"), echo=FALSE, out.height="40%"}
 production = readRDS("data/counterfactual_production.Rds")
 
@@ -471,6 +479,7 @@ plot(dj10)
 ```
 Figure \@ref(fig:prod-cap-uk) and \@ref(fig:prod-cap-usa) show our assumptions about the maximum number of vaccines that could be produced each day if vaccines were approved 30, 60 and 90 days earlier.
 
+\newpage
 # Subsequent infection waves
 
 While our main results present the number of deaths averted up to July 2021, we simulated the counterfactual scenarious up until the end of 2021. The longer timeline includes an additional wave of infections in both the US and the UK. Our model shows much more uncertainty over the effect of earlier vaccination timelines for this second wave of infections in the United States. In this country, for vaccines 90 days earlier, the 95% interval of simulation traces ranges from 36 739 to 221 093 extra lives saved by January 2022, and the intervals for 30 and 60 days earlier include some traces in which the earlier timelines resulted in a larger number of deaths in total. The UK, on the other hand, shows less variation in the impact of earlier timelines on the number of deaths in the second wave, and all counterfactuals result in fewer deaths at all points in time.
