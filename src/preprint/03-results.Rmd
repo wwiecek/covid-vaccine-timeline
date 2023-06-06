@@ -1,6 +1,6 @@
 # Estimated mortality reductions
 
-```{r vaccinations-table, caption=c("Total vaccinations up to 1 January, 1 April and 1 July 2021, under baseline (observed) and counterfactual scenarios"), echo=FALSE}
+```{r vaccinations-table, caption=c("Total vaccinations up to 1 January, 1 April and 1 July 2021, under baseline (observed) and counterfactual scenarios"), echo=FALSE, out.height="50%"}
 baseline = readRDS("data/owid_raw.Rds")
 sooner_30 = readRDS("data/30_days_sooner.Rds")
 sooner_60 = readRDS("data/60_days_sooner.Rds")

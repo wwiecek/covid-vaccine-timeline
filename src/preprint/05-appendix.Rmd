@@ -54,7 +54,7 @@ The model assumes homogenous mixing of the population. It models different kinds
 
 The model features a mix of deterministic parameters and random parameters. We run an ensemble of simulations for each country, sampling the random parameters at the start of each run from pre-defined distributions. The initial number of cases seeding the pandemic in the country and the time series of reproduction numbers of infections in a fully susceptible population $R_t$ is then fit to the observed course of deaths during the time period associated with the simulation. 
 
-```{r trajectory-sampling-parameters, tidy=FALSE, echo=FALSE, escape=FALSE, caption=c('Pandemic trajectory sampling distributions')}
+```{r trajectory-sampling-parameters, tidy=FALSE, echo=FALSE, escape=FALSE, caption=c('Pandemic trajectory sampling distributions'), out.height="40%"}
 
 sampling_dists <- data.frame(
     'Parameter' = c('Vaccine efficacy $V$', 'Vaccine duration $D$', 'Infection fatality rate with treatment $F$', 'Natural immunity duration $R$'), 
@@ -77,7 +77,7 @@ The distributions of random parameters is given in Table \@ref(tab:trajectory-sa
 
 The model of @watsonoliverj.COVID19LMICReports2022 also samples probabilities of hospitalisation and mechanical ventilation for each trajectory, but these play no role in our analysis not already captured by the infection fatality rate, and so we haven't reported on the relevant parameters here. 
 
-```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy')}
+```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy'), out.height="40%"}
 
 vaccine_efficacy <- read.csv('vaccine_efficacy_groups.csv')
 
@@ -91,7 +91,7 @@ vaccine_efficacy %>% kbl(
 ```
 The shape parameters $\alpha_e^P, \beta_e^P$ that appear in Table \@ref(tab:trajectory-sampling-parameters) are the shape parameters associated with a beta distribution with mean $\mu_e^P$ and variance $0.005$. The mean $\mu_e^P$ is determined by estimating the efficacy of each vaccine platform $P$ against each variant (see Table \@ref(tab:vaccine-efficacy)). The mean vaccine durations are determined according to models of antibody decay, and are dependent on the sampled vaccine efficacies $\mu_e^P$ [@watsonoliverj.COVID19LMICReports2022].
 
-```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated')}
+```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated'), out.height="40%"}
 vaccine_onward_protection <- 
   data.frame(
     'Doses' = c(
@@ -134,7 +134,7 @@ Plots can currently be found in [Vaccine production model]
 
 ## Impact of counterfactual vaccination scenarios
 
-```{r cumulative-deaths, fig.align="center", fig.cap=c("Cumulative deaths under baseline and counterfactual scenarios"), echo=FALSE}
+```{r cumulative-deaths, fig.align="center", fig.cap=c("Cumulative deaths under baseline and counterfactual scenarios"), echo=FALSE, out.height="40%"}
 cumulative_deaths_plot = ggplot(zoomed_deaths_averted,
                                 aes(x = as.Date(date),
                                     y = cumulative_deaths_avg_perpop,
@@ -171,7 +171,7 @@ Illustrated in Figure \@ref(fig:cumulative-deaths).
 
 ## Baseline fit to reported deaths instead of excess deaths
 
-```{r reported-deaths-averted-table, echo=FALSE}
+```{r reported-deaths-averted-table, echo=FALSE, out.height="40%"}
 
 differences_table <- deaths_averted_table_single(load_deaths_averted_table( excess = TRUE ))
 
@@ -186,7 +186,7 @@ differences_table %>%
   kable_styling(font_size = 7)
 
 ```
-```{r reported-deaths-averted-plot, fig.align="center", fig.cap=c("Reported deaths for each counerfactual scenario compared to baseline reported deaths"), echo=FALSE}
+```{r reported-deaths-averted-plot, fig.align="center", fig.cap=c("Reported deaths for each counerfactual scenario compared to baseline reported deaths"), echo=FALSE, out.height="40%"}
 deaths_averted = readRDS("data/deaths_averted_detail.Rds")
 
 zoomed_deaths_averted = deaths_averted %>%
@@ -223,7 +223,7 @@ Illustrated in Table \@ref(tab:reported-deaths-averted-table) and Figure \@ref(f
 
 ## Counterfactual scenario: what if US had doubled the rate of booster uptake?
 
-```{r deaths-averted-table-doubleboost, echo=FALSE, results='asis'}
+```{r deaths-averted-table-doubleboost, echo=FALSE, results='asis', out.height="40%"}
 differences_table <- deaths_averted_table_single(
     load_deaths_averted_table(
       table_path = "data/doubleboost_deaths_averted_detail.Rds")
@@ -243,7 +243,7 @@ Illustrated in Table \@ref(tab:deaths-averted-table-doubleboost).
 
 ## Counterfactual scenario: what if vaccine demand was lower?
 
-```{r deaths-averted-table-d95, echo=FALSE, results='asis'}
+```{r deaths-averted-table-d95, echo=FALSE, results='asis', out.height="40%"}
 differences_table <- deaths_averted_table_single(
     load_deaths_averted_table(
       table_path = "data/d95_deaths_averted_detail.Rds")
@@ -259,7 +259,7 @@ differences_table %>% kbl(booktabs = TRUE, centering = TRUE, caption = "How woul
   kable_styling(font_size = 7)
 
 ```
-```{r deaths-averted-table-d90, echo=FALSE, results='asis'}
+```{r deaths-averted-table-d90, echo=FALSE, results='asis', out.height="40%"}
 differences_table <- deaths_averted_table_single(
     load_deaths_averted_table(
       table_path = "data/d90_deaths_averted_detail.Rds")
@@ -279,7 +279,7 @@ Here, we examine the effect of lower vaccination demand. We consider vaccine dem
 
 ## Sensitivity to parametric estimates
 
-```{r deaths-averted-table-vei, echo=FALSE, results='asis'}
+```{r deaths-averted-table-vei, echo=FALSE, results='asis', out.height="35%"}
 differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
 differences_tables$veis %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to average vaccine efficacy against infection (VEI)") %>%
   pack_rows("UK to April 2021", 1, 6) %>%
@@ -290,7 +290,7 @@ differences_tables$veis %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Se
   pack_rows("US to Jan 2022", 31, 36) %>%
   kable_styling(font_size = 7)
 ```
-```{r deaths-averted-table-durV, echo=FALSE, results='asis'}
+```{r deaths-averted-table-durV, echo=FALSE, results='asis', out.height="35%"}
 differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
 differences_tables$dur_Vs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of vaccine acquired immunity (DVI)") %>%
   pack_rows("UK to April 2021", 1, 6) %>%
@@ -301,7 +301,7 @@ differences_tables$dur_Vs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "
   pack_rows("US to Jan 2022", 31, 36) %>%
   kable_styling(font_size = 7)
 ```
-```{r deaths-averted-table-durR, echo=FALSE, results='asis'}
+```{r deaths-averted-table-durR, echo=FALSE, results='asis', out.height="35%"}
 differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
 differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of naturally acquired immunity (DNI)") %>%
   pack_rows("UK to April 2021", 1, 6) %>%
@@ -313,26 +313,26 @@ differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "
   kable_styling(font_size = 7)
 
 ```
-```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine efficacy"), echo=FALSE}
+```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine efficacy"), echo=FALSE, out.height="35%"}
 deaths_averted_plot_veis <- deaths_averted_plot('veis', percentiles, last_dates_to_display)
 plot(deaths_averted_plot_veis)
 ```
-```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine duration"), echo=FALSE}
+```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine duration"), echo=FALSE, out.height="35%"}
 deaths_averted_plot_dur_Vs <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to_display)
 plot(deaths_averted_plot_dur_Vs)
 ```
-```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to natural immunity duration"), echo=FALSE}
+```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to natural immunity duration"), echo=FALSE, out.height="35%"}
 deaths_averted_plot_dur_Rs <- deaths_averted_plot('dur_Rs', percentiles, last_dates_to_display)
 plot(deaths_averted_plot_dur_Rs)
 ```
-```{r vaccinated-plot-vei, fig.align="center", fig.cap=c("Effective vaccinated, sensitivity to vaccine duration"), echo=FALSE}
+```{r vaccinated-plot-vei, fig.align="center", fig.cap=c("Effective vaccinated, sensitivity to vaccine duration"), echo=FALSE, out.height="35%"}
 effective_vaccinated_plot_dur_Vs <- vaccinated_plot('dur_Vs', percentiles, last_dates_to_display[3])
 ```
 Illustrated in Table \@ref(tab:deaths-averted-table-vei), Table \@ref(tab:deaths-averted-table-durV), Table \@ref(tab:deaths-averted-table-durR), Figure \@ref(fig:deaths-averted-plot-vei), Figure \@ref(fig:deaths-averted-plot-durV), Figure \@ref(fig:deaths-averted-plot-durR), and Figure \@ref(fig:vaccinated-plot-vei).
 
 # Vaccine production model
 
-```{r prod-assumptions, fig.align="center", fig.cap=c("Vaccine production assumptions"), echo=FALSE}
+```{r prod-assumptions, fig.align="center", fig.cap=c("Vaccine production assumptions"), echo=FALSE, out.height="40%"}
 detail_prod = readRDS("data/detail_production.Rds")
 pfizer_prod = readRDS("data/pfizer_estimated_production.Rds")
 moderna_prod = readRDS("data/moderna_estimated_production.Rds")
@@ -376,7 +376,7 @@ plot(combined_plot)
 ```
 Figure \@ref(fig:prod-assumptions) shows the assumptions we made about the achievable production when vaccines were approved to be used 30, 60 and 90 days earlier.
 
-```{r prod-cap-uk, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the U.K. under counterfactual and baseline scenarios"), echo=FALSE}
+```{r prod-cap-uk, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the U.K. under counterfactual and baseline scenarios"), echo=FALSE, out.height="40%"}
 production = readRDS("data/counterfactual_production.Rds")
 
 country_name = "United Kingdom"
@@ -422,7 +422,7 @@ dj10 = ggplot() +
 
 plot(dj10)
 ```
-```{r prod-cap-usa, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the U.S. under counterfactual and baseline scenarios"), echo=FALSE}
+```{r prod-cap-usa, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the U.S. under counterfactual and baseline scenarios"), echo=FALSE, out.height="40%"}
 production = readRDS("data/counterfactual_production.Rds")
 
 country_name = "United States"

@@ -6,6 +6,7 @@ output:
     base_format: rticles::arxiv_article
     citation_package: natbib
     number_sections: false
+    extra_dependencies: ["float"]
 documentclass: article
 bibliography: report.bib
 biblio-style: plainnat
@@ -35,6 +36,8 @@ site: bookdown::bookdown_site
 
 
 ```{r, include=FALSE}
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
+
 fontsize = 12
 
 colour_direct <- "#98df8a"
