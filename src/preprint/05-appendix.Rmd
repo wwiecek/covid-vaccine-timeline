@@ -89,7 +89,7 @@ vaccine_efficacy %>% kbl(
   centering = TRUE
 )
 ```
-The shape parameters $\alpha_e^P, \beta_e^P$ that appear in Table \@ref(tab:trajectory-sampling-parameters) are the shape parameters associated with a beta distribution with mean $\mu_e^P$ and variance $0.005$. The mean $\mu_e^P$ is determined by estimating the efficacy of each vaccine platform $P$ against each variant (see Table \@ref(tab:vaccine-efficacy)). The mean vaccine durations are determined according to models of antibody decay, and are dependent on the sampled vaccine efficacies $\mu_e^P$ [@watsonoliverj.COVID19LMICReports2022].
+The shape parameters $\alpha_e^P, \beta_e^P$ that appear in Table \@ref(tab:trajectory-sampling-parameters) are the shape parameters associated with a beta distribution with mean $\mu_e^P$ and variance $0.005$. The mean $\mu_e^P$ is determined by estimating the efficacy of each vaccine platform $P$ against each variant (see Table \@ref(tab:vaccine-efficacy)). The mean vaccine durations are determined according to models of antibody decay, and are dependent on the sampled vaccine efficacies $\mu_e^P$ [@watsonoliverj.COVID19LMICReports2022]. The infection fatality rates $f_{min}$, $f_{med}$ and $f_{max}$ were calculated for each country according to the age specific infection fatality rate estimates in [@brazeauReport34COVID192020]. In these estimates, a typical high income country like the UK or the USA have an overall infection fatality rate of around 1.15% (95% credible interval 0.78-1.79).
 
 ```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated')}
 vaccine_onward_protection <- 
