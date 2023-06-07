@@ -53,8 +53,6 @@ As with any clinical trial, human challenge studies are not without risks, and r
 
 In conclusion, our epidemiological modelling suggests that accelerating COVID-19 vaccine approvals could result in significant health benefits, with potentially thousands of lives saved in just a few months. There are large uncertainties in the model, associated costs, and practical feasibility of any such innovations, especially human challenge trials. However, the potential benefits of faster vaccine availability are very large, especially considering the global public good nature of vaccines.
 
-\newpage
-
 [^17]: In the period between 1 January and 1 July 2021 there were 61,000 confirmed COVID deaths in the UK and 246,000 in the US [@Mathieu2021Aglobal]).
 
 [^18]: The assumption of 33% chance of success (i.e. probability of regulatory approval, conditional on positive results of Phase 1/2 trials—in case of COVID-19 around May 2020) may be a slightly conservative assumption for COVID, since the vaccine developers were optimistic of approval by the time Phase 2 trials started. However, it is higher than some of the historic probabilities of clinical trial success in vaccine development [@Gouglas2018Estimating].

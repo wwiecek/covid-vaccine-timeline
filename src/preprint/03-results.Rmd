@@ -1,4 +1,3 @@
-\newpage
 # Estimated mortality reductions
 ```{r vaccinations-table, caption=c("Total vaccinations up to 1 January, 1 April and 1 July 2021, under baseline (observed) and counterfactual scenarios"), echo=FALSE, out.height="50%"}
 baseline = readRDS("data/owid_raw.Rds")
@@ -17,9 +16,7 @@ vaccinations_table = counterfactuals %>%
   )) %>%
   select(country, date, total_vacc, shifted_by) %>%
   mutate(
-    total_vacc = format(total_vacc,
-                        big.mark = ",",
-                        trim = TRUE),
+    total_vacc = format(total_vacc, big.mark = ","),
     shifted_by = mapvalues(
       shifted_by,
       from = c("baseline", "30", "60", "90"),
@@ -103,7 +100,6 @@ print(dj4)
 ```
 Numbers of vaccine doses distributed under the base case and counterfactual models are given in Table \@ref(tab:vaccinations-table) and Figure \@ref(fig:cumul-vacc-cfacts). Focusing on our chosen period of up to 1 July 2021, we find 9% increase in the US in the doses administered and corresponding 20% increase for the UK, under the most optimistic scenario of vaccines being available 90 days earlier. However, the differences are much larger in the earlier periods. For example, up to 1 April 2021, the corresponding increases are 68% and 105% for the US and UK respectively.
 
-\newpage
 ```{r model-fit-deaths, fig.align="center", fig.cap=c("Comparison of real and modelled (baseline) deaths over time. Shaded areas indicate 95\\% confidence interval."), echo=FALSE, out.height="40%"}
 deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
 data_for_plot3 = deaths_averted %>% 
@@ -177,7 +173,6 @@ In the US, corresponding numbers of deaths averted are 53,511 (30-day accelerati
 
 As these numbers suggest, the simulations for the UK are typically more sensitive to how much earlier the vaccines become available, likely due to higher vaccine uptake in the UK than in the US (also uptake of boosters: about 50% in the UK compared to only about 25% in the US up to 1 January 2022) and no binding constraints on vaccine availability in the UK even under the most optimistic scenario, unlike in the US. 
 
-\newpage
 ```{r deaths-averted-plot, fig.align="center", fig.cap=c("Daily deaths under baseline and counterfactual scenarios. Shaded area indicates 95\\% confidence interval. Cumulative reductions are shown in the Appendix."), echo=FALSE, out.height="40%"}
 deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
 

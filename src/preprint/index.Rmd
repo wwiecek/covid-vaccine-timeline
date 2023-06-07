@@ -21,10 +21,9 @@ header-includes:
   \author[1]{Witold Więcek}
   \author[1]{David Johnston}
   \author[1]{Tomas Dulka}
-  \author[1,2]{Danny Toomey}
+  \author[1]{Danny Toomey}
   \author[1]{Enlli Lewis}
   \affil[1]{1Day Sooner, Delaware, United States}
-  \affil[2]{HHV-6 Foundation, Santa Barbara, California, United States}
 description: "This is an article describing a retrospective comparison between the
   actual mortality incurred during the COVID-19 pandemic in the US and the UK, and
   the moretality incurred in several counterfactual scenarios involving accelerated
