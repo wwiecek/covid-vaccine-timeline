@@ -26,7 +26,53 @@ We assume a linear scale-up of production from March to July, followed by consta
 
 At this point, we assume companies already knew that they would most likely get authorization[^22] and were able to do another linear scale-up to a production level they would maintain until the end of the year. After the end of 2020 we assume production is unconstrained, i.e. it is as if infinite vaccines were available each day since 01-01-2021. This assumption is not important since even with a 90-day shift of vaccination series the production constraint stops being binding before the end of 2020. Additionally, we assume that if a country did approve vaccines earlier, they would nearly have all manufactured vaccines to themself. 
 
-In the case of the United Kingdom this means that in all scenarios of earlier vaccination the production constraint does not bind at all, since the amount of vaccines is very large compared with their population size. In the case of the United States the production only binds in the case when the vaccination is shifted by 90 days.
+Figure \@ref(fig:prod-cap) shows the assumptions we made about the achievable production compare to earlier vaccine approval scenarios. In the case of the United Kingdom we find that in all scenarios of earlier vaccination the production constraint does not bind at all, since the amount of vaccines is very large compared with their population size. In the case of the United States the production only binds in the case when the vaccination is shifted by 90 days. 
+
+
+```{r prod-cap, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the UK and the US under counterfactual and baseline scenarios. Four lines in red are different acceleration factors, from baseline up to 90 days earlier approval."), echo=FALSE, out.height="40%"}
+current_cfact = counterfactuals %>%
+  # filter(country == country_name) %>%
+  mutate(shifted_by = factor(
+    shifted_by,
+    levels = c("baseline", "30", "60", "90"),
+    labels = c(
+      "Baseline",
+      "Vaccines 30 days sooner",
+      "Vaccines 60 days sooner",
+      "Vaccines 90 days sooner"
+    )
+  ))
+# country_prod = production %>% filter(country == country_name)
+
+date_range <- as.Date(c("2020-01-01", "2021-07-01"))
+dj10 <- ggplot() +
+  geom_line(data = production,
+            aes(
+              x = as.Date(date),
+              y = cumulative_available_vaccines,
+              color = "Production"
+            )) +
+  geom_line(data = current_cfact,
+            aes(
+              x = as.Date(date),
+              y = total_vacc,
+              group = shifted_by,
+              color = "Vaccination"
+            )) +
+  labs(x = "Date",
+       y = "Cumulative production / vaccinations",
+       color = "Colour") +
+  # ggtitle(country_name) +
+  scale_colour_manual(
+    labels = c('Production', 'Vaccination'),
+    values = c(colour_baseline, colour_counterfactual)
+  ) +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "6 months", limits = date_range) +
+  facet_wrap(~ country, scales = "free")
+plot(dj10)
+```
+
 
 # Vaccine hesitancy
 
@@ -195,10 +241,7 @@ plot(deaths_averted_plot_dur_Rs)
 effective_vaccinated_plot_dur_Vs <- vaccinated_plot('dur_Vs', percentiles, last_dates_to_display[3])
 ```
 
-\newpage
-# Vaccine production model
-
-```{r prod-assumptions, fig.align="center", fig.cap=c("Vaccine production assumptions"), echo=FALSE, out.height="40%"}
+```{r prod-assumptions, include=FALSE, fig.align="center", fig.cap=c("Vaccine production assumptions"), echo=FALSE, out.height="40%"}
 detail_prod = readRDS("data/detail_production.Rds")
 pfizer_prod = readRDS("data/pfizer_estimated_production.Rds")
 moderna_prod = readRDS("data/moderna_estimated_production.Rds")
@@ -240,103 +283,7 @@ combined_plot =
             ncol = 2)
 plot(combined_plot)
 ```
-Figure \@ref(fig:prod-assumptions) shows the assumptions we made about the achievable production when vaccines were approved to be used 30, 60 and 90 days earlier.
 
-\newpage
-```{r prod-cap-uk, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the U.K. under counterfactual and baseline scenarios"), echo=FALSE, out.height="40%"}
-production = readRDS("data/counterfactual_production.Rds")
-
-country_name = "United Kingdom"
-
-country_cfact = counterfactuals %>%
-  filter(country == country_name) %>%
-  mutate(shifted_by = factor(
-    shifted_by,
-    levels = c("baseline", "30", "60", "90"),
-    labels = c(
-      "Baseline",
-      "Vaccines 30 days sooner",
-      "Vaccines 60 days sooner",
-      "Vaccines 90 days sooner"
-    )
-  ))
-  country_prod = production %>% filter(country == country_name)
-  
-
-dj10 = ggplot() +
-  geom_line(data = country_prod,
-            aes(
-              x = as.Date(date),
-              y = cumulative_available_vaccines,
-              color = "Production"
-            )) +
-  geom_line(data = country_cfact,
-            aes(
-              x = as.Date(date),
-              y = total_vacc,
-              color = "Vaccination"
-            )) +
-  labs(x = "Date",
-       y = "Cumulative production / vaccinations",
-       color = "Colour") +
-  ggtitle(country_name) +
-  scale_colour_manual(
-    labels = c('Production', 'Vaccination'),
-    values = c(colour_baseline, colour_counterfactual)
-  ) +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
-  facet_wrap(~ shifted_by)
-
-plot(dj10)
-```
-```{r prod-cap-usa, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the U.S. under counterfactual and baseline scenarios"), echo=FALSE, out.height="40%"}
-production = readRDS("data/counterfactual_production.Rds")
-
-country_name = "United States"
-
-country_cfact = counterfactuals %>%
-  filter(country == country_name) %>%
-  mutate(shifted_by = factor(
-    shifted_by,
-    levels = c("baseline", "30", "60", "90"),
-    labels = c(
-      "Baseline",
-      "Vaccines 30 days sooner",
-      "Vaccines 60 days sooner",
-      "Vaccines 90 days sooner"
-    )
-  ))
-  country_prod = production %>% filter(country == country_name)
-  
-
-dj10 = ggplot() +
-  geom_line(data = country_prod,
-            aes(
-              x = as.Date(date),
-              y = cumulative_available_vaccines,
-              color = "Production"
-            )) +
-  geom_line(data = country_cfact,
-            aes(
-              x = as.Date(date),
-              y = total_vacc,
-              color = "Vaccination"
-            )) +
-  labs(x = "Date",
-       y = "Cumulative production / vaccinations",
-       color = "Colour") +
-  ggtitle(country_name) +
-  scale_colour_manual(
-    labels = c('Production', 'Vaccination'),
-    values = c(colour_baseline, colour_counterfactual)
-  ) +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
-  facet_wrap(~ shifted_by)
-
-plot(dj10)
-
-```
-Figure \@ref(fig:prod-cap-uk) and \@ref(fig:prod-cap-usa) show our assumptions about the maximum number of vaccines that could be produced each day if vaccines were approved 30, 60 and 90 days earlier.
 
 [^21]: This is an estimate based on them producing 2.5 times more than Moderna in 2020 but getting faster approval and running at full speed longer.
 
