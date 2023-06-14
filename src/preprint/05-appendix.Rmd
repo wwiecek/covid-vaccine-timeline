@@ -30,6 +30,7 @@ Figure \@ref(fig:prod-cap) shows the assumptions we made about the achievable pr
 
 
 ```{r prod-cap, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the UK and the US under counterfactual and baseline scenarios. Four lines in red are different acceleration factors, from baseline up to 90 days earlier approval."), echo=FALSE, out.height="40%"}
+production = readRDS("data/counterfactual_production.Rds")
 current_cfact = counterfactuals %>%
   # filter(country == country_name) %>%
   mutate(shifted_by = factor(
@@ -45,8 +46,10 @@ current_cfact = counterfactuals %>%
 # country_prod = production %>% filter(country == country_name)
 
 date_range <- as.Date(c("2020-01-01", "2021-07-01"))
+production_filtered <- production %>% filter(date > min(date_range) & date < max(date_range))
+
 dj10 <- ggplot() +
-  geom_line(data = production,
+  geom_line(data = production_filtered,
             aes(
               x = as.Date(date),
               y = cumulative_available_vaccines,
@@ -83,8 +86,6 @@ In the US and UK, the rate of respondents who intended to be vaccinated when vac
 @Dzieciolowska2021COVID conducted a study of 2,761 health care workers in Canada in December 2020 to assess vaccine hesitancy, with 19.1% of participants indicating they were not willing to receive the COVID vaccine. Among participants who refused the vaccine, 82% indicated the novelty of the vaccine was very or somewhat important in their decision and 60% indicated that they did not have enough time to make a decision. An approval of vaccines using accelerated timelines could obviously negatively impact hesitancy rooted in vaccine novelty and feelings of needing more time to decide. However, the main hypothetical we discuss in our paper is accelerating efficacy testing and starting safety testing early. This also suggests that while the impact may be non-negligible, it may not be large.
 
 @Joshi2021Predictors found that the global average vaccine acceptance rate was 86% in March 2020, dropped to 54% in July 2020, and increased to 72% in September 2020.  By these estimates, if vaccines were approved during summer of 2020, hesitancy may have appreciably impacted uptake. However, it appears that vaccine hesitancy would likely not have impacted uptake if vaccines had been available up to 90 days earlier in the UK and US, with surveys evaluating intention to be vaccinated and trust in health authorities varying by no more than a few percentage points during this time. It is possible these trends would have been impacted by a concern among the general public for vaccines approved quickly, but these effects are difficult to quantify.
-
-\newpage
 
 # Epidemiological methods
 
