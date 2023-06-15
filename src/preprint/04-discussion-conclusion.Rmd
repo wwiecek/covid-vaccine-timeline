@@ -1,4 +1,6 @@
 ```{r lives-saved-data, echo=FALSE}
+text_fmt <- function(x) format(signif(x, 2), big.mark = ",", scientific = FALSE)
+
 differences_table <- load_deaths_averted_table( excess = FALSE) %>% 
   filter(date == "2021-07-01") %>% 
   select(iso3c, counterfactual, cumulative_averted_deaths_avg) 
@@ -16,10 +18,8 @@ saved90 = differences_table %>% filter(counterfactual == "90_days_sooner") %>%
 success_probability = 0.33
 
 expected_lives_saved = success_probability*(0.06*saved30 + 0.03*saved60 + 0.01*saved90)
-expected_lives_saved_formatted = format(signif(expected_lives_saved, 2), big.mark = ",", scientific = FALSE)
 
 cost_per_life <- 1e06 / expected_lives_saved
-cost_per_life_fmt <- format(signif(cost_per_life, 2), big.mark = ",", scientific = FALSE)
 ```
 
 # Discussion
@@ -35,7 +35,7 @@ We are not aware of retrospective epidemiological analyses of how mortality chan
 
 ## Do benefits justify investment?
 
-Does the large health benefit found by our model justify investing more into additional trials? Consider the following illustrative example. Firstly, let's assume that going into Phase II COVID vaccine developers predicted a 33% chance of success.[^18] Secondly, let’s assume some hypothetical innovation (faster field trials, use of HCTs, streamlined approval process) has a 6% chance of accelerating approval by 30 days, 3% by 60 days or 1% by 90 days. In expectation this gives `r expected_lives_saved_formatted` lives saved in two countries. If implementing this innovation for all leading vaccine candidates cost 100 million USD total, that's still about `r cost_per_life_fmt` USD per life saved. This figure ignores other health and economic benefits and the fact that a vaccine is a global public good. If we were to factor these in, the benefits would have likely been even orders of magnitude larger.
+Does the large health benefit found by our model justify investing more into additional trials? Consider the following illustrative example. Firstly, let's assume that going into Phase II COVID vaccine developers predicted a 33% chance of success.[^18] Secondly, let’s assume some hypothetical innovation (faster field trials, use of HCTs, streamlined approval process) has a 6% chance of accelerating approval by 30 days, 3% by 60 days or 1% by 90 days. In expectation this gives `r text_fmt(expected_lives_saved)` lives saved in two countries. If implementing this innovation for all leading vaccine candidates cost 100 million USD total, that's still about `r text_fmt(cost_per_life)` USD per life saved. This figure ignores other health and economic benefits and the fact that a vaccine is a global public good. If we were to factor these in, the benefits would have likely been even orders of magnitude larger.
 
 The 100 million cost quoted here is just a rough estimate. Costs will of course depend on the type of innovation used to accelerate the trial. In the UK, the world's first coronavirus human challenge study, conducted by hVIVO, which involved up to 90 volunteers, was backed by a £33.6 million UK government investment.[^19] In a pandemic setting these costs will be likely higher, e.g. overall funding for vaccine R&D in the US provided by the government amounted to $1.7 billion, but only part of it was spent on clinical trials [@Lalani2023US]. Moreover, the probabilities of acceleration that we assumed in the above example (6%, 3%, and 1%) are purely hypothetical. 
 
