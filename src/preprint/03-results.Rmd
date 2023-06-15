@@ -103,7 +103,7 @@ dj4 = ggplot(data = counterfactuals,
 print(dj4)
 ```
 
-Model fit is presented in Figure \@ref(fig:cumul-vacc-cfacts) and comparison of counterfactual scenarios over time in Figure \@ref(fig:model-fit-deaths). We summarise cumulative reductions in mortality in Table \@ref(tab:deaths-averted-table). In our main period of interest, up to 1 July 2021, our model suggests that for the UK accelerating availability of vaccines would have averted between 9,461 (30-day acceleration; lower 95% bound is 5,493) and 46,675 (90-day acceleration; upper 95% bound is 66,134) deaths (Figure \@ref(fig:cumulative-deaths), Figure \@ref(fig:reported-deaths-averted-plot)). This translates to 1.41-6.96 deaths averted per 10,000 individuals or a reduction in overall deaths by 21% to 54%% in the period between start of vaccinations and 1 July 2021. As a reminder, lower and upper bounds correspond to uncertainty in vaccine parameters.
+Model fit is presented in Figure \@ref(fig:cumul-vacc-cfacts) and comparison of counterfactual scenarios over time in Figure \@ref(fig:model-fit-deaths). We summarize cumulative reductions in mortality in Table \@ref(tab:deaths-averted-table). In our main period of interest, up to 1 July 2021, our model suggests that for the UK accelerating availability of vaccines would have averted between 9,461 (30-day acceleration; lower 95% bound is 5,493) and 46,675 (90-day acceleration; upper 95% bound is 66,134) deaths (Figure \@ref(fig:cumulative-deaths), Figure \@ref(fig:reported-deaths-averted-plot)). This translates to 1.41-6.96 deaths averted per 10,000 individuals or a reduction in overall deaths by 21% to 54%% in the period between start of vaccinations and 1 July 2021. As a reminder, lower and upper bounds correspond to uncertainty in vaccine parameters.
 
 ```{r model-fit-deaths, fig.align="center", fig.cap=c("Comparison of real and modelled (baseline) deaths over time. Shaded areas indicate 95\\% confidence interval."), echo=FALSE, out.height="40%"}
 deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
@@ -330,9 +330,9 @@ We also noted that while the simulations in the US are affected by the accelerat
 
 ## Results of alternative model specifications
 
-Detailed results for sensitivity to model parameters are in Appendix D. Here we summarise our main findings.
+Detailed results for sensitivity to model parameters are in Appendix D. Here we summarize our main findings.
 
-**Cut-off dates for calculation of deaths averted.** If we extend the modelled period up to 1 January 2022, the average number of deaths averted generally increases (24,044 to 70,441 for the UK, 48,309 to 174,028 for the US; the ranges represent 30-day to 90-day accelerations). However, uncertainty increases too and we see a considerable “rebound” effect, where the number of deaths can even increase under some trajectories when compared to the status quo. This is because the model is very sensitive to duration of protection.
+**Cut-off dates for calculation of deaths averted.** If we extend the modeled period up to 1 January 2022, the average number of deaths averted generally increases (24,044 to 70,441 for the UK, 48,309 to 174,028 for the US; the ranges represent 30-day to 90-day accelerations). However, uncertainty increases too and we see a considerable “rebound” effect, where the number of deaths can even increase under some trajectories when compared to the status quo. This is because the model is very sensitive to duration of protection.
 
 **Using excess deaths.** If using the excess deaths the effects show similar trends, but are generally smaller, sometimes by as much as a third. This diminished effect is somewhat to be expected, since excess deaths measure also includes non-COVID-attributable deaths and may therefore be less sensitive to increasing vaccination (Table \@ref(tab:reported-deaths-averted-table)).[^16]
 
