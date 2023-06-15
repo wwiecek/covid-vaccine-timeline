@@ -10,67 +10,6 @@ However, any back-of-envelope calculation on health impacts of accelerating vacc
 
 Therefore to address our research question, we use an epidemiological model, one which is a slight modification of the model used by @watsonGlobalImpactFirst2022 which adds support for booster vaccinations and strain-dependent efficacy[^8]. However, before turning to the model, we first consider the design of the counterfactual scenarios.
 
-```{r baseline-vacc-death, fig.align="center", fig.cap=c("Data on daily vaccinations and deaths in the UK and the US in 2021"), echo=FALSE, out.height = "40%"}
-
-baseline_vaccination = readRDS("data/owid_raw.Rds") %>% 
-  mutate(daily_vaccination = first_doses + second_doses + third_doses) %>% 
-  mutate(daily_vaccination = rollmean(daily_vaccination, k = 7, fill = NA)) %>% 
-  select(iso3c, date, daily_vaccination)
-
-
-model_fits_reported_GBR = readRDS("data/model_fits_reported_GBR.Rds")
-deaths_UK = model_fits_reported_GBR$inputs$data
-model_fits_reported_USA = readRDS("data/model_fits_reported_USA.Rds")
-deaths_USA = model_fits_reported_USA$inputs$data
-
-first_date = as.Date("2020-12-08")
-last_date = as.Date("2022-01-01")
-population <- data.frame(
-  iso3c = c("GBR", "USA"),
-  pop10k = c(67081000, 331501080) / 10000
-)
-
-deaths_reported = bind_rows(deaths_UK, deaths_USA) %>% 
-  mutate(iso3c = iso, date = date_start) %>% 
-  group_by(iso3c) %>% 
-  mutate(deaths_smoothed = rollmean(deaths, k = 7, fill = NA))
-
-data_for_plot = deaths_reported %>% 
-  left_join(baseline_vaccination, by = c("iso3c", "date")) %>% 
-  left_join(population, by = "iso3c") %>% 
-  filter(date <= last_date & date >= first_date & !is.na(deaths_smoothed) ) %>% 
-  mutate(
-    deaths = deaths_smoothed / pop10k,
-    vaccinations = ifelse(is.na(daily_vaccination), 0, daily_vaccination / pop10k)
-  ) %>% 
-  pivot_longer(cols = c(deaths, vaccinations),
-               names_to = "type") %>% 
-  mutate(type = factor(type, c("vaccinations", "deaths")))
-
-fig1 = ggplot() +
-  geom_line(data = data_for_plot,
-            aes(x = as.Date(date),
-                y = value,
-                color = iso3c)) +
-  facet_wrap(~type, 
-             ncol = 2, 
-             scales = "free_y", labeller = as_labeller(c(
-               "deaths" = str_wrap("Daily deaths per 10,000 people \n(7-day moving average)", width = 30),
-               "vaccinations" = str_wrap("Daily vaccinations per 10,000 people \n(7-day moving average)", width = 40)
-             ))) +
-  scale_colour_manual(
-    labels = c('United Kingdom', 'United States'),
-    values = c(colour_baseline, colour_counterfactual)
-  ) +
-  labs(x = "Date",
-       y = "",
-       color = "Country:")
-
-plot(fig1)
-
-```
-
-
 # Vaccine trials and approvals 
 
 In building the counterfactual scenarios and epidemiological modelling we focus on vaccines produced by Moderna, Pfizer, and AstraZeneca, which were the main vaccines approved both in the United Kingdom and the United States (with exception of AstraZeneca). 

@@ -549,8 +549,8 @@ crv <- c(
 )
 # total reductions vector
 trv <- c(
-  sv("jul", "uk", 30, "avg", "per10k") + sv("jul", "us", 30, "avg", "per10k"),
-  sv("jul", "uk", 90, "avg", "per10k") + sv("jul", "us", 90, "avg", "per10k")
+  sv("jul", "uk", 30, "avg") + sv("jul", "us", 30, "avg"),
+  sv("jul", "uk", 90, "avg") + sv("jul", "us", 90, "avg")
 )
 ```
 
