@@ -1,65 +1,8 @@
 # Estimated mortality reductions
 
-```{r values-for-reductions, echo = FALSE}
-# Functions for formatting inline numbers when reporting them
-
-# get table that will store the values to be selected:
-get_values_for_text <- function(x){ 
-  x %>% 
-  select(date, iso3c, country, counterfactual, 
-         cumulative_averted_deaths_avg,
-         cumulative_averted_deaths_975, 
-         cumulative_averted_deaths_025)%>%
-  left_join(population, by = "iso3c") %>%
-  mutate(cumulative_averted_deaths_perpop_avg = cumulative_averted_deaths_avg / pop10k,
-         cumulative_averted_deaths_perpop_025 = cumulative_averted_deaths_025 / pop10k,
-         cumulative_averted_deaths_perpop_975 = cumulative_averted_deaths_975 / pop10k) 
-}
-# select value:
-sv <- function(d,c,s,b="avg",o="total", t=dt) {
-  d <- case_when(d == "apr" ~ "2021-04-01",
-                 d == "jul" ~ "2021-07-01",
-                 d == "jan" ~ "2022-01-01")
-  s <- case_when(s == 30 ~ "30_days_sooner",
-                 s == 60 ~ "60_days_sooner",
-                 s == 90 ~ "90_days_sooner",
-                 s == 0 ~ "owid_raw")
-  
-  # Note that lci/uci are "flipped" because we're dealing with negative numbers
-  if(o == "total"){
-  b <- case_when(b == "avg" ~ "cumulative_averted_deaths_avg",
-                 b == "uci" ~ "cumulative_averted_deaths_025",
-                 b == "lci" ~ "cumulative_averted_deaths_975")
-  }else if(o == "per10k"){
-    b <- case_when(b == "avg" ~ "cumulative_averted_deaths_perpop_avg",
-                   b == "uci" ~ "cumulative_averted_deaths_perpop_025",
-                   b == "lci" ~ "cumulative_averted_deaths_perpop_975")
-  }
-  val <- t %>% 
-    get_values_for_text() %>% 
-    filter(date == d) %>% 
-    filter(country == ifelse(c=="uk", "United Kingdom", "United States")) %>% 
-    filter(counterfactual == s)
-  
-  val <- -val[[b]]
-  
-  if(length(val) > 1)
-    stop("Error in pulling values")
-  else(return(val))
-}
-
-# Text formatter:
-text_fmt <- function(x) format(signif(x, 2), big.mark = ",", scientific = FALSE)
-
-# You can now do simple things like:
-# text_fmt(sv("jul", "uk", 30, "avg"))
-```
 
 
-
-Numbers of vaccine doses distributed under the base case and counterfactual models are given in Table \@ref(tab:vaccinations-table) and Figure \@ref(fig:cumul-vacc-cfacts). Focusing on our chosen period of up to 1 July 2021, we find 9% increase in the US in the doses administered and corresponding 20% increase for the UK, under the most optimistic scenario of vaccines being available 90 days earlier. However, the differences are much larger in the earlier periods. For example, up to 1 April 2021, the corresponding increases are 68% and 105% for the US and UK respectively.
-
-```{r vaccinations-table, caption=c("Total vaccinations up to 1 January, 1 April and 1 July 2021, under baseline (observed) and counterfactual scenarios"), echo=FALSE, out.height="50%"}
+```{r vaccinations-table, caption=c("Total vaccinations up to 1 January, 1 April and 1 July 2021, under baseline (observed) and counterfactual scenarios"), echo=FALSE}
 baseline = readRDS("data/owid_raw.Rds")
 sooner_30 = readRDS("data/30_days_sooner.Rds")
 sooner_60 = readRDS("data/60_days_sooner.Rds")
@@ -109,7 +52,10 @@ vaccinations_table %>%
   pack_rows("United States", 5, 8)
 
 ```
-```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("Cumulative vaccinations under baseline and counterfactual scenarios"), echo=FALSE, out.height="40%"}
+
+Numbers of vaccine doses distributed under the base case and counterfactual models are given in Table \@ref(tab:vaccinations-table) and Figure \@ref(fig:cumul-vacc-cfacts). Focusing on our chosen period of up to 1 July 2021, we find 9% increase in the US in the doses administered and corresponding 20% increase for the UK, under the most optimistic scenario of vaccines being available 90 days earlier. However, the differences are much larger in the earlier periods. For example, up to 1 April 2021, the corresponding increases are 68% and 105% for the US and UK respectively.
+
+```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("Cumulative vaccinations under baseline and counterfactual scenarios"), echo=FALSE, out.height = "40%"}
 baseline = readRDS("data/owid_raw.Rds")
 sooner_30 = readRDS("data/30_days_sooner.Rds")
 sooner_60 = readRDS("data/60_days_sooner.Rds")
@@ -164,7 +110,7 @@ print(dj4)
 
 Model fit is presented in Figure \@ref(fig:cumul-vacc-cfacts) and comparison of counterfactual scenarios over time in Figure \@ref(fig:model-fit-deaths). We summarize cumulative reductions in mortality in Table \@ref(tab:deaths-averted-table). In our main period of interest, up to 1 July 2021, our model suggests that for the UK accelerating availability of vaccines would have averted between `r text_fmt(sv("jul", "uk", 30, "avg"))` (30-day acceleration; lower 95% bound is `r text_fmt(sv("jul", "uk", 30, "lci"))`) and `r text_fmt(sv("jul", "uk", 90, "avg"))` (90-day acceleration; upper 95% bound is `r text_fmt(sv("jul", "uk", 90, "uci"))`) deaths (Figure \@ref(fig:cumulative-deaths), Figure \@ref(fig:reported-deaths-averted-plot)). This translates to `r text_fmt(sv("jul", "uk", 30, "avg", "per10k"))` and `r text_fmt(sv("jul", "uk", 90, "avg", "per10k"))` deaths averted per 10,000 individuals or a reduction in overall deaths by 21% to 54%% in the period between start of vaccinations and 1 July 2021. As a reminder, lower and upper bounds correspond to uncertainty in vaccine parameters.
 
-```{r model-fit-deaths, fig.align="center", fig.cap=c("Comparison of real and modelled (baseline) deaths over time. Shaded areas indicate 95\\% confidence interval."), echo=FALSE, out.height="40%"}
+```{r model-fit-deaths, fig.align="center", fig.cap=c("Comparison of real and modelled (baseline) deaths over time. Shaded areas indicate 95\\% confidence interval."), echo=FALSE, out.height = "40%"}
 text_fmt <- function(x) format(signif(x, 2), big.mark = ",", scientific = FALSE)
 deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
 data_for_plot3 = deaths_averted %>% 
@@ -238,7 +184,10 @@ As these numbers suggest, the simulations for the UK are typically more sensitiv
 
 On the other hand, reductions in the UK are generally lower than in the US. This is likely due to the fact that benefits of vaccination are biggest if mass vaccination precedes rise in cases (for illustration see Fig S6 in @Wiecek2022Testing). In the UK numbers of cases were already rapidly rising in winter 2020 and at the lower end of speed-up counterfactuals (30 days) only a small proportion of cases would be averted, because a small proportion of population would have been vaccinated before epidemic peak (see Figure \@ref(fig:deaths-averted-plot)). 
 
-```{r deaths-averted-plot, fig.align="center", fig.cap=c("Daily deaths under baseline and counterfactual scenarios. Shaded area indicates 95\\% confidence interval. Cumulative reductions are shown in the Appendix."), echo=FALSE, out.height="40%"}
+We also noted that while the simulations in the US are affected by the acceleration factor a bit less, within each counterfactual they are more uncertain. This is possibly also explained by the timing of epidemic peaks. Whereas in the UK the crucial parameter is timing of mass vaccination compared to epidemic peak, in the US the deaths are spread more evenly over time and therefore more sensitive to vaccine parameters such as efficacy or duration of protection.
+
+
+```{r deaths-averted-plot, fig.align="center", fig.cap=c("Daily deaths under baseline and counterfactual scenarios. Shaded area indicates 95\\% confidence interval. Cumulative reductions are shown in the Appendix."), echo=FALSE, out.height = "40%"}
 deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
 
 zoomed_deaths_averted = deaths_averted %>%
@@ -296,7 +245,6 @@ single_timeseries_plot = ggplot(data = zoomed_deaths_averted,
 plot(single_timeseries_plot)
 ```
 
-We also noted that while the simulations in the US are affected by the acceleration factor a bit less, within each counterfactual they are more uncertain. This is possibly also explained by the timing of epidemic peaks. Whereas in the UK the crucial parameter is timing of mass vaccination compared to epidemic peak, in the US the deaths are spread more evenly over time and therefore more sensitive to vaccine parameters such as efficacy or duration of protection.
 
 ## Results of alternative model specifications
 
@@ -313,4 +261,3 @@ Detailed results for sensitivity to model parameters are in Appendix D. Here we 
 **Sensitivity to mis-specified vaccine parameters. ** See Appendix D for details. Typically mis-specifying vaccine efficacy (first two doses), DVI, or DNI led to decrease in estimated benefits, sometimes by a considerable margin (one-third or even half of the reductions seen under the base case), but in a few cases we also saw increases in benefits. Overall these results suggest large sensitivity to parameter misspecification. 
 
 [^16]: In our main period of interest, up to 1 July 2021, our results suggest that for the UK accelerating availability of vaccines would have averted between `r text_fmt(sv("jul", "uk", 30, "avg", t=dt_excess))` (assuming 30-day acceleration; lower 95% bound is `r text_fmt(sv("jul", "uk", 30, "lci", t=dt_excess))`) and `r text_fmt(sv("jul", "uk", 90, "avg", t=dt_excess))` (90-day acceleration; upper 95% bound is `r text_fmt(sv("jul", "uk", 90, "uci", t=dt_excess))`) deaths. This translates to `r text_fmt(sv("jul", "uk", 30, "avg", "per10k", t=dt_excess))`-`r text_fmt(sv("jul", "uk", 90, "avg", "per10k", t=dt_excess))` deaths averted per 10,000. In the US, corresponding numbers of deaths averted are `r text_fmt(sv("jul", "us", 30, "avg", t=dt_excess))` (lower 95% bound of `r text_fmt(sv("jul", "us", 30, "lci", t=dt_excess))`) and `r text_fmt(sv("jul", "us", 90, "avg", t=dt_excess))` (upper 95% bound of `r text_fmt(sv("jul", "us", 90, "uci", t=dt_excess))`) for 30-day and 90-day acceleration respectively. This gives a range of `r text_fmt(sv("jul", "us", 30, "avg", "per10k", t=dt_excess))`-`r text_fmt(sv("jul", "us", 90, "avg", "per10k", t=dt_excess))` deaths averted per 10,000.
-

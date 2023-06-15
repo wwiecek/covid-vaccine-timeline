@@ -10,7 +10,7 @@ However, any back-of-envelope calculation on health impacts of accelerating vacc
 
 Therefore to address our research question, we use an epidemiological model, one which is a slight modification of the model used by @watsonGlobalImpactFirst2022 which adds support for booster vaccinations and strain-dependent efficacy[^8]. However, before turning to the model, we first consider the design of the counterfactual scenarios.
 
-```{r baseline-vacc-death, fig.align="center", fig.cap=c("Data on daily vaccinations and deaths in the UK and the US in 2021"), echo=FALSE, out.height="40%"}
+```{r baseline-vacc-death, fig.align="center", fig.cap=c("Data on daily vaccinations and deaths in the UK and the US in 2021"), echo=FALSE, out.height = "40%"}
 
 baseline_vaccination = readRDS("data/owid_raw.Rds") %>% 
   mutate(daily_vaccination = first_doses + second_doses + third_doses) %>% 
