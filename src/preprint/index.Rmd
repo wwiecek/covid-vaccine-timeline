@@ -9,9 +9,9 @@ output:
     extra_dependencies: ["float"]
 documentclass: article
 bibliography: report.bib
-biblio-style: rusnat
+biblio-style: plainnat
 header-includes:
- - \usepackage[round]{natbib}
+ - \usepackage[authoryear,round]{natbib}
   \usepackage{authblk} 
   \newcommand{\beginsupplement}{
   \setcounter{table}{0}  

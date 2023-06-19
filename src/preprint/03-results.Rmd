@@ -16,7 +16,7 @@ We also noted that while the simulations in the US are affected by the accelerat
 
 ## Results of alternative model specifications
 
-Detailed results for sensitivity to model parameters are in Appendix D. Here we summarize our main findings.
+Here we summarize our main findings.
 
 **Cut-off dates for calculation of deaths averted.** If we extend the modeled period up to 1 January 2022, the average number of deaths averted generally increases (`r text_fmt(sv("jan", "uk", 30, "avg"))` to `r text_fmt(sv("jan", "uk", 90, "avg"))` for the UK, `r text_fmt(sv("jan", "us", 30, "avg"))` to `r text_fmt(sv("jan", "uk", 90, "avg"))` for the US; the ranges represent 30-day to 90-day accelerations). However, uncertainty increases too and we see a considerable “rebound” effect, where the number of deaths can even increase under some trajectories when compared to the status quo. This is because the model is very sensitive to duration of protection.
 
