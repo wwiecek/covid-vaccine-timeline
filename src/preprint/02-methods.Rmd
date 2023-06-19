@@ -50,7 +50,7 @@ In addition to the base case, we report outcomes of the same model but at differ
 
 * **Cut-off dates for analysis:** A major source of variation in the estimates of deaths under accelerated vaccine timelines is the degree of the “rebound effect” which we mentioned earlier. In particular, if we continue the simulation until a winter peak is reached, we sometimes see more deaths under the counterfactual than the baseline. This happens because when people receive vaccines earlier, their effects also wane faster. The size of this rebound has a substantial impact on the overall estimated benefits of accelerated vaccine timelines. Therefore in reporting counterfactual scenarios we calculate health impacts up to 1 July 2021, 1 April 2021, and 1 January 2022.
 
-* **Fitting the model to excess deaths rather than reported deaths: **An epidemiological model which focuses on COVID-19-attributable deaths (our base case) will likely fit better to data, but it may obviously underestimate the total burden of disease. Therefore, following Watson et al. we also report results for an alternative pandemic model which was fit to reported deaths rather than excess deaths.
+* **Fitting the model to excess deaths rather than reported deaths: **An epidemiological model which focuses on COVID-19-attributable deaths (our base case) will likely fit better to data, but it may obviously underestimate the total burden of disease. Therefore, following Watson et al. we also report results for an alternative pandemic model which was fit to excess rather than reported deaths.
 
 ## Sensitivity analyses
 
