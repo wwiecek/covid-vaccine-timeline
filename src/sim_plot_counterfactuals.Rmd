@@ -41,6 +41,7 @@ install.packages("sf") # version 1.0.7
 install.packages("qpdf") # version 1.1
 install.packages("knitr")
 install.packages("here")
+install.packages("patchwork")
 ```
 
 ```{r setup, include=FALSE}
