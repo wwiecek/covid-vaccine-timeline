@@ -1,16 +1,29 @@
 --- 
-title: "The impact of accelerated COVID vaccine trials on mortality"
-author: "Tomáš Dulka, David Johnston, Witold Więcek"
+title: "Vaccines at Velocity: Evaluating Potential Lives Saved by Earlier Vaccination in the COVID-19 Pandemic"
 date: "`r Sys.Date()`"
 output:
   bookdown::pdf_book:
     base_format: rticles::arxiv_article
     citation_package: natbib
+    number_sections: false
+    extra_dependencies: ["float"]
 documentclass: article
 bibliography: report.bib
-biblio-style: apalike
+biblio-style: plainnat
 header-includes:
- - \usepackage{natbib}
+ - \usepackage[authoryear,round]{natbib}
+  \usepackage{authblk} 
+  \newcommand{\beginsupplement}{
+  \setcounter{table}{0}  
+  \renewcommand{\thetable}{S\arabic{table}} 
+  \setcounter{figure}{0} 
+  \renewcommand{\thefigure}{S\arabic{figure}}}
+  \author[1]{Witold Więcek}
+  \author[1]{David Johnston}
+  \author[1]{Tomas Dulka}
+  \author[1]{Danny Toomey}
+  \author[1]{Enlli Lewis}
+  \affil[1]{1Day Sooner, Delaware, United States}
 description: "This is an article describing a retrospective comparison between the
   actual mortality incurred during the COVID-19 pandemic in the US and the UK, and
   the moretality incurred in several counterfactual scenarios involving accelerated
@@ -22,6 +35,8 @@ site: bookdown::bookdown_site
 
 
 ```{r, include=FALSE}
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
+
 fontsize = 12
 
 colour_direct <- "#98df8a"
@@ -47,6 +62,28 @@ data_source <- c('e', 'r')
 parameter_variants <- c('veis', 'dur_Vs', 'dur_Rs')
 
 percentiles <- c(10, 90)
+
+# source: https://data.worldbank.org/indicator/SP.POP.TOTL
+population <- data.frame(
+  iso3c = c("GBR", "USA"),
+  pop10k = c(67081000, 331501080) / 10000
+)
+
+cfacts_to_display <- c("30_days_sooner",
+                         "60_days_sooner",
+                         "90_days_sooner")
+labels_to_display <- c("30 days sooner",
+                         "60 days sooner",
+                         "90 days sooner")
+
+vaccination_start_dates = data.frame(
+  iso3c = c(rep('USA',5), rep('GBR',5)),
+  counterfactual = c('no_vaccines', 'owid_raw', '30_days_sooner', '60_days_sooner', '90_days_sooner'),
+  vacc_start_date = as.Date(c("2020-12-14", "2020-12-14", "2020-11-14", "2020-10-15", "2020-09-15",
+                         "2021-01-11", "2021-01-11", "2020-12-12", "2020-11-12", "2020-10-13"))
+)
+
+
 ```
 
 
@@ -82,6 +119,22 @@ join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
             suffix = c("", "_reported")) %>%
           mutate( sen = sen ) %>%
           mutate( quant = quant ) %>% 
+          left_join(vaccination_start_dates, by = c('iso3c', 'counterfactual')) %>%
+          mutate(
+            baseline_deaths_since_vacc = ifelse(date >= vacc_start_date,
+                                                baseline_deaths_avg, 0)
+          ) %>%
+          ungroup() %>%
+          group_by(iso3c, counterfactual) %>%
+          dplyr::mutate(
+            baseline_cumulative_deaths_since_vacc = cumsum(baseline_deaths_since_vacc)
+          ) %>%
+          mutate(
+            baseline_deaths_display = format(
+              round(baseline_cumulative_deaths_since_vacc, digits = 0),
+                                             big.mark = ",")
+          ) %>% 
+          ungroup() %>%
           filter(date %in% dates)
       })
   })
@@ -93,10 +146,7 @@ join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
 }
 
 join_counterfactual_tables_horizontal <- function(sensitivity, quantiles) {
-  population <- data.frame(
-    iso3c = c("GBR", "USA"),
-    pop10k = c(67081000, 331501080) / 10000
-  )
+
 
   counterfactuals <- lapply(quantiles, function(quant) {
       cf_table <- readRDS(paste0("data/deaths_averted_", sensitivity, "_", quant, "_detail.Rds")) %>%
@@ -105,13 +155,7 @@ join_counterfactual_tables_horizontal <- function(sensitivity, quantiles) {
                quant = quant,
                averted_deaths_perpop_avg = averted_deaths_avg / pop10k,
                averted_deaths_perpop_025 = averted_deaths_025 / pop10k,
-               averted_deaths_perpop_975 = averted_deaths_975 / pop10k,
-               vaccinated_perpop_avg = (vaccinated_avg - vaccinated_second_waned_avg) / pop10k,
-               vaccinated_perpop_025 = (vaccinated_025 - vaccinated_second_waned_025) / pop10k,
-               vaccinated_perpop_975 = (vaccinated_975 - vaccinated_second_waned_975) / pop10k,
-               baseline_vaccinated_perpop_avg = (baseline_vaccinated_avg - baseline_vaccinated_second_waned_avg) / pop10k,
-               baseline_vaccinated_perpop_025 = (baseline_vaccinated_025 - baseline_vaccinated_second_waned_025) / pop10k,
-               baseline_vaccinated_perpop_975 = (baseline_vaccinated_975 - baseline_vaccinated_second_waned_975) / pop10k)
+               averted_deaths_perpop_975 = averted_deaths_975 / pop10k)
 
       return(cf_table)
     })
@@ -122,33 +166,51 @@ join_counterfactual_tables_horizontal <- function(sensitivity, quantiles) {
    )
 }
 
-load_deaths_averted_table <- function( table_path = "data/deaths_averted_detail.Rds", excess = TRUE ) {
-  
-  if(excess) {
-    deaths_averted_reported <- readRDS("data/reported_deaths_averted_detail.Rds")
-    deaths_averted_summary <- readRDS(table_path) %>%
-      left_join(deaths_averted_reported, by = c('iso3c', 'date', 'counterfactual'), suffix = c('', '_reported')) %>%
-      filter( date %in% last_dates_to_display)
-    return(deaths_averted_summary)
-  } else {
-    deaths_averted_summary <- readRDS("data/reported_deaths_averted_detail.Rds") %>%
-      mutate( baseline_cumulative_deaths_avg_reported = baseline_cumulative_deaths_avg ) %>%
-      filter( date %in% last_dates_to_display)
+load_deaths_averted_table <-
+  function(table_path = "data/deaths_averted_detail.Rds",
+           excess = TRUE) {
+    
+    
+    if (excess) {
+      deaths_averted_reported <-
+        readRDS("data/reported_deaths_averted_detail.Rds")
+      deaths_averted_summary <- readRDS(table_path) %>%
+        left_join(
+          deaths_averted_reported,
+          by = c('iso3c', 'date', 'counterfactual'),
+          suffix = c('', '_reported')
+        ) 
+        
+    } else {
+      deaths_averted_summary <-
+        readRDS("data/reported_deaths_averted_detail.Rds") %>%
+        mutate(baseline_cumulative_deaths_avg_reported = baseline_cumulative_deaths_avg) 
+    }
+    
+    
+    deaths_averted_summary = deaths_averted_summary %>%
+      left_join(vaccination_start_dates, by = c('iso3c', 'counterfactual')) %>%
+      mutate(
+        baseline_deaths_since_vacc = ifelse(date >= vacc_start_date,
+                                            baseline_deaths_avg, 0)
+      ) %>%
+      ungroup() %>%
+      group_by(iso3c, counterfactual) %>%
+      dplyr::mutate(
+        baseline_cumulative_deaths_since_vacc = cumsum(baseline_deaths_since_vacc)
+      ) %>%
+      mutate(
+            baseline_deaths_display = format(
+              round(baseline_cumulative_deaths_since_vacc, digits = 0),
+                                             big.mark = ",")
+          ) %>% 
+      ungroup() %>%
+      filter(date %in% last_dates_to_display)
+    
     return(deaths_averted_summary)
   }
-  
-}
 
 format_deaths_table <- function(deaths_averted_detail){
-
-
-
-    # source: https://data.worldbank.org/indicator/SP.POP.TOTL
-    population <- data.frame(
-      iso3c = c("GBR", "USA"),
-      pop10k = c(67081000, 331501080) / 10000
-    )
-
     with_pop <- deaths_averted_detail %>%
       left_join(population, by = "iso3c") %>%
       mutate(cumulative_averted_deaths_perpop_avg = cumulative_averted_deaths_avg / pop10k,
@@ -202,8 +264,8 @@ format_deaths_table <- function(deaths_averted_detail){
                                          from = cfacts_to_display,
                                          to = labels_to_display),
         iso3c = as.factor(iso3c),
-        delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_avg,2),
-        baseline_cumulative_deaths_avg = round(baseline_cumulative_deaths_avg, 0)
+        delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_since_vacc,2),
+        baseline_cumulative_deaths_since_vacc = round(baseline_cumulative_deaths_since_vacc, 0)
       ) %>%
       mutate(counterfactual_label = factor(counterfactual_label,
                                            labels_to_display)) %>%
@@ -212,29 +274,20 @@ format_deaths_table <- function(deaths_averted_detail){
           counterfactual_label,
           delta_deaths,
           delta_deaths_perpop,
-          baseline_cumulative_deaths_avg,
+          baseline_deaths_display,
           delta_deaths_perreported ) %>%
-      rename(
-        all_of(c(
-           "Counterfactual scenario" = "counterfactual_label",
-           "Deaths averted" = "delta_deaths",
-           "Deaths averted per 10,000" = "delta_deaths_perpop",
-          "Baseline deaths" = "baseline_cumulative_deaths_avg",
-          "Deaths averted per baseline death" = "delta_deaths_perreported"
-        ))
+      plyr::rename(
+        c(
+           "counterfactual_label" = "Counterfactual scenario",
+           "delta_deaths" = "Deaths averted",
+           "delta_deaths_perpop" = "Per 10,000 people",
+           "baseline_deaths_display" = "Baseline deaths",
+           "delta_deaths_perreported" = "Averted/baseline"
+        )
       )
     }
 
 format_deaths_table_sensitivity <- function(deaths_averted_detail){
-
-    sensitivity_value <- paste0("Average ", parameter_names[unique(deaths_averted_detail$sen)])
-
-    # source: https://data.worldbank.org/indicator/SP.POP.TOTL
-    population <- data.frame(
-      iso3c = c("GBR", "USA"),
-      pop10k = c(67081000, 331501080) / 10000
-    )
-
     with_pop <- deaths_averted_detail %>%
       left_join(population, by = "iso3c") %>%
       mutate(cumulative_averted_deaths_perpop_avg = cumulative_averted_deaths_avg / pop10k,
@@ -288,11 +341,9 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
                                          from = cfacts_to_display,
                                          to = labels_to_display),
         iso3c = as.factor(iso3c),
-        delta_deaths = delta_deaths,
-        delta_deaths_perpop = delta_deaths_perpop,
         sensitivity_value_avg = round(sensitivity_value_avg, as.numeric(parameter_precision[sen])),
-        delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_avg,2),
-        baseline_cumulative_deaths_avg = round(baseline_cumulative_deaths_avg, 0)
+        delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_since_vacc,2),
+        baseline_cumulative_deaths_since_vacc = round(baseline_cumulative_deaths_since_vacc, 0)
       ) %>%
       mutate(counterfactual_label = factor(counterfactual_label,
                                            labels_to_display)) %>%
@@ -302,17 +353,17 @@ format_deaths_table_sensitivity <- function(deaths_averted_detail){
           sensitivity_value_avg,
           delta_deaths,
           delta_deaths_perpop,
-          baseline_cumulative_deaths_avg,
+          baseline_deaths_display,
           delta_deaths_perreported ) %>%
-      rename(
-        all_of(c(
-           "Counterfactual scenario" = "counterfactual_label",
-           "Deaths averted" = "delta_deaths",
-           sensitivity_value = 'sensitivity_value_avg',
-           "Deaths averted per 10,000" = "delta_deaths_perpop",
-          "Baseline deaths" = "baseline_cumulative_deaths_avg",
-          "Averted/baseline" = "delta_deaths_perreported"
-        ))
+      plyr::rename(
+        c(
+           "counterfactual_label" = "Counterfactual scenario",
+           "delta_deaths" = "Deaths averted",
+           "sensitivity_value_avg" = paste0("Average ", parameter_names[unique(deaths_averted_detail$sen)]),
+           "delta_deaths_perpop" = "Per 10,000 people",
+           "baseline_deaths_display" = "Baseline deaths",
+           "delta_deaths_perreported" = "Averted/baseline"
+        )
       )
     }
 
@@ -342,15 +393,15 @@ deaths_averted_plot <- function(sen, quantiles, dates)  {
                                            labels_to_display))
 
     single_timeseries_plot <- ggplot(zoomed_deaths_averted, aes(x = date)) +
-      geom_line(aes(y = averted_deaths_perpop_avg_10, colour = "10th percentile")) +
-      geom_line(aes(y = averted_deaths_perpop_avg_90, colour = "90th percentile")) +
+      geom_line(aes(y = -1*averted_deaths_perpop_avg_10, colour = "10th percentile")) +
+      geom_line(aes(y = -1*averted_deaths_perpop_avg_90, colour = "90th percentile")) +
       geom_ribbon(
-        aes(ymin = averted_deaths_perpop_025_10, ymax = averted_deaths_perpop_975_10),
+        aes(ymin = -1*averted_deaths_perpop_025_10, ymax = -1*averted_deaths_perpop_975_10),
         alpha = 0.5,
         fill = colour_10
       ) +
       geom_ribbon(
-        aes(ymin = averted_deaths_perpop_025_90, ymax = averted_deaths_perpop_975_90),
+        aes(ymin = -1*averted_deaths_perpop_025_90, ymax = -1*averted_deaths_perpop_975_90),
         alpha = 0.4,
         fill = colour_90
       ) +
@@ -365,7 +416,7 @@ deaths_averted_plot <- function(sen, quantiles, dates)  {
       labs(x = "Date", y = "Daily deaths averted per 10 000 people", color = "Colour")
 
 
-    plot(single_timeseries_plot) 
+    return(single_timeseries_plot) 
   }  
 }
 
@@ -385,15 +436,18 @@ vaccinated_plot <- function(sen, quantiles, dates)  {
                                            labels_to_display))
 
     single_timeseries_plot <- ggplot(zoomed_deaths_averted, aes(x = date)) +
-      geom_line(aes(y = baseline_vaccinated_perpop_avg_10/vaccinated_perpop_avg_10, colour = "10th percentile")) +
-      geom_line(aes(y = baseline_vaccinated_perpop_avg_90/vaccinated_perpop_avg_90, colour = "90th percentile")) +
+      geom_line(aes(y = (total_vaccinated_avg_10 - baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_10), colour = "10th percentile")) +
+      geom_line(aes(y = (total_vaccinated_avg_90 - baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_90), colour = "90th percentile")) +
       geom_ribbon(
-        aes(ymin = averted_deaths_perpop_025_10, ymax = averted_deaths_perpop_975_10),
+        aes(
+          ymin = (total_vaccinated_025_10-baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_10), 
+          ymax = (total_vaccinated_975_10-baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_90)),
         alpha = 0.5,
         fill = colour_10
       ) +
       geom_ribbon(
-        aes(ymin = averted_deaths_perpop_025_90, ymax = averted_deaths_perpop_975_90),
+        aes(ymin = (total_vaccinated_025_90-baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_10)
+          , ymax = (total_vaccinated_975_90-baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_90)),
         alpha = 0.4,
         fill = colour_90
       ) +
@@ -405,7 +459,7 @@ vaccinated_plot <- function(sen, quantiles, dates)  {
           paste0("90th percentile ", parameter_names[sen], sep=' ')),
         values = c(colour_10, colour_90)
       ) +
-      labs(x = "Date", y = "Effective number of fully vaccinated people per 10 000 population", color = "Colour")
+      labs(x = "Date", y = "Normalised difference in effective number of vaccinated", color = "Colour")
 
 
     plot(single_timeseries_plot) 
@@ -414,17 +468,93 @@ vaccinated_plot <- function(sen, quantiles, dates)  {
 
 ```
 
-
-# Abstract
-
-
-```{r include=FALSE}
-# automatically create a bib database for R packages
-knitr::write_bib(c(
-  .packages(), 'bookdown', 'knitr', 'rmarkdown'
-), 'packages.bib')
+```{r load-death-tables, echo = FALSE}
+dt <- load_deaths_averted_table(excess = FALSE)
+dt_excess <- load_deaths_averted_table(excess = TRUE)
+dt_double <- load_deaths_averted_table(
+      table_path = "data/doubleboost_deaths_averted_detail.Rds")
+dt_d90 <- load_deaths_averted_table(
+      table_path = "data/d90_deaths_averted_detail.Rds")
+dt_d95 <- load_deaths_averted_table(
+      table_path = "data/d95_deaths_averted_detail.Rds")
 ```
 
+```{r formatting-reductions, echo = FALSE}
+# Functions for formatting inline numbers when reporting them
+
+# get table that will store the values to be selected:
+get_values_for_text <- function(x){ 
+  x %>% 
+  select(date, iso3c, country, counterfactual, 
+         cumulative_averted_deaths_avg,
+         cumulative_averted_deaths_975, 
+         cumulative_averted_deaths_025)%>%
+  left_join(population, by = "iso3c") %>%
+  mutate(cumulative_averted_deaths_perpop_avg = cumulative_averted_deaths_avg / pop10k,
+         cumulative_averted_deaths_perpop_025 = cumulative_averted_deaths_025 / pop10k,
+         cumulative_averted_deaths_perpop_975 = cumulative_averted_deaths_975 / pop10k) 
+}
+# select value:
+sv <- function(d,c,s,b="avg",o="total", t=dt) {
+  d <- case_when(d == "apr" ~ "2021-04-01",
+                 d == "jul" ~ "2021-07-01",
+                 d == "jan" ~ "2022-01-01")
+  s <- case_when(s == 30 ~ "30_days_sooner",
+                 s == 60 ~ "60_days_sooner",
+                 s == 90 ~ "90_days_sooner",
+                 s == 0 ~ "owid_raw")
+  
+  # Note that lci/uci are "flipped" because we're dealing with negative numbers
+  if(o == "total"){
+  b <- case_when(b == "avg" ~ "cumulative_averted_deaths_avg",
+                 b == "uci" ~ "cumulative_averted_deaths_025",
+                 b == "lci" ~ "cumulative_averted_deaths_975")
+  }else if(o == "per10k"){
+    b <- case_when(b == "avg" ~ "cumulative_averted_deaths_perpop_avg",
+                   b == "uci" ~ "cumulative_averted_deaths_perpop_025",
+                   b == "lci" ~ "cumulative_averted_deaths_perpop_975")
+  }
+  val <- t %>% 
+    get_values_for_text() %>% 
+    filter(date == d) %>% 
+    filter(country == ifelse(c=="uk", "United Kingdom", "United States")) %>% 
+    filter(counterfactual == s)
+  
+  val <- -val[[b]]
+  
+  if(length(val) > 1)
+    stop("Error in pulling values")
+  else(return(val))
+}
+
+# Text formatter:
+text_fmt <- function(x) format(signif(x, 2), big.mark = ",", scientific = FALSE)
+
+# You can now do simple things like:
+# text_fmt(sv("jul", "uk", 30, "avg"))
+
+# Ranges for reductions across two countries
+# main_reductions_vec
+mrv <- c(
+  sv("jul", "uk", 30, "avg", "per10k"),
+  sv("jul", "uk", 90, "avg", "per10k"),
+  sv("jul", "us", 30, "avg", "per10k"),
+  sv("jul", "us", 90, "avg", "per10k")
+)
+crv <- c(
+  sv("jul", "uk", 30, "avg"),
+  sv("jul", "uk", 90, "avg"),
+  sv("jul", "us", 30, "avg"),
+  sv("jul", "us", 90, "avg")
+)
+# total reductions vector
+trv <- c(
+  sv("jul", "uk", 30, "avg") + sv("jul", "us", 30, "avg"),
+  sv("jul", "uk", 90, "avg") + sv("jul", "us", 90, "avg")
+)
+```
+
+_Fast development of COVID-19 vaccines likely averted millions of deaths. We estimate how many more lives could have been saved if safe and effective vaccines were available earlier in the pandemic, in particular, before the epidemic waves in winter of 2020. We fit an epidemiological model informed by retrospective data and simulate counterfactual vaccination scenarios for the United Kingdom and the United States in which vaccines are available between 30 and 90 days earlier. We find that up to 1 July 2021 reductions in mortality range from `r text_fmt(crv[1])` to `r text_fmt(crv[2])` in the UK and `r text_fmt(crv[3])` to `r text_fmt(crv[4])` in the US, depending on when vaccinations start. This corresponds to a maximum of `r text_fmt(sv("jul", "uk", 90, "avg", "per10k"))` and `r text_fmt(sv("jul", "us", 90, "avg", "per10k"))` deaths averted per 10,000 people in the UK and US respectively, or a reduction in overall deaths of 50% and 32%. We find that our model is sensitive to uncertain vaccine parameters and benefits depend on the time horizon of the analysis. However, the large average reductions we estimate suggests that it is highly cost-effective to make large investments in strategies to expedite vaccine availability._
 
 ```{r include=FALSE}
 

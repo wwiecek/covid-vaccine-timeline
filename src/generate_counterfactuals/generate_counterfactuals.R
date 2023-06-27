@@ -85,13 +85,15 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     date_0 <- max(data$date_end)
   }
 
-  date_start <- min(data$date_start)
+  start_date <- out$inputs$start_date
 
   t_end <- as.integer(max(counterfactual$owid_raw$date) - out$inputs$start_date)
 
   # Add the rt_optimised class label to try to prevent a failure of the generic function
   # generate_draws
   attr(out, "class") <- c("rt_optimised",class(out))
+
+  out <- update_parameters(out, iso3c)
 
   #Set up the baseline results
   baseline <- squire.page::generate_draws(out, t_end)
@@ -132,11 +134,10 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
     # We need to add this class so that the nimue_format utility knows it's a booster sim
   attr(baseline, "class") <- c("lmic_booster_nimue_simulation",class(baseline))
 
-  baseline <- update_parameters(baseline, iso3c)
-
   # format the counter factual run
   baseline_deaths <- squire.page::nimue_format(baseline, c("deaths", "infections", "vaccinated_first_dose",
-        "vaccinated_second_dose", "vaccinated_second_waned", "N", "R"), date_0 = date_start,
+        "vaccinated_second_dose", "vaccinated_second_waned",  "vaccinated_booster_dose",
+       "vaccinated_booster_waned", "N", "R"), date_0 = start_date,
       reduce_age = reduce_age) %>%
     dplyr::distinct() %>%
     tidyr::pivot_wider(names_from = .data$compartment, values_from = .data$y) %>%
@@ -178,8 +179,9 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
 
       #format the counter factual run
       counter_df <- squire.page::nimue_format(counter, c("deaths", "infections", "vaccinated_first_dose",
-       "vaccinated_second_dose", "vaccinated_second_waned", "N", "R"),
-                                              date_0 = date_start,
+       "vaccinated_second_dose", "vaccinated_booster_dose",
+       "vaccinated_booster_waned", "vaccinated_second_waned", "N", "R"),
+                                              date_0 = start_date,
                                               reduce_age = reduce_age) %>%
         dplyr::distinct() %>%
         tidyr::pivot_wider(names_from = .data$compartment, values_from = .data$y) %>%
@@ -207,7 +209,7 @@ deaths_averted <- function(out, draws, counterfactual, iso3c, reduce_age = TRUE,
   )
 
   deaths_df <- dplyr::arrange(deaths_df, counterfactual,
-    N, R, replicate, vaccinated_second_dose, vaccinated_second_waned, date)
+    N, R, replicate, vaccinated_second_dose, vaccinated_second_waned, vaccinated_booster_dose, vaccinated_booster_waned, date)
 
   # and add country info
   deaths_df$country <- country
@@ -224,8 +226,11 @@ update_parameters <- function(out, iso3c) {
         out$parameters$booster_doses <- out$parameters$booster_doses*50.5/23.4
       }
     }
+
   return(out)
 }
+
+# Updates for counterfactuals only
 
 update_counterfactual <- function(out, counterfactual){
 
@@ -242,6 +247,16 @@ update_counterfactual <- function(out, counterfactual){
     out$parameters$booster_doses <- 0
     out$parameters$tt_booster_doses <- 0
   }
+
+
+  if (demand){
+    out$parameters$primary_doses <- demand*out$parameters$primary_doses
+
+    if(boosters) {
+      out$parameters$booster_doses <- demand*out$parameters$booster_doses
+    }
+  }
+
   return(out)
 }
 

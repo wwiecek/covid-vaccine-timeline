@@ -109,6 +109,7 @@ packages:
   - systemfonts
   - rticles
   - bookdown
+  - zoo
 
 
 # Source files, in addition to the script.  Typically these will
@@ -176,7 +177,7 @@ resources:
 
 depends:
   - deaths_averted_plot_timeline:
-      id: latest((parameter:excess == TRUE) && (parameter:boosters == TRUE) && (parameter:double_boosters == FALSE) && (parameter:lowtransmission == FALSE))
+      id: latest((parameter:excess == TRUE) && (parameter:boosters == TRUE) && (parameter:double_boosters == FALSE) && (parameter:lowtransmission == FALSE) && (parameter:demand == FALSE))
       use:
         data/deaths_averted_summary.Rds: deaths_averted_summary.Rds
         data/deaths_averted_detail.Rds: deaths_averted_detail.Rds
@@ -187,7 +188,7 @@ depends:
         data/deaths_averted_dur_Rs_10_detail.Rds: deaths_averted_dur_Rs_10_detail.Rds
         data/deaths_averted_dur_Rs_90_detail.Rds: deaths_averted_dur_Rs_90_detail.Rds
   - deaths_averted_plot_timeline:
-      id: latest((parameter:excess == FALSE) && (parameter:boosters == TRUE) && (parameter:double_boosters == FALSE) && (parameter:lowtransmission == FALSE))
+      id: latest((parameter:excess == FALSE) && (parameter:boosters == TRUE) && (parameter:double_boosters == FALSE) && (parameter:lowtransmission == FALSE) && (parameter:demand == FALSE))
       use:
         data/reported_deaths_averted_summary.Rds: deaths_averted_summary.Rds
         data/reported_deaths_averted_detail.Rds: deaths_averted_detail.Rds
@@ -198,9 +199,17 @@ depends:
         data/reported_deaths_averted_dur_Rs_10_detail.Rds: deaths_averted_dur_Rs_10_detail.Rds
         data/reported_deaths_averted_dur_Rs_90_detail.Rds: deaths_averted_dur_Rs_90_detail.Rds
   - deaths_averted_plot_timeline:
-      id: latest((parameter:excess == TRUE) && (parameter:boosters == TRUE) && (parameter:double_boosters == TRUE) && (parameter:lowtransmission == FALSE))
+      id: latest((parameter:excess == TRUE) && (parameter:boosters == TRUE) && (parameter:double_boosters == TRUE) && (parameter:lowtransmission == FALSE) && (parameter:demand == FALSE))
       use:
         data/doubleboost_deaths_averted_detail.Rds: deaths_averted_detail.Rds
+  - deaths_averted_plot_timeline:
+      id: latest((parameter:demand == 0.95))
+      use:
+        data/d95_deaths_averted_detail.Rds: deaths_averted_detail.Rds
+  - deaths_averted_plot_timeline:
+      id: latest((parameter:demand == 0.9))
+      use:
+        data/d90_deaths_averted_detail.Rds: deaths_averted_detail.Rds
   - generate_production_counterfactual:
       id: latest
       use:
@@ -215,3 +224,11 @@ depends:
         data/30_days_sooner.Rds: counterfactual_timelines/30_days_sooner.Rds
         data/60_days_sooner.Rds: counterfactual_timelines/60_days_sooner.Rds
         data/90_days_sooner.Rds: counterfactual_timelines/90_days_sooner.Rds
+  - lmic_reports_rt_optimise:
+      id: latest((parameter:iso3c == "GBR"))
+      use:
+        data/model_fits_reported_GBR.Rds: reported_out.Rds
+  - lmic_reports_rt_optimise:
+      id: latest((parameter:iso3c == "USA"))
+      use:
+        data/model_fits_reported_USA.Rds: reported_out.Rds

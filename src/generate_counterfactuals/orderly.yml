@@ -91,6 +91,8 @@ parameters:
     default: TRUE
   double_boosters:
     default: FALSE
+  demand:
+    default: FALSE
 
 # Similar to "data" but sets of temporary views before the data are
 # extracted.  Can be embedded SQL strings or filenames to actual
@@ -128,14 +130,10 @@ sources:
 # referenced in "views" or "data"
 #
 resources:
-    - model_fits/excess_mortality/USA.Rds
-    - model_fits/excess_mortality/GBR.Rds
-    - model_fits/reported_deaths/USA.Rds
-    - model_fits/reported_deaths/GBR.Rds
-    - model_fits/excess_mortality/USA_lowtransmission.Rds
-    - model_fits/excess_mortality/GBR_lowtransmission.Rds
-    - model_fits/reported_deaths/USA_lowtransmission.Rds
-    - model_fits/reported_deaths/GBR_lowtransmission.Rds
+  - model_fits/excess_mortality/USA_lowtransmission.Rds
+  - model_fits/excess_mortality/GBR_lowtransmission.Rds
+  - model_fits/reported_deaths/USA_lowtransmission.Rds
+  - model_fits/reported_deaths/GBR_lowtransmission.Rds
 
 # Optional name of a variable to make the SQL connection available to
 # the script.  Use this with care and avoid using any queries that
@@ -164,11 +162,21 @@ resources:
 #           other-data.csv: data.csv
 #
 depends:
-  generate_vaccine_counterfactual:
-    id: latest
-    use:
-      counterfactual_timelines/no_vaccines.Rds: counterfactual_timelines/no_vaccines.Rds
-      counterfactual_timelines/owid_raw.Rds: counterfactual_timelines/owid_raw.Rds
-      counterfactual_timelines/30_days_sooner.Rds: counterfactual_timelines/30_days_sooner.Rds
-      counterfactual_timelines/60_days_sooner.Rds: counterfactual_timelines/60_days_sooner.Rds
-      counterfactual_timelines/90_days_sooner.Rds: counterfactual_timelines/90_days_sooner.Rds
+  - generate_vaccine_counterfactual:
+      id: latest
+      use:
+        counterfactual_timelines/no_vaccines.Rds: counterfactual_timelines/no_vaccines.Rds
+        counterfactual_timelines/owid_raw.Rds: counterfactual_timelines/owid_raw.Rds
+        counterfactual_timelines/30_days_sooner.Rds: counterfactual_timelines/30_days_sooner.Rds
+        counterfactual_timelines/60_days_sooner.Rds: counterfactual_timelines/60_days_sooner.Rds
+        counterfactual_timelines/90_days_sooner.Rds: counterfactual_timelines/90_days_sooner.Rds
+  - lmic_reports_rt_optimise:
+      id: latest(parameter:iso3c == "USA")
+      use:
+        model_fits/excess_mortality/USA.Rds: excess_out.Rds
+        model_fits/reported_deaths/USA.Rds: reported_out.Rds
+  - lmic_reports_rt_optimise:
+      id: latest(parameter:iso3c == "GBR")
+      use:
+        model_fits/excess_mortality/GBR.Rds: excess_out.Rds
+        model_fits/reported_deaths/GBR.Rds: reported_out.Rds

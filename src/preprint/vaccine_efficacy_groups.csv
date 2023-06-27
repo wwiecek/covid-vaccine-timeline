@@ -6,13 +6,7 @@ mRNA,2,Delta,0.88
 mRNA,1,Omicron,0
 mRNA,2,Omicron,0.136
 mRNA,3,Omicron,0.65
-Single dose,Full,Wild,0.66
-Single dose,Full,Delta,0.5
 Adenovirus,Partial,Wild,0.64
 Adenovirus,Full,Wild,0.77
 Adenovirus,Partial,Delta,0.3
 Adenovirus,Full,Delta,0.67
-Subunit,Partial,Wild,0.54
-Subunit,Full,Wild,0.86
-Subunit,Partial,Delta,0.3
-Subunit,Full,Delta,0.71
