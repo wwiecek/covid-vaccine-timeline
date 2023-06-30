@@ -46,8 +46,6 @@ data_for_plot = deaths_reported %>%
                names_to = "type") %>% 
   mutate(type = factor(type, c("vaccinations", "deaths")))
 
-patch_design <- c(area(1, 1, 3, 4),
-                  area(1, 1, 4, 4))
 
 fig1 = ggplot() +
   geom_line(data = data_for_plot,
@@ -66,8 +64,7 @@ fig1 = ggplot() +
   ) +
   labs(x = "Date",
        y = "",
-       color = "Country:") +
-  patchwork::plot_layout(design=patch_design)
+       color = "Country:")
 
 plot(fig1)
 
@@ -126,7 +123,7 @@ vaccinations_table %>%
 ```
 
 
-```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("Cumulative vaccinations under baseline and counterfactual scenarios"), echo=FALSE, out.height = "40%"}
+```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("Cumulative vaccinations under baseline and counterfactual scenarios"), echo=FALSE, out.height = "40%", warning=FALSE, message=FALSE}
 baseline = readRDS("data/owid_raw.Rds")
 sooner_30 = readRDS("data/30_days_sooner.Rds")
 sooner_60 = readRDS("data/60_days_sooner.Rds")
@@ -156,9 +153,6 @@ labels_fun = function(b) {
   format(b, "%b-%d")
 }
 
-patch_design <- c(area(1, 1, 3, 4),
-                  area(1, 1, 4, 4))
-
 dj4 = ggplot(data = counterfactuals,
             aes(x = as.Date(date),
                 y = total_vacc,
@@ -177,13 +171,12 @@ dj4 = ggplot(data = counterfactuals,
   labs(x = "Date",
        y = "Cumulative vaccinations",
        color = "Vaccinations starting sooner by:") +
-  theme(axis.text.x=element_text(angle = 90, hjust = 0)) +
-  patchwork::plot_layout(design=patch_design)
+  theme(axis.text.x=element_text(angle = 90, hjust = 0))
 
 print(dj4)
 ```
 
-```{r model-fit-deaths, fig.align="center", fig.cap=c("Comparison of real and modelled (baseline) deaths over time. Shaded areas indicate 95\\% confidence interval."), echo=FALSE, out.height = "40%"}
+```{r model-fit-deaths, fig.align="center", fig.cap=c("Comparison of real and modelled (baseline) deaths over time. Shaded areas indicate 95\\% confidence interval."), echo=FALSE, out.height = "40%", warning=FALSE, message=FALSE}
 text_fmt <- function(x) format(signif(x, 2), big.mark = ",", scientific = FALSE)
 deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
 data_for_plot3 = deaths_averted %>% 
@@ -205,9 +198,6 @@ data_for_plot3 = deaths_averted %>%
   ) %>% 
   pivot_longer(cols = c(deaths_perpop, baseline_deaths_perpop),
                names_to = "type")
-
-patch_design <- c(area(1, 1, 3, 4),
-                  area(1, 1, 4, 4))
 
 fig3 = ggplot(data = data_for_plot3,
               aes(x = as.Date(date),
@@ -235,13 +225,12 @@ fig3 = ggplot(data = data_for_plot3,
   labs(x = "Date",
        y = "Daily deaths per 10,000 people",
        color = "Type:") +
-  guides(linetype = FALSE, scale = "none") +
-  patchwork::plot_layout(design=patch_design)
+  guides(linetype = FALSE, scale = "none") 
   
 plot(fig3)
 ```
 
-```{r deaths-averted-table, echo=FALSE}
+```{r deaths-averted-table, echo=FALSE, warning=FALSE, message=FALSE}
 dt %>%
   deaths_averted_table_single() %>% select(-c("Baseline deaths", "Averted/baseline")) %>% 
   kbl(booktabs=TRUE, centering = TRUE, caption = "Total averted deaths under counterfactual scenarios, based on reported deaths. 95\\% intervals are calculated over 100 simulation runs which vary vaccine parameters and duration of natural immunity (see Table S1 in Appendix for details). More details are given in Table S7.") %>%
@@ -254,7 +243,6 @@ dt %>%
   kable_styling(font_size = 9)
 
 ```
-
 
 
 ```{r deaths-averted-plot, fig.align="center", fig.cap=c("Daily deaths under baseline and counterfactual scenarios. Shaded area indicates 95\\% confidence interval. Cumulative reductions are shown in the Appendix."), echo=FALSE, out.height = "40%"}
@@ -287,9 +275,6 @@ counterfactual1_color <- "#E74C3C" # red
 counterfactual2_color <- "#27AE60" # green
 counterfactual3_color <- "#F1C40F" # yellow
 
-patch_design <- c(area(1, 1, 3, 4),
-                  area(1, 1, 4, 4))
-
 single_timeseries_plot = ggplot(data = zoomed_deaths_averted,
                                 aes(x = as.Date(date),
                                     y = deaths_avg_perpop,
@@ -313,8 +298,7 @@ single_timeseries_plot = ggplot(data = zoomed_deaths_averted,
       baseline_color
     )
   ) +
-  labs(x = "Date", y = "Daily Deaths per 10 000 people", color = "Earlier vaccines by:") +
-  patchwork::plot_layout(design=patch_design)
+  labs(x = "Date", y = "Daily Deaths per 10 000 people", color = "Earlier vaccines by:")
 
 plot(single_timeseries_plot)
 ```
@@ -497,122 +481,6 @@ We made one change to the model used by [@watsonoliverj.COVID19LMICReports2022]:
 
 \newpage
 
-# Sensitivity To Model Parameters
-
-We explored various alternative model configurations in order to assess the sensitivity of our conclusion to modelling assumptions. Compared to a hypothetical ideal model that yields correct counterfactual assessments, the model we employ is likely to differ in a number of ways:
-
-- It may differ structurally. We might anticipate some structural differences - for example, overdispersion in the distribution of contact rates is not captured by our model, but overdispersion in this distribution was typically found to be high [@endoEstimatingOverdispersionCOVID192020]. However, there may be other structural differences that we do not anticipate
-- The assumed distributions of input parameters may differ in our model and in the hypothetical ideal
-
-Both of these differences mean that the fitted values of $R_t$ are also likely to differ between our model and the hypothetical ideal, and hence they may yield substantially different assessments of counterfactual scenarios. If it turns out that counterfactual assessments are very sensitive to input parameter values, then we might conclude that our estimates are likely to differ substantially from the "true" counterfactual. Because of the prospect of structural differences, this is true even if we have done a very good job of estimating parameters. If our results are robust to variation of parameters within a reasonable range, then if we believe that our model is capable of yielding a good approximation to the ideal for some "reasonable" parameter choices, we should also think our counterfactual assessments are a good approximation to ideal counterfactual assessments.
-
-We assess the impact of three different parameter estimates on our overall results. To do this, we examine the average conclusion from the model runs featuring the top and bottom deciles of each of the following parameters:
-
-- The average infection-blocking efficacy of one and two doses of the vaccine
-- The average duration for protection due to one and two doses of the vaccine
-- The average duration of protection due to natural immunity
-
-In both countries, the estimates of deaths averted showed little sensitivity to the estimated duration of natural immunity (Table \@ref(tab:deaths-averted-table-durR). The estimates of deaths averted in the UK was *also* relatively insensitive to the estimated vaccine efficacy, though the estimate in the US was more sensitive to this value (it is worth noting that in the case of the US the model explored captured a wider range of variation in vaccine efficacy) - see Table \@ref(tab:deaths-averted-table-vei). Note that for long-run estimates of deaths averted in the US (up to Jan 2022), higher estimates of vaccine efficacy were associated with much greater uncertainty over the number of deaths averted. This may be due to the fact that, given a more effective vaccine, waning immunity will have a larger impact on the end results.
-
-The estimate of long-run deaths averted in the US was extremely sensitive to the estimated duration of vaccine derived immunity, with a difference of 14 days in this parameter estimate yielding long-run estimates of deaths averted that ranged from 32,255 to *negative* 11,456 (that is, 11,456 extra deaths) for a 30-day advance in the vaccination schedule. Notably, short estimates of vaccine duration were also associated with extreme decreases in the uncertainty over the number of deaths averted. Note that the short run estimates of deaths averted (up to July 2021) were robustly positive, but were also substantially more uncertain for longer estimates of the duration of vaccine protection.
-
-Our model is already very uncertain about the effect of earlier vaccinations on the second infection wave in the US. However, the high sensitivity of this figure to the estimated duration of vaccine-derived protection offers an extra reason to be unsure that the model is providing us with an accurate assessment of the counterfactual impacts on this timescale.
-
-We also run an identical analysis to our main analysis, except with a model fit to reported numbers of COVID-19 deaths instead of COVID-19 deaths estimated from excess mortality. The results are reported in Table \@ref(tab:reported-deaths-averted-table) and Figure \@ref(fig:reported-deaths-averted-plot). This method yields larger estimates of deaths averted than our main method, particularly up to July 2021 where the estimates are close to the 95th percentile estimate for the main method. This is in spite of the fact that the total estimated number of deaths under this method is somewhat lower than under the excess mortality method.
-
-```{r deaths-averted-table-vei, echo=FALSE, results='asis', out.height="35%"}
-differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
-differences_tables$veis %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to average vaccine efficacy against infection (VEI)") %>%
-  pack_rows("UK to April 2021", 1, 6) %>%
-  pack_rows("UK to July 2021", 7, 12) %>%
-  pack_rows("UK to Jan 2022", 13, 18) %>%
-  pack_rows("US to April 2021", 19, 24) %>%
-  pack_rows("US to July 2021", 25, 30) %>%
-  pack_rows("US to Jan 2022", 31, 36) %>%
-  kable_styling(font_size = 7)
-```
-```{r deaths-averted-table-durV, echo=FALSE, results='asis', out.height="35%"}
-differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
-differences_tables$dur_Vs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of vaccine acquired immunity (DVI)") %>%
-  pack_rows("UK to April 2021", 1, 6) %>%
-  pack_rows("UK to July 2021", 7, 12) %>%
-  pack_rows("UK to Jan 2022", 13, 18) %>%
-  pack_rows("US to April 2021", 19, 24) %>%
-  pack_rows("US to July 2021", 25, 30) %>%
-  pack_rows("US to Jan 2022", 31, 36) %>%
-  kable_styling(font_size = 7)
-```
-```{r deaths-averted-table-durR, echo=FALSE, results='asis', out.height="35%"}
-differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
-differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of naturally acquired immunity (DNI)") %>%
-  pack_rows("UK to April 2021", 1, 6) %>%
-  pack_rows("UK to July 2021", 7, 12) %>%
-  pack_rows("UK to Jan 2022", 13, 18) %>%
-  pack_rows("US to April 2021", 19, 24) %>%
-  pack_rows("US to July 2021", 25, 30) %>%
-  pack_rows("US to Jan 2022", 31, 36) %>%
-  kable_styling(font_size = 7)
-
-```
-```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine efficacy. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
-deaths_averted_plot_veis <- deaths_averted_plot('veis', percentiles, last_dates_to_display)
-plot(deaths_averted_plot_veis)
-```
-```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine duration. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
-deaths_averted_plot_dur_Vs <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to_display)
-plot(deaths_averted_plot_dur_Vs)
-```
-```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to natural immunity duration. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
-deaths_averted_plot_dur_Rs <- deaths_averted_plot('dur_Rs', percentiles, last_dates_to_display)
-plot(deaths_averted_plot_dur_Rs)
-```
-```{r vaccinated-plot-vei, fig.align="center", fig.cap=c("Effective vaccinated, sensitivity to vaccine duration"), echo=FALSE, out.height="35%"}
-effective_vaccinated_plot_dur_Vs <- vaccinated_plot('dur_Vs', percentiles, last_dates_to_display[3])
-```
-
-```{r prod-assumptions, include=FALSE, fig.align="center", fig.cap=c("Vaccine production assumptions"), echo=FALSE, out.height="40%"}
-detail_prod = readRDS("data/detail_production.Rds")
-pfizer_prod = readRDS("data/pfizer_estimated_production.Rds")
-moderna_prod = readRDS("data/moderna_estimated_production.Rds")
-
-plot1 = ggplot() +
-  geom_line(data = detail_prod,
-            aes(x = date, y = cumulative_available_vaccines)) +
-  xlab("Date") +
-  ylab("Cumulative vaccines available") +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
-
-plot2 = ggplot() +
-  geom_line(data = detail_prod,
-            aes(x = date, y = daily_vaccines)) +
-  xlab("Date") +
-  ylab("Daily vaccines produced") +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
-
-plot3 = ggplot() +
-  geom_line(data = moderna_prod,
-            aes(x = date, y = daily_production)) +
-  xlab("Date") +
-  ylab("Daily vaccines produced\nModerna") +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
-
-plot4 = ggplot() +
-  geom_line(data = pfizer_prod,
-            aes(x = date, y = daily_production)) +
-  xlab("Date") +
-  ylab("Daily vaccines produced\nPfizer") +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
-
-combined_plot =
-  ggarrange(plot3,
-            plot4,
-            plot2,
-            plot1,
-            nrow = 2,
-            ncol = 2)
-plot(combined_plot)
-```
-
 
 # Supplementary Figures and Tables
 
@@ -777,5 +645,124 @@ dt_excess %>%
   pack_rows("United States to Jan 2022", 16, 18) %>%
   kable_styling(font_size = 7)
 
+```
+
+
+\newpage
+
+# Sensitivity To Model Parameters
+
+We explored various alternative model configurations in order to assess the sensitivity of our conclusion to modelling assumptions. Compared to a hypothetical ideal model that yields correct counterfactual assessments, the model we employ is likely to differ in a number of ways:
+
+- It may differ structurally. We might anticipate some structural differences - for example, overdispersion in the distribution of contact rates is not captured by our model, but overdispersion in this distribution was typically found to be high [@endoEstimatingOverdispersionCOVID192020]. However, there may be other structural differences that we do not anticipate
+- The assumed distributions of input parameters may differ in our model and in the hypothetical ideal
+
+Both of these differences mean that the fitted values of $R_t$ are also likely to differ between our model and the hypothetical ideal, and hence they may yield substantially different assessments of counterfactual scenarios. If it turns out that counterfactual assessments are very sensitive to input parameter values, then we might conclude that our estimates are likely to differ substantially from the "true" counterfactual. Because of the prospect of structural differences, this is true even if we have done a very good job of estimating parameters. If our results are robust to variation of parameters within a reasonable range, then if we believe that our model is capable of yielding a good approximation to the ideal for some "reasonable" parameter choices, we should also think our counterfactual assessments are a good approximation to ideal counterfactual assessments.
+
+We assess the impact of three different parameter estimates on our overall results. To do this, we examine the average conclusion from the model runs featuring the top and bottom deciles of each of the following parameters:
+
+- The average infection-blocking efficacy of one and two doses of the vaccine
+- The average duration for protection due to one and two doses of the vaccine
+- The average duration of protection due to natural immunity
+
+In both countries, the estimates of deaths averted showed little sensitivity to the estimated duration of natural immunity (Table \@ref(tab:deaths-averted-table-durR). The estimates of deaths averted in the UK was *also* relatively insensitive to the estimated vaccine efficacy, though the estimate in the US was more sensitive to this value (it is worth noting that in the case of the US the model explored captured a wider range of variation in vaccine efficacy) - see Table \@ref(tab:deaths-averted-table-vei). Note that for long-run estimates of deaths averted in the US (up to Jan 2022), higher estimates of vaccine efficacy were associated with much greater uncertainty over the number of deaths averted. This may be due to the fact that, given a more effective vaccine, waning immunity will have a larger impact on the end results.
+
+The estimate of long-run deaths averted in the US was extremely sensitive to the estimated duration of vaccine derived immunity, with a difference of 14 days in this parameter estimate yielding long-run estimates of deaths averted that ranged from 32,255 to *negative* 11,456 (that is, 11,456 extra deaths) for a 30-day advance in the vaccination schedule. Notably, short estimates of vaccine duration were also associated with extreme decreases in the uncertainty over the number of deaths averted. Note that the short run estimates of deaths averted (up to July 2021) were robustly positive, but were also substantially more uncertain for longer estimates of the duration of vaccine protection.
+
+Our model is already very uncertain about the effect of earlier vaccinations on the second infection wave in the US. However, the high sensitivity of this figure to the estimated duration of vaccine-derived protection offers an extra reason to be unsure that the model is providing us with an accurate assessment of the counterfactual impacts on this timescale.
+
+We also run an identical analysis to our main analysis, except with a model fit to reported numbers of COVID-19 deaths instead of COVID-19 deaths estimated from excess mortality. The results are reported in Table \@ref(tab:reported-deaths-averted-table) and Figure \@ref(fig:reported-deaths-averted-plot). This method yields larger estimates of deaths averted than our main method, particularly up to July 2021 where the estimates are close to the 95th percentile estimate for the main method. This is in spite of the fact that the total estimated number of deaths under this method is somewhat lower than under the excess mortality method.
+
+```{r deaths-averted-table-vei, echo=FALSE, results='asis', out.height="35%"}
+differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
+differences_tables$veis %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to average vaccine efficacy against infection (VEI)") %>%
+  pack_rows("UK to April 2021", 1, 6) %>%
+  pack_rows("UK to July 2021", 7, 12) %>%
+  pack_rows("UK to Jan 2022", 13, 18) %>%
+  pack_rows("US to April 2021", 19, 24) %>%
+  pack_rows("US to July 2021", 25, 30) %>%
+  pack_rows("US to Jan 2022", 31, 36) %>%
+  kable_styling(font_size = 7)
+```
+```{r deaths-averted-table-durV, echo=FALSE, results='asis', out.height="35%"}
+differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
+differences_tables$dur_Vs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of vaccine acquired immunity (DVI)") %>%
+  pack_rows("UK to April 2021", 1, 6) %>%
+  pack_rows("UK to July 2021", 7, 12) %>%
+  pack_rows("UK to Jan 2022", 13, 18) %>%
+  pack_rows("US to April 2021", 19, 24) %>%
+  pack_rows("US to July 2021", 25, 30) %>%
+  pack_rows("US to Jan 2022", 31, 36) %>%
+  kable_styling(font_size = 7)
+```
+```{r deaths-averted-table-durR, echo=FALSE, results='asis', out.height="35%"}
+differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
+differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of naturally acquired immunity (DNI)") %>%
+  pack_rows("UK to April 2021", 1, 6) %>%
+  pack_rows("UK to July 2021", 7, 12) %>%
+  pack_rows("UK to Jan 2022", 13, 18) %>%
+  pack_rows("US to April 2021", 19, 24) %>%
+  pack_rows("US to July 2021", 25, 30) %>%
+  pack_rows("US to Jan 2022", 31, 36) %>%
+  kable_styling(font_size = 7)
+
+```
+```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine efficacy. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
+deaths_averted_plot_veis <- deaths_averted_plot('veis', percentiles, last_dates_to_display)
+plot(deaths_averted_plot_veis)
+```
+```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine duration. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
+deaths_averted_plot_dur_Vs <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to_display)
+plot(deaths_averted_plot_dur_Vs)
+```
+```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to natural immunity duration. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
+deaths_averted_plot_dur_Rs <- deaths_averted_plot('dur_Rs', percentiles, last_dates_to_display)
+plot(deaths_averted_plot_dur_Rs)
+```
+```{r vaccinated-plot-vei, fig.align="center", fig.cap=c("Effective vaccinated, sensitivity to vaccine duration"), echo=FALSE, out.height="35%"}
+effective_vaccinated_plot_dur_Vs <- vaccinated_plot('dur_Vs', percentiles, last_dates_to_display[3])
+```
+
+```{r prod-assumptions, include=FALSE, fig.align="center", fig.cap=c("Vaccine production assumptions"), echo=FALSE, out.height="40%"}
+detail_prod = readRDS("data/detail_production.Rds")
+pfizer_prod = readRDS("data/pfizer_estimated_production.Rds")
+moderna_prod = readRDS("data/moderna_estimated_production.Rds")
+
+plot1 = ggplot() +
+  geom_line(data = detail_prod,
+            aes(x = date, y = cumulative_available_vaccines)) +
+  xlab("Date") +
+  ylab("Cumulative vaccines available") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot2 = ggplot() +
+  geom_line(data = detail_prod,
+            aes(x = date, y = daily_vaccines)) +
+  xlab("Date") +
+  ylab("Daily vaccines produced") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot3 = ggplot() +
+  geom_line(data = moderna_prod,
+            aes(x = date, y = daily_production)) +
+  xlab("Date") +
+  ylab("Daily vaccines produced\nModerna") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot4 = ggplot() +
+  geom_line(data = pfizer_prod,
+            aes(x = date, y = daily_production)) +
+  xlab("Date") +
+  ylab("Daily vaccines produced\nPfizer") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+combined_plot =
+  ggarrange(plot3,
+            plot4,
+            plot2,
+            plot1,
+            nrow = 2,
+            ncol = 2)
+plot(combined_plot)
 ```
 
