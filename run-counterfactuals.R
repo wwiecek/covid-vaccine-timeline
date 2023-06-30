@@ -77,4 +77,9 @@ ord_runs <- lapply(
 )
 
 preprint <- orderly::orderly_run("preprint", echo = FALSE)
-orderly::orderly_commit(preprint)
+preprint_a <- orderly::orderly_commit(preprint)
+
+# If you want to update the draft in the main folder of the project
+file.copy(from = paste0(preprint_a, "/_book/_main.pdf"),
+          to = "Vaccines at Velocity.pdf",
+          overwrite = TRUE)
