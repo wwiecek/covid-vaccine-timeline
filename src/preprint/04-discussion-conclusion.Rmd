@@ -19,7 +19,7 @@ success_probability = 0.33
 
 expected_lives_saved = success_probability*(0.06*saved30 + 0.03*saved60 + 0.01*saved90)
 
-cost_per_life <- 1e06 / expected_lives_saved
+cost_per_life <- 1e08 / expected_lives_saved
 ```
 
 # Discussion
