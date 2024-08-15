@@ -1,0 +1,1200 @@
+--- 
+title: "Supporting Information For Vaccines at Velocity: Evaluating Potential Lives Saved by Earlier Vaccination in the COVID-19 Pandemic"
+output:
+  bookdown::pdf_document2:
+    toc: false
+    citation_package: natbib
+    extra_dependencies: ["float"]
+    keep_tex: true
+bibliography: report.bib
+biblio-style: plainnat
+header-includes:
+ - \usepackage[authoryear,round]{natbib}
+  \usepackage{authblk} 
+  \newcommand{\beginsupplement}{
+  \setcounter{table}{0}  
+  \renewcommand{\thetable}{S\arabic{table}} 
+  \setcounter{figure}{0} 
+  \renewcommand{\thefigure}{S\arabic{figure}}}
+link-citations: yes
+github-repo: "wwiecek/covid-vaccine-timeline"
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
+
+fontsize = 12
+
+colour_direct <- "#98df8a"
+colour_total <- "#17becf"
+colour_baseline <- "black"
+colour_counterfactual <- "#d62728"
+colour_10 <- "#0485d1"
+colour_90 <- "#fac205"
+
+
+theme = theme_bw() +
+  theme(text = element_text(family = "serif", size = fontsize),
+        legend.position = 'bottom')
+theme_set(theme)
+```
+
+```{r, include=FALSE}
+primary_last_date = as.Date("2021-07-01")
+last_dates_to_display <- c(as.Date("2021-04-01"), as.Date("2021-07-01"), as.Date("2022-01-01"))
+
+data_source <- c('e', 'r')
+
+parameter_variants <- c('veis', 'dur_Vs', 'dur_Rs')
+
+percentiles <- c(10, 90)
+
+# source: https://data.worldbank.org/indicator/SP.POP.TOTL
+population <- data.frame(
+  iso3c = c("GBR", "USA"),
+  pop10k = c(67081000, 331501080) / 10000
+)
+
+cfacts_to_display <- c("30_days_sooner",
+                         "60_days_sooner",
+                         "90_days_sooner")
+labels_to_display <- c("30 days sooner",
+                         "60 days sooner",
+                         "90 days sooner")
+
+vaccination_start_dates = data.frame(
+  iso3c = c(rep('USA',5), rep('GBR',5)),
+  counterfactual = c('no_vaccines', 'owid_raw', '30_days_sooner', '60_days_sooner', '90_days_sooner'),
+  vacc_start_date = as.Date(c("2020-12-14", "2020-12-14", "2020-11-14", "2020-10-15", "2020-09-15",
+                         "2021-01-11", "2021-01-11", "2020-12-12", "2020-11-12", "2020-10-13"))
+)
+
+
+```
+
+
+```{r load-functions, echo=FALSE}
+
+parameter_names <- list(
+  veis = "VEI",
+  dur_Vs = "DVI",
+  dur_Rs = "DNI"
+  )
+
+parameter_precision <- list(
+  veis = 2,
+  dur_Vs = 0,
+  dur_Rs = 0
+  )
+
+
+cfacts_to_display <- c("30_days_sooner",
+                     "60_days_sooner",
+                     "90_days_sooner")
+labels_to_display <- c("30 days sooner",
+                     "60 days sooner",
+                     "90 days sooner")
+
+join_counterfactual_tables <- function(sensitivities, quantiles, dates) {
+  counterfactuals <- lapply(sensitivities, function(sen) {
+    lapply(quantiles, function(quant) {
+        cf_table <- readRDS(paste0("data/deaths_averted_", sen, "_", quant, "_detail.Rds")) %>%
+          left_join(
+            readRDS(paste0("data/reported_deaths_averted_", sen, "_", quant, "_detail.Rds")),
+            by = c("iso3c", "date", "counterfactual"),
+            suffix = c("", "_reported")) %>%
+          mutate( sen = sen ) %>%
+          mutate( quant = quant ) %>% 
+          left_join(vaccination_start_dates, by = c('iso3c', 'counterfactual')) %>%
+          mutate(
+            baseline_deaths_since_vacc = ifelse(date >= vacc_start_date,
+                                                baseline_deaths_avg, 0)
+          ) %>%
+          ungroup() %>%
+          group_by(iso3c, counterfactual) %>%
+          dplyr::mutate(
+            baseline_cumulative_deaths_since_vacc = cumsum(baseline_deaths_since_vacc)
+          ) %>%
+          mutate(
+            baseline_deaths_display = format(
+              round(baseline_cumulative_deaths_since_vacc, digits = 0),
+                                             big.mark = ",")
+          ) %>% 
+          ungroup() %>%
+          filter(date %in% dates)
+      })
+  })
+  names(counterfactuals) <- sensitivities
+  counterfactuals <- lapply(counterfactuals, function(sen) {
+       do.call(rbind, sen)
+      })
+  counterfactuals
+}
+
+join_counterfactual_tables_horizontal <- function(sensitivity, quantiles) {
+
+
+  counterfactuals <- lapply(quantiles, function(quant) {
+      cf_table <- readRDS(paste0("data/deaths_averted_", sensitivity, "_", quant, "_detail.Rds")) %>%
+        left_join(population, by = "iso3c") %>%
+        mutate(sen = sensitivity,
+               quant = quant,
+               averted_deaths_perpop_avg = averted_deaths_avg / pop10k,
+               averted_deaths_perpop_025 = averted_deaths_025 / pop10k,
+               averted_deaths_perpop_975 = averted_deaths_975 / pop10k)
+
+      return(cf_table)
+    })
+  counterfactuals <- counterfactuals %>% reduce(
+    left_join, 
+    by = c("iso3c", "date", "counterfactual", "country"),
+    suffix = c('_10', '_90')
+   )
+}
+
+load_deaths_averted_table <-
+  function(table_path = "data/deaths_averted_detail.Rds",
+           excess = TRUE) {
+    
+    
+    if (excess) {
+      deaths_averted_reported <-
+        readRDS("data/reported_deaths_averted_detail.Rds")
+      deaths_averted_summary <- readRDS(table_path) %>%
+        left_join(
+          deaths_averted_reported,
+          by = c('iso3c', 'date', 'counterfactual'),
+          suffix = c('', '_reported')
+        ) 
+        
+    } else {
+      deaths_averted_summary <-
+        readRDS("data/reported_deaths_averted_detail.Rds") %>%
+        mutate(baseline_cumulative_deaths_avg_reported = baseline_cumulative_deaths_avg) 
+    }
+    
+    
+    deaths_averted_summary = deaths_averted_summary %>%
+      left_join(vaccination_start_dates, by = c('iso3c', 'counterfactual')) %>%
+      mutate(
+        baseline_deaths_since_vacc = ifelse(date >= vacc_start_date,
+                                            baseline_deaths_avg, 0)
+      ) %>%
+      ungroup() %>%
+      group_by(iso3c, counterfactual) %>%
+      dplyr::mutate(
+        baseline_cumulative_deaths_since_vacc = cumsum(baseline_deaths_since_vacc)
+      ) %>%
+      mutate(
+            baseline_deaths_display = format(
+              round(baseline_cumulative_deaths_since_vacc, digits = 0),
+                                             big.mark = ",")
+          ) %>% 
+      ungroup() %>%
+      filter(date %in% last_dates_to_display)
+    
+    return(deaths_averted_summary)
+  }
+
+format_deaths_table <- function(deaths_averted_detail){
+    with_pop <- deaths_averted_detail %>%
+      left_join(population, by = "iso3c") %>%
+      mutate(cumulative_averted_deaths_perpop_avg = cumulative_averted_deaths_avg / pop10k,
+             cumulative_averted_deaths_perpop_025 = cumulative_averted_deaths_025 / pop10k,
+             cumulative_averted_deaths_perpop_975 = cumulative_averted_deaths_975 / pop10k)
+
+    differences_table <- with_pop %>%
+      filter(counterfactual %in% cfacts_to_display) %>%
+      mutate(
+        delta_deaths = paste0(
+          format(
+            round(-1*cumulative_averted_deaths_avg, 0),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          " [",
+          format(
+            round(-1*cumulative_averted_deaths_975, 0),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "; ",
+          format(
+            round(-1*cumulative_averted_deaths_025, 0),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "]"
+        ),
+        delta_deaths_perpop = paste0(
+          format(
+            round(-1*cumulative_averted_deaths_perpop_avg, 2),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          " [",
+          format(
+            round(-1*cumulative_averted_deaths_perpop_975, 2),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "; ",
+          format(
+            round(-1*cumulative_averted_deaths_perpop_025, 2),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "]"
+        ),
+        counterfactual_label = mapvalues(counterfactual,
+                                         from = cfacts_to_display,
+                                         to = labels_to_display),
+        iso3c = as.factor(iso3c),
+        delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_since_vacc,2),
+        baseline_cumulative_deaths_since_vacc = round(baseline_cumulative_deaths_since_vacc, 0)
+      ) %>%
+      mutate(counterfactual_label = factor(counterfactual_label,
+                                           labels_to_display)) %>%
+      arrange(iso3c, date, counterfactual_label) %>%
+      select( 
+          counterfactual_label,
+          delta_deaths,
+          delta_deaths_perpop,
+          baseline_deaths_display,
+          delta_deaths_perreported ) %>%
+      plyr::rename(
+        c(
+           "counterfactual_label" = "Counterfactual scenario",
+           "delta_deaths" = "Deaths averted",
+           "delta_deaths_perpop" = "Per 10,000 people",
+           "baseline_deaths_display" = "Baseline deaths",
+           "delta_deaths_perreported" = "Averted/baseline"
+        )
+      )
+    }
+
+format_deaths_table_sensitivity <- function(deaths_averted_detail){
+    with_pop <- deaths_averted_detail %>%
+      left_join(population, by = "iso3c") %>%
+      mutate(cumulative_averted_deaths_perpop_avg = cumulative_averted_deaths_avg / pop10k,
+             cumulative_averted_deaths_perpop_025 = cumulative_averted_deaths_025 / pop10k,
+             cumulative_averted_deaths_perpop_975 = cumulative_averted_deaths_975 / pop10k)
+
+    differences_table <- with_pop %>%
+      filter(counterfactual %in% cfacts_to_display) %>%
+      mutate(
+        delta_deaths = paste0(
+          format(
+            round(-1*cumulative_averted_deaths_avg, 0),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          " [",
+          format(
+            round(-1*cumulative_averted_deaths_975, 0),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "; ",
+          format(
+            round(-1*cumulative_averted_deaths_025, 0),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "]"
+        ),
+        delta_deaths_perpop = paste0(
+          format(
+            round(-1*cumulative_averted_deaths_perpop_avg, 2),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          " [",
+          format(
+            round(-1*cumulative_averted_deaths_perpop_975, 2),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "; ",
+          format(
+            round(-1*cumulative_averted_deaths_perpop_025, 2),
+            big.mark = ",",
+            trim = TRUE
+          ),
+          "]"
+        ),
+        counterfactual_label = mapvalues(counterfactual,
+                                         from = cfacts_to_display,
+                                         to = labels_to_display),
+        iso3c = as.factor(iso3c),
+        sensitivity_value_avg = round(sensitivity_value_avg, as.numeric(parameter_precision[sen])),
+        delta_deaths_perreported = round(-1*cumulative_averted_deaths_avg/baseline_cumulative_deaths_since_vacc,2),
+        baseline_cumulative_deaths_since_vacc = round(baseline_cumulative_deaths_since_vacc, 0)
+      ) %>%
+      mutate(counterfactual_label = factor(counterfactual_label,
+                                           labels_to_display)) %>%
+      arrange(iso3c, date, counterfactual_label) %>%
+      select( 
+          counterfactual_label,
+          sensitivity_value_avg,
+          delta_deaths,
+          delta_deaths_perpop,
+          baseline_deaths_display,
+          delta_deaths_perreported ) %>%
+      plyr::rename(
+        c(
+           "counterfactual_label" = "Counterfactual scenario",
+           "delta_deaths" = "Deaths averted",
+           "sensitivity_value_avg" = paste0("Average ", parameter_names[unique(deaths_averted_detail$sen)]),
+           "delta_deaths_perpop" = "Per 10,000 people",
+           "baseline_deaths_display" = "Baseline deaths",
+           "delta_deaths_perreported" = "Averted/baseline"
+        )
+      )
+    }
+
+deaths_averted_table_multiple <- function(deaths_averted_list, sensitivity) {
+
+  differences_tables <- lapply(deaths_averted_list, format_deaths_table_sensitivity)   
+  }
+
+deaths_averted_table_single <- function(deaths_averted_data) {
+
+  differences_table <- format_deaths_table(deaths_averted_data)  
+  }
+
+deaths_averted_plot <- function(sen, quantiles, dates)  {
+
+  deaths_averted_detail <- join_counterfactual_tables_horizontal(sen, quantiles)
+  for (last_date_to_display in dates) {
+    zoomed_deaths_averted <- deaths_averted_detail %>%
+      filter(date > as.Date("2020-09-01") & date <= last_date_to_display) %>%
+      filter(counterfactual %in% cfacts_to_display) %>%
+      mutate(counterfactual_label = mapvalues(
+        counterfactual,
+        from = cfacts_to_display,
+        to = labels_to_display
+      )) %>%
+      mutate(counterfactual_label = factor(counterfactual_label,
+                                           labels_to_display))
+
+    single_timeseries_plot <- ggplot(zoomed_deaths_averted, aes(x = date)) +
+      geom_line(aes(y = -1*averted_deaths_perpop_avg_10, colour = "10th percentile")) +
+      geom_line(aes(y = -1*averted_deaths_perpop_avg_90, colour = "90th percentile")) +
+      geom_ribbon(
+        aes(ymin = -1*averted_deaths_perpop_025_10, ymax = -1*averted_deaths_perpop_975_10),
+        alpha = 0.5,
+        fill = colour_10
+      ) +
+      geom_ribbon(
+        aes(ymin = -1*averted_deaths_perpop_025_90, ymax = -1*averted_deaths_perpop_975_90),
+        alpha = 0.4,
+        fill = colour_90
+      ) +
+      facet_grid(counterfactual_label ~ country,
+                 labeller = labeller(.rows=label_wrap_gen(width = 15))) +
+      scale_colour_manual(
+        labels = c(
+          paste0("10th percentile ", parameter_names[sen], sep=' '),
+          paste0("90th percentile ", parameter_names[sen], sep=' ')),
+        values = c(colour_10, colour_90)
+      ) +
+      labs(x = "Date", y = "Daily deaths averted per 10 000 people", color = "Colour")
+
+
+    return(single_timeseries_plot) 
+  }  
+}
+
+vaccinated_plot <- function(sen, quantiles, dates)  {
+
+  deaths_averted_detail <- join_counterfactual_tables_horizontal(sen, quantiles)
+  for (last_date_to_display in dates) {
+    zoomed_deaths_averted <- deaths_averted_detail %>%
+      filter(date > as.Date("2020-09-01") & date <= last_date_to_display) %>%
+      filter(counterfactual %in% cfacts_to_display) %>%
+      mutate(counterfactual_label = mapvalues(
+        counterfactual,
+        from = cfacts_to_display,
+        to = labels_to_display
+      )) %>%
+      mutate(counterfactual_label = factor(counterfactual_label,
+                                           labels_to_display))
+
+    single_timeseries_plot <- ggplot(zoomed_deaths_averted, aes(x = date)) +
+      geom_line(aes(y = (total_vaccinated_avg_10 - baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_10), colour = "10th percentile")) +
+      geom_line(aes(y = (total_vaccinated_avg_90 - baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_90), colour = "90th percentile")) +
+      geom_ribbon(
+        aes(
+          ymin = (total_vaccinated_025_10-baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_10), 
+          ymax = (total_vaccinated_975_10-baseline_total_vaccinated_avg_10)/max(baseline_total_vaccinated_avg_90)),
+        alpha = 0.5,
+        fill = colour_10
+      ) +
+      geom_ribbon(
+        aes(ymin = (total_vaccinated_025_90-baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_10)
+          , ymax = (total_vaccinated_975_90-baseline_total_vaccinated_avg_90)/max(baseline_total_vaccinated_avg_90)),
+        alpha = 0.4,
+        fill = colour_90
+      ) +
+      facet_grid(counterfactual_label ~ country,
+                 labeller = labeller(.rows=label_wrap_gen(width = 15))) +
+      scale_colour_manual(
+        labels = c(
+          paste0("10th percentile ", parameter_names[sen], sep=' '),
+          paste0("90th percentile ", parameter_names[sen], sep=' ')),
+        values = c(colour_10, colour_90)
+      ) +
+      labs(x = "Date", y = "Normalised difference in effective number of vaccinated", color = "Colour")
+
+
+    plot(single_timeseries_plot) 
+  }  
+}
+
+```
+
+```{r load-death-tables, echo = FALSE}
+dt <- load_deaths_averted_table(excess = FALSE)
+dt_excess <- load_deaths_averted_table(excess = TRUE)
+dt_double <- load_deaths_averted_table(
+      table_path = "data/doubleboost_deaths_averted_detail.Rds")
+dt_d90 <- load_deaths_averted_table(
+      table_path = "data/d90_deaths_averted_detail.Rds")
+dt_d95 <- load_deaths_averted_table(
+      table_path = "data/d95_deaths_averted_detail.Rds")
+```
+
+```{r formatting-reductions, echo = FALSE}
+# Functions for formatting inline numbers when reporting them
+
+# get table that will store the values to be selected:
+get_values_for_text <- function(x){ 
+  x %>% 
+  select(date, iso3c, country, counterfactual, 
+         cumulative_averted_deaths_avg,
+         cumulative_averted_deaths_975, 
+         cumulative_averted_deaths_025)%>%
+  left_join(population, by = "iso3c") %>%
+  mutate(cumulative_averted_deaths_perpop_avg = cumulative_averted_deaths_avg / pop10k,
+         cumulative_averted_deaths_perpop_025 = cumulative_averted_deaths_025 / pop10k,
+         cumulative_averted_deaths_perpop_975 = cumulative_averted_deaths_975 / pop10k) 
+}
+# select value:
+sv <- function(d,c,s,b="avg",o="total", t=dt) {
+  d <- case_when(d == "apr" ~ "2021-04-01",
+                 d == "jul" ~ "2021-07-01",
+                 d == "jan" ~ "2022-01-01")
+  s <- case_when(s == 30 ~ "30_days_sooner",
+                 s == 60 ~ "60_days_sooner",
+                 s == 90 ~ "90_days_sooner",
+                 s == 0 ~ "owid_raw")
+  
+  # Note that lci/uci are "flipped" because we're dealing with negative numbers
+  if(o == "total"){
+  b <- case_when(b == "avg" ~ "cumulative_averted_deaths_avg",
+                 b == "uci" ~ "cumulative_averted_deaths_025",
+                 b == "lci" ~ "cumulative_averted_deaths_975")
+  }else if(o == "per10k"){
+    b <- case_when(b == "avg" ~ "cumulative_averted_deaths_perpop_avg",
+                   b == "uci" ~ "cumulative_averted_deaths_perpop_025",
+                   b == "lci" ~ "cumulative_averted_deaths_perpop_975")
+  }
+  val <- t %>% 
+    get_values_for_text() %>% 
+    filter(date == d) %>% 
+    filter(country == ifelse(c=="uk", "United Kingdom", "United States")) %>% 
+    filter(counterfactual == s)
+  
+  val <- -val[[b]]
+  
+  if(length(val) > 1)
+    stop("Error in pulling values")
+  else(return(val))
+}
+
+# Text formatter:
+text_fmt <- function(x) format(signif(x, 2), big.mark = ",", scientific = FALSE)
+
+# You can now do simple things like:
+# text_fmt(sv("jul", "uk", 30, "avg"))
+
+# Ranges for reductions across two countries
+# main_reductions_vec
+mrv <- c(
+  sv("jul", "uk", 30, "avg", "per10k"),
+  sv("jul", "uk", 90, "avg", "per10k"),
+  sv("jul", "us", 30, "avg", "per10k"),
+  sv("jul", "us", 90, "avg", "per10k")
+)
+crv <- c(
+  sv("jul", "uk", 30, "avg"),
+  sv("jul", "uk", 90, "avg"),
+  sv("jul", "us", 30, "avg"),
+  sv("jul", "us", 90, "avg")
+)
+# total reductions vector
+trv <- c(
+  sv("jul", "uk", 30, "avg") + sv("jul", "us", 30, "avg"),
+  sv("jul", "uk", 90, "avg") + sv("jul", "us", 90, "avg")
+)
+```
+
+
+
+```{r baseline-vacc-death, fig.align="center", fig.cap=c("Data on daily vaccinations and deaths in the UK and the US in 2021"), echo=FALSE, out.height = "40%"}
+
+baseline_vaccination = readRDS("data/owid_raw.Rds") %>% 
+  mutate(daily_vaccination = first_doses + second_doses + third_doses) %>% 
+  mutate(daily_vaccination = rollmean(daily_vaccination, k = 7, fill = NA)) %>% 
+  select(iso3c, date, daily_vaccination)
+
+
+model_fits_reported_GBR = readRDS("data/model_fits_reported_GBR.Rds")
+deaths_UK = model_fits_reported_GBR$inputs$data
+model_fits_reported_USA = readRDS("data/model_fits_reported_USA.Rds")
+deaths_USA = model_fits_reported_USA$inputs$data
+
+first_date = as.Date("2020-12-08")
+last_date = as.Date("2022-01-01")
+population <- data.frame(
+  iso3c = c("GBR", "USA"),
+  pop10k = c(67081000, 331501080) / 10000
+)
+
+deaths_reported = bind_rows(deaths_UK, deaths_USA) %>% 
+  mutate(iso3c = iso, date = date_start) %>% 
+  group_by(iso3c) %>% 
+  mutate(deaths_smoothed = rollmean(deaths, k = 7, fill = NA))
+
+data_for_plot = deaths_reported %>% 
+  left_join(baseline_vaccination, by = c("iso3c", "date")) %>% 
+  left_join(population, by = "iso3c") %>% 
+  filter(date <= last_date & date >= first_date & !is.na(deaths_smoothed) ) %>% 
+  mutate(
+    deaths = deaths_smoothed / pop10k,
+    vaccinations = ifelse(is.na(daily_vaccination), 0, daily_vaccination / pop10k)
+  ) %>% 
+  pivot_longer(cols = c(deaths, vaccinations),
+               names_to = "type") %>% 
+  mutate(type = factor(type, c("vaccinations", "deaths")))
+```
+
+
+```{r vaccinations-table, caption=c("Total vaccinations up to 1 January, 1 April and 1 July 2021, under baseline (observed) and counterfactual scenarios"), echo=FALSE}
+baseline = readRDS("data/owid_raw.Rds")
+sooner_30 = readRDS("data/30_days_sooner.Rds")
+sooner_60 = readRDS("data/60_days_sooner.Rds")
+sooner_90 = readRDS("data/90_days_sooner.Rds")
+
+counterfactuals = bind_rows(baseline, sooner_30, sooner_60, sooner_90) %>%
+  filter(date <= primary_last_date)
+
+vaccination_values <- counterfactuals %>%
+  filter(date %in% c(
+    as.Date('2021-01-01'),
+    as.Date('2021-04-01'),
+    as.Date('2021-07-01')
+  )) %>%
+  select(country, date, total_vacc, shifted_by) %>%
+  mutate(
+    # total_vacc = base::format(total_vacc, big.mark = ",", trim = TRUE),
+    shifted_by = mapvalues(
+      shifted_by,
+      from = c("baseline", "30", "60", "90"),
+      to = c(
+        "Baseline",
+        "Vaccines 30 days sooner",
+        "Vaccines 60 days sooner",
+        "Vaccines 90 days sooner"
+      )
+    )
+  ) %>%
+  plyr::rename(
+    c(
+      "shifted_by" = "Counterfactual scenario"
+    )
+  ) %>%
+  pivot_wider(names_from = date,
+              values_from = total_vacc) %>%
+  replace(is.na(.), '0') %>%
+  arrange(country) %>%
+  select(-country)
+
+
+```
+
+
+```{r cumul-vacc-cfacts, fig.align="center", fig.cap=c("Cumulative vaccinations under baseline and counterfactual scenarios"), echo=FALSE, out.height = "40%", warning=FALSE, message=FALSE}
+baseline = readRDS("data/owid_raw.Rds")
+sooner_30 = readRDS("data/30_days_sooner.Rds")
+sooner_60 = readRDS("data/60_days_sooner.Rds")
+sooner_90 = readRDS("data/90_days_sooner.Rds")
+
+counterfactuals = bind_rows(baseline, sooner_30, sooner_60, sooner_90) %>%
+  filter(date <= primary_last_date)
+
+first_date_us = baseline %>% filter(iso3c == "USA") %>% head(1) %>% pull(date)
+first_date_uk = baseline %>% filter(iso3c == "GBR") %>% head(1) %>% pull(date)
+highlight_dates_us = c(first_date_us, first_date_us - 30, first_date_us - 60, first_date_us - 90, as.Date("2021-04-01"), as.Date("2021-07-01"))
+highlight_dates_uk = c(first_date_uk, first_date_uk - 30, first_date_uk - 60, first_date_uk - 90, as.Date("2021-04-01"), as.Date("2021-07-01"))
+
+lines = data.frame(country = c("United Kingdom", "United States"),
+                   dates = c(first_date_uk, first_date_us))
+
+breaks_fun = function(x) {
+  # Only way to distinguish US and UK is that they start at different dates :(
+  if (min(x) < as.integer(as.Date("2020-09-01"))) {
+    return(highlight_dates_uk)
+  } else {
+    return(highlight_dates_us)
+  }
+}
+
+labels_fun = function(b) {
+  format(b, "%b-%d")
+}
+
+```
+
+```{r model-fit-deaths, fig.align="center", fig.cap=c("Comparison of real and modelled (baseline) deaths over time. Shaded areas indicate 95\\% confidence interval."), echo=FALSE, out.height = "40%", warning=FALSE, message=FALSE}
+text_fmt <- function(x) format(signif(x, 2), big.mark = ",", scientific = FALSE)
+deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
+data_for_plot3 = deaths_averted %>% 
+  filter(counterfactual == 'owid_raw') %>% 
+  select(iso3c, date, country, 
+         deaths_avg, 
+         deaths_025,
+         deaths_975
+  ) %>% 
+  # join by deaths reported from 02-methods
+  left_join(deaths_reported, by = c("iso3c", "date")) %>% 
+  left_join(population, by = "iso3c") %>% 
+  filter(date >= first_date) %>% 
+  mutate(
+    deaths_perpop = deaths_avg / pop10k,
+    deaths_025_perpop = deaths_025 / pop10k,
+    deaths_975_perpop = deaths_975 / pop10k,
+    baseline_deaths_perpop = deaths_smoothed / pop10k
+  ) %>% 
+  pivot_longer(cols = c(deaths_perpop, baseline_deaths_perpop),
+               names_to = "type")
+
+```
+
+
+
+```{r deaths-averted-plot, fig.align="center", fig.cap=c("Daily deaths under baseline and counterfactual scenarios. Shaded area indicates 95\\% confidence interval. Cumulative reductions are shown in the Appendix."), echo=FALSE, out.height = "40%"}
+deaths_averted = readRDS("data/reported_deaths_averted_detail.Rds")
+
+zoomed_deaths_averted = deaths_averted %>%
+  filter(date > as.Date("2020-09-01") & date <= primary_last_date) %>%
+  filter(counterfactual %in% cfacts_to_display) %>%
+  mutate(counterfactual_label = mapvalues(
+    counterfactual,
+    from = cfacts_to_display,
+    to = labels_to_display
+  )) %>%
+  mutate(counterfactual_label = factor(counterfactual_label,
+                                       labels_to_display)) %>%
+  left_join(population, by = "iso3c") %>%
+  mutate(
+    deaths_025_perpop = deaths_025 / pop10k,
+    deaths_975_perpop = deaths_975 / pop10k,
+    baseline_deaths_avg_perpop = baseline_deaths_avg / pop10k,
+    deaths_avg_perpop = deaths_avg / pop10k,
+    cumulative_deaths_025_perpop = cumulative_deaths_025 / pop10k,
+    cumulative_deaths_975_perpop = cumulative_deaths_975 / pop10k,
+    baseline_cumulative_deaths_avg_perpop = baseline_cumulative_deaths_avg / pop10k,
+    cumulative_deaths_avg_perpop = cumulative_deaths_avg / pop10k,
+  )
+  
+baseline_color <- "#2C3E50" # dark blue
+counterfactual1_color <- "#E74C3C" # red
+counterfactual2_color <- "#27AE60" # green
+counterfactual3_color <- "#F1C40F" # yellow
+
+```
+
+
+# (APPENDIX) Supplementary material {-}
+
+\beginsupplement
+
+# Manufacturing constraints
+
+If vaccines were approved earlier, production capacity would probably have been a major constraint on the number of doses delivered at the beginning of the mass vaccination campaigns. 
+
+We make three major assumptions:
+
+- As mentioned in the main text, hypothesizing the extent to which production is a binding constraint is complicated by the fact that new manufacturing capacity (or expansion of existing capacity) was put in place in anticipation of regulatory approval. Therefore it is likely that an earlier approval would have led the vaccine makers to expand production faster. In our base case model we make a conservative assumption of no expansion of capacity under earlier approval. 
+- While we model the United States and the United Kingdom using separate epidemiological models, we do not differentiate between countries when it comes to manufacturing capacity, reasoning that if a country was able to approve a vaccine earlier it would jump to the front of the vaccine deliveries queue. 
+- We also ignore AstraZeneca's vaccine (not available in the US in the modelled period) since the doses manufactured by Pfizer and Moderna vaccines are enough to satisfy demand in the UK in the initial phase of vaccinations. However, as a conservative assumption, we still assume that vaccine effectiveness in the UK is a mix of mRNA vaccines and the one manufactured by AstraZeneca.
+
+With these assumptions in place, we hypothesize the daily vaccine production over 2020. We use information about the actual manufacturing timelines and total vaccine production in the modelled period as follows: 
+
+- First, we assume that in 2020 Moderna produced 20 million doses and Pfizer/BioNTech produced 50 million [@NPR2020How, @Pfizer2020Pfizer]. Additionally, we know Moderna was producing 500,000 doses a day at the time their vaccine was authorized and assume Pfizer/BioNTech was producing 1 million doses a day at the time they received authorization [@NPR2020How][^21].
+- We assume a linear scale-up of production from March to July, followed by constant production until two weeks before authorization by the FDA. Specifically, we assume Pfizer/BioNTech started working on scale up from their announced partnership on March 17th and Moderna from March 23rd [@Pfizer2020BioNTech, @Time2020As, @Moderna2020Edited]. The start of mass production in July (for calculations we use July 31st) was assumed based on reports that Pfizer might have been ready to mass produce by then, with Moderna entering a partnership with Catalent in June to do their fill-and-finish processing with an estimated start at the beginning of Q3 [@PfizerNDShot, @Moderna2020Moderna]. 
+- Time of vaccine authorization was December 11th Pfizer/BioNTech, and December 18th for Moderna meaning another scale up in manufacturing started on November 27th for Pfizer and December 4th for Moderna [@FDA2020FDA, @FDA2020Second]. We assume that at that point both companies already knew that they would most likely get authorization and were able to do another linear scale-up to a production level they would maintain until the end of the year. 
+- After the end of 2020 we assume production is unconstrained. This assumption is not important since even with a 90-day shift of vaccination series the production constraint stops binding before the end of 2020. 
+
+
+
+Figure \@ref(fig:prod-cap) shows the hypothetical daily production compared to vaccinations under different acceleration scenarios (status quo or 30 days, 60 days, 90 days faster). In the case of the United Kingdom we find that in all scenarios of earlier vaccination the production constraint does not bind at all, since the amount of manufactured doses is very large compared with their population size. In the case of the United States the production constraints binds, but only in the case when the vaccination is shifted by 90 days. 
+
+[^21]: This is an estimate based on Pfizer producing 2.5 times more than Moderna in 2020 but getting faster approval and running at full speed longer.
+
+
+
+```{r prod-cap, fig.align="center", fig.cap=c("Cumulative vaccine production and distribution in the UK and the US under counterfactual and baseline scenarios. Four lines in red are different acceleration factors, from baseline up to 90 days earlier approval."), echo=FALSE, out.height="40%"}
+production = readRDS("data/counterfactual_production.Rds")
+current_cfact = counterfactuals %>%
+  # filter(country == country_name) %>%
+  mutate(shifted_by = factor(
+    shifted_by,
+    levels = c("baseline", "30", "60", "90"),
+    labels = c(
+      "Baseline",
+      "Vaccines 30 days sooner",
+      "Vaccines 60 days sooner",
+      "Vaccines 90 days sooner"
+    )
+  ))
+# country_prod = production %>% filter(country == country_name)
+
+date_range <- as.Date(c("2020-01-01", "2021-07-01"))
+production_filtered <- production %>% filter(date > min(date_range) & date < max(date_range))
+
+dj10 <- ggplot() +
+  geom_line(data = production_filtered,
+            aes(
+              x = as.Date(date),
+              y = cumulative_available_vaccines,
+              color = "Production"
+            )) +
+  geom_line(data = current_cfact,
+            aes(
+              x = as.Date(date),
+              y = total_vacc,
+              group = shifted_by,
+              color = "Vaccination"
+            )) +
+  labs(x = "Date",
+       y = "Cumulative production / vaccinations",
+       color = "Colour") +
+  # ggtitle(country_name) +
+  scale_colour_manual(
+    labels = c('Production', 'Vaccination'),
+    values = c(colour_baseline, colour_counterfactual)
+  ) +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6)) +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "6 months", limits = date_range) +
+  facet_wrap(~ country, scales = "free")
+
+plot(dj10)
+```
+
+
+# Vaccine hesitancy
+
+A useful framework for vaccine hesitancy is provided by the “5C’s” model, which considers the following drivers: confidence in vaccine safety, complacency, convenience, risk calculation, and sense of collective responsibility [@Machingaidze2021Understanding]. The factor most clearly affected by a hypothetical earlier approval is confidence in safety (and efficacy). Therefore we used surveys evaluating intention to be vaccinated and confidence in health authorities to approximate the effect of vaccine hesitancy within our time-frame of interest. 
+
+In the US and UK, the rate of respondents who intended to be vaccinated when vaccines were approved was 41% and 73% respectively. These proportions at 90 days prior to approval were 39% in the US and 71% in the UK, with the lowest rates of intention to be vaccinated at 36% in October 2020 in the US and 61% in November 2020 in the UK [@YouGov2023COVID, @Freeman2022COVID]. 
+
+In a separate series of surveys in the US, 85% of respondents had "a lot" or "a fair" amount of confidence in health authorities at time of vaccine approval, compared to 89% in April 2020 [@Kennedy2022Americans]. In the UK, surveys asking respondents their confidence in the country’s health system indicated 73% were confident at time of approval and 77% were confident 90 days prior [@YouGov2023Confidence]. By these estimations, vaccine hesitancy and confidence in health authorities hovered around similar levels during our period of interest. 
+
+@Dzieciolowska2021COVID conducted a study of 2,761 health care workers in Canada in December 2020 to assess vaccine hesitancy, with 19.1% of participants indicating they were not willing to receive the COVID vaccine. Among participants who refused the vaccine, 82% indicated the novelty of the vaccine was very or somewhat important in their decision and 60% indicated that they did not have enough time to make a decision. An approval of vaccines using accelerated timelines could obviously negatively impact hesitancy rooted in vaccine novelty and feelings of needing more time to decide. However, the main hypothetical we discuss in our paper is accelerating efficacy testing and starting safety testing early. This also suggests that while the impact may be non-negligible, it may not be large.
+
+@Joshi2021Predictors found that the global average vaccine acceptance rate was 86% in March 2020, dropped to 54% in July 2020, and increased to 72% in September 2020.  By these estimates, if vaccines were approved during summer of 2020, hesitancy may have appreciably impacted uptake. However, it appears that vaccine hesitancy would likely not have impacted uptake if vaccines had been available up to 90 days earlier in the UK and US, with surveys evaluating intention to be vaccinated and trust in health authorities varying by no more than a few percentage points during this time. It is possible these trends would have been impacted by a concern among the general public for vaccines approved quickly, but these effects are difficult to quantify.
+
+# Epidemiological methods
+
+As discussed in the main text, to model alternative vaccination timelines, we took an existing compartmental model that simulated the COVID-19 pandemic through 2020 and 2021 including the impact of vaccinations (which throughout the paper we refer to as the baseline or base case model) and re-ran the simulation freezing all parameters except the vaccination timelines (the counterfactual models). Here we provide more details on the structure and assumptions of the epidemiological model, as well as its parameters.
+
+The baseline pandemic model builds on earlier work [@watsonoliverj.COVID19LMICReports2022]. The model is implemented in open source R packages Squire and SirCOVID [@hoganWithincountryAgebasedPrioritisation2021, @walkerImpactCOVID19Strategies2020,@baguelinSircovidSIRModel2022]. An older version of this model is described in detail in the supplementary material of @walkerImpactCOVID19Strategies2020, and details of many parameters (again, for an older version of the model) can be found in the supplementary material of @watsonGlobalImpactFirst2022. Additional (incomplete) information about the parametrization of the version of the model we used can be found at [COVID-19 LMIC Reports documentation](https://web.archive.org/web/20221230232942/https://mrc-ide.github.io/global-lmic-reports/parameters.html) [@watsonoliverj.COVID19LMICReports2022] and (more up-to-date but less complete) model structure can be found in the [Nimue documentation](https://web.archive.org/web/20221230232915/https://mrc-ide.github.io/nimue/index.html) [@winskillNimue]. Here we will describe the model in broad terms, without providing all of these details, for which the reader can refer to the original publications.
+
+The epidemiological model is an age stratified SEIRD (susceptible-exposed-infectious-recovered-dead) model. In addition to classifying the population by the disease (SEIRD) status, the model also classifies people by vaccination status: they may be unvaccinated, vaccinated with 1 dose, vaccinated with 2 doses, vaccinated with 2 doses with waned protection, vaccinated 3 doses, or vaccinated with 3 doses with waned protection. People are vaccinated according to vaccination dosage data from Our World in Data [@mathieuCoronavirusPandemicCOVID192020] combined with a default model of vaccine prioritization. They progress to "waned" classes according to an assumed rate of waning of vaccine-derived immunity, which is itself time- and dose-number-dependent. The model accounts for separate modes of vaccine action (infection blocking vs disease blocking), variant-dependent efficacy of vaccine and naturally derived immunity and age-dependent vaccination strategies. 
+
+The model features a mix of fixed and random parameters. We run an ensemble of simulations for each country, sampling values for the random parameters at the start of each run from pre-defined distributions. The initial number of cases seeding the pandemic in the country and the time series of reproduction numbers of infections in a fully susceptible population $R_t$ are then fit to the observed course of deaths during the time period associated with the simulation. 
+
+```{r trajectory-sampling-parameters, tidy=FALSE, echo=FALSE, escape=FALSE, caption=c('Pandemic trajectory sampling distributions'), out.height="40%"}
+
+sampling_dists <- data.frame(
+    'Parameter' = c('Vaccine efficacy, $V$', 
+                    'Vaccine immunity duration, $D$', 
+                    'Infection fatality rate with vaccination, $F$', 
+                    'Natural immunity duration, $R$',
+                    'Immune escape (Delta from wild)',
+                    'Immune escape (Omicron from Delta)',
+                    'Immune escape (Omicron subvariant from Omicron)'), 
+    'Distribution' = c(
+      '$V\\sim \\mathrm{Beta}(\\alpha_{e}^P, \\beta_{e}^P), P = \\mathrm{vaccine\\; platform}$', 
+      '$D \\sim \\mathrm{Gamma}(\\alpha_{d}, \\beta_d)$',
+      '$F = \\mathrm{rescale}(X,f_{min}, f_{med}, f_{max}), \\quad X\\sim \\mathrm{Beta}(2,2)$',
+      '$R  \\sim \\mathrm{Gamma}(20, 4/73)$',
+      '$I_1 \\sim \\mathrm{Beta}(1.014, 2)$', 
+      '$I_2 \\sim \\mathrm{Beta}(2.54, 2)$',
+      '$I_3 \\sim \\mathrm{Beta}(1.014, 2)$'
+      )
+    )
+
+sampling_dists %>% kbl(
+  booktabs = TRUE,
+  linesep = "",
+  caption = 'Distributions from which parameters are sampled. The parameters $\\alpha_e^P, \\beta_e^P$ are shape parameters for vaccine platform $P$ with associated efficacy $e$ (see text for additional details). The parameters $\\alpha_d, \\beta_d$ are shape and rate parameters for distribution of vaccine durations, determined by fitting an antibody decay curve to vaccine efficacies. $\\mathrm{rescale}(\\cdot, f_{min}, f_{med}, f_{max})$ is a function that maps $0$ to $f_{min}$, $0.5$ to $f_{med}$ and $1$ to $f_{max}$, linearly interpolating between each. $f_{min}, f_{med}, f_{max}$ are respectively the minimum, median, and maximum estimates of age-adjusted infection fatality. ',
+  centering = TRUE,
+  escape = FALSE
+)
+```
+
+The distributions of random parameters is given in Table \@ref(tab:trajectory-sampling-parameters). Parameters are sampled from each distribution independently, except for the duration of vaccine-derived immunity, which is dependent on vaccine efficacy. 100 sets of parameters are sampled, and epidemic trajectories simulated for each. 95% intervals in our results refer to percentiles among the set of 100 sampled trajectories, so a 95% interval for deaths averted is the pair of numbers given by the 2.5th and the 97.5th percentile of deaths averted among all sampled trajectories. Note that the distributions given here are not exact representations of the models sampling distributions, which involve additional truncation steps.
+
+**Age-specific parameters for transmission and disease progression**. Disease progression risks, mortality risks, vaccination patterns and social mixing (based on POLYMOD surveys, unmodified from the original model and same in the UK and the US) are all heterogeneous with age. Two kinds of infection are modelled, "severe" and "non-severe", each with different, age-dependent probabilities of progressing to recovery or death. These parameters are the same as in [@watsonoliverj.COVID19LMICReports2022]. The model also samples probabilities of hospitalization and mechanical ventilation for each trajectory, but these play no role in our analysis not already captured by the infection fatality rate, and so we haven't reported on the relevant parameters here. 
+
+**Duration of natural immunity**. Individuals who have recovered are assumed to be fully protected for an exponentially random duration. The mean of the exponential distribution is calculated in a multi-step process. First, a baseline (wild type) duration of natural immunity is sampled (from a Gamma distribution with mean 365). Immune escape by new variants modifies this to a shorter effective duration of natural immunity. The effective duration is calculated such that a short lived variant reduces the class of immune people by an amount proportional to the variant's immune escape rate, while a long lived variant has an immunity duration approximately equal to the baseline.\footnote{More precisely, for variant $i$, duration of immunity is $R_i = tvar_i/(tvar_i/R_b - \log(1 - I_i))$, where $tvar_i$ is the duration for which variant $i$ is dominant.} The unweighted average durations of natural immunity were 235 days in the UK and 242 days in the USA. See Table \@ref(tab:trajectory-sampling-parameters) for more details.
+
+```{r vaccine-efficacy, tidy=FALSE, echo=FALSE, caption=c('Model parameters - central estimates of vaccine efficacy')}
+
+vaccine_efficacy <- read.csv('vaccine_efficacy_groups.csv') %>% 
+  mutate(Protection.against.infection = paste0(round(100*Protection.against.infection, 1), "%"))
+
+vaccine_efficacy %>% kbl(
+  booktabs = TRUE,
+  linesep = "",
+  col.names = c('Vaccine type', 'Doses', 'Strain', 'Protection against infection'),
+  caption = 'Model parameters - central estimates of vaccine efficacy',
+  centering = TRUE
+)
+```
+
+**Choice of vaccines.** For the US we assumed that all doses used were mRNA. For the UK we assumed that half of initial vaccinations (first two doses) were AstraZeneca vaccines and the other half were mRNA. To do this, we use the average of vaccine efficacy parameters for AstraZeneca vaccines and mRNA. While there are no exact statistics of vaccine use in the UK broken down by manufacturer, the government press release a year on from the start of vaccinations supports this assumption [@UK2022One]. For booster doses in both countries we assumed that mRNA vaccines were used. 
+
+**Vaccine efficacy against disease and duration of protection.** The shape parameters $\alpha_e^P, \beta_e^P$ that appear in Table \@ref(tab:trajectory-sampling-parameters) are the shape parameters associated with a beta distribution with mean $\mu_e^P$ and variance $0.005$. The mean $\mu_e^P$ was determined by estimating the efficacy of each vaccine platform $P$ against each variant (see Table \@ref(tab:vaccine-efficacy)). The mean protective durations from vaccine were determined according to models of antibody decay and are dependent on the sampled vaccine efficacies $\mu_e^P$ [@watsonoliverj.COVID19LMICReports2022]. 
+
+**Infection fatality rates.** The infection fatality rates $f_{min}$, $f_{med}$ and $f_{max}$ were calculated for each country according to the age-specific infection fatality rate estimates in [@brazeauReport34COVID192020]. In these estimates, a typical high income country like the UK or the USA has an overall infection fatality rate of around 1.15% (with a 95% credible interval from 0.78% to 1.79%).
+
+Individuals who have been vaccinated have different levels of protection at different points in time depending on the dominant strain, and unless they receive additional doses then protection is considered to have waned after an exponentially random period of time (on average, around 150 days). 
+
+```{r onward, tidy=FALSE, echo=FALSE, caption=c('Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated')}
+vaccine_onward_protection <- 
+  data.frame(
+    'Doses' = c(
+      '1 dose (not wanted)', 
+      '2 doses (not wanted)', 
+      '2 doses (waned)',
+      '3 doses (not wanted)',
+      '3 doses (waned stage 1)',
+      '3 doses (waned stage 2)'
+      ),
+    'Protection from onward transmission' = c(
+      '27%', 
+      '27%', 
+      '0%',
+      '30%',
+      '10%',
+      '5%'
+      )
+    )
+
+vaccine_onward_protection %>% kbl(
+  booktabs = TRUE,
+  col.names = c('Doses', 'Protection from onward transmission'),
+  linesep = "",
+  caption = 'Assumed relative transmissibility of infection by vaccinated individuals compared to unvaccinated',
+  centering = TRUE
+)
+```
+
+**Protection from onwards transmission.** We made one change to the model used by [@watsonoliverj.COVID19LMICReports2022]: by default, vaccination was assumed to reduce onward transmission by 50%, regardless of whether the dose was "fresh" or if the protection has waned. We modified this to the schedule shown in Table \@ref(tab:onward). These represented an average between the estimates of [@eyreImpactSARSCoV2Vaccination2021a] for effectiveness at blocking onward transmission of Alpha and Delta and the estimate of [@tanInfectiousnessSARSCoV2Breakthrough2023] for effectiveness of the vaccine at blocking onward transmission of Omicron, as the period of the simulation included both Delta and Omicron waves.
+
+\newpage
+
+
+# Supplementary Figures and Tables
+
+```{r deaths-averted-table-full, echo=FALSE}
+dt %>%
+  deaths_averted_table_single() %>% 
+  kbl(booktabs=TRUE, centering = TRUE, caption = "Total averted deaths under counterfactual scenarios, based on reported deaths. 95\\% intervals are calculated over 100 simulation runs which vary vaccine parameters and duration of natural immunity (see Table S1 for details). This table provides additional results for Table 2.") %>%
+  pack_rows("United Kingdom to April 2021", 1, 3) %>%
+  pack_rows("United Kingdom to July 2021", 4, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
+  pack_rows("United States to April 2021", 10, 12) %>%
+  pack_rows("United States to July 2021", 13, 15) %>%
+  pack_rows("United States to Jan 2022", 16, 18) %>%
+  kable_styling(font_size = 9)
+
+```
+
+```{r reported-deaths-averted-plot, fig.align="center", fig.cap=c("Reported deaths for each counerfactual scenario compared to baseline reported deaths. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="40%"}
+deaths_averted = readRDS("data/deaths_averted_detail.Rds")
+
+zoomed_deaths_averted = deaths_averted %>%
+  filter(date > as.Date("2020-09-01") & date <= primary_last_date) %>%
+  filter(counterfactual %in% cfacts_to_display) %>%
+  mutate(counterfactual_label = mapvalues(
+    counterfactual,
+    from = cfacts_to_display,
+    to = labels_to_display
+  )) %>%
+  mutate(counterfactual_label = factor(counterfactual_label,
+                                       labels_to_display))
+
+single_timeseries_plot = ggplot(zoomed_deaths_averted, aes(x = date)) +
+  geom_line(aes(y = baseline_deaths_avg, colour = "baseline")) +
+  geom_line(aes(y = deaths_avg, colour = "counterfactual")) +
+  geom_ribbon(
+    aes(ymin = deaths_025, ymax = deaths_975),
+    alpha = 0.3,
+    fill = colour_counterfactual
+  ) +
+  facet_grid(counterfactual_label ~ country,
+             labeller = labeller(.rows=label_wrap_gen(width = 15))) +
+  scale_colour_manual(
+    labels = c('baseline', 'counterfactual'),
+    values = c(colour_baseline, colour_counterfactual)
+  ) +
+  labs(x = "Date", y = "Daily Deaths", color = "Colour")
+  
+plot(single_timeseries_plot)
+
+```
+
+```{r cumulative-deaths, fig.align="center", fig.cap=c("Cumulative deaths under baseline and counterfactual scenarios. Shaded area indicates 95\\% confidence interval"), echo=FALSE, out.height="40%"}
+zoomed_deaths_averted = deaths_averted %>%
+  filter(date > as.Date("2020-09-01") & date <= primary_last_date) %>%
+  filter(counterfactual %in% cfacts_to_display) %>%
+  mutate(counterfactual_label = mapvalues(
+    counterfactual,
+    from = cfacts_to_display,
+    to = labels_to_display
+  )) %>%
+  mutate(counterfactual_label = factor(counterfactual_label,
+                                       labels_to_display)) %>%
+  left_join(population, by = "iso3c") %>%
+  mutate(
+    deaths_025_perpop = deaths_025 / pop10k,
+    deaths_975_perpop = deaths_975 / pop10k,
+    baseline_deaths_avg_perpop = baseline_deaths_avg / pop10k,
+    deaths_avg_perpop = deaths_avg / pop10k,
+    cumulative_deaths_025_perpop = cumulative_deaths_025 / pop10k,
+    cumulative_deaths_975_perpop = cumulative_deaths_975 / pop10k,
+    baseline_cumulative_deaths_avg_perpop = baseline_cumulative_deaths_avg / pop10k,
+    cumulative_deaths_avg_perpop = cumulative_deaths_avg / pop10k,
+  )
+  
+baseline_color <- "#2C3E50" # dark blue
+counterfactual1_color <- "#E74C3C" # red
+counterfactual2_color <- "#27AE60" # green
+counterfactual3_color <- "#F1C40F" # yellow
+
+cumulative_deaths_plot = ggplot(zoomed_deaths_averted,
+                                aes(x = as.Date(date),
+                                    y = cumulative_deaths_avg_perpop,
+                                    color = counterfactual)) +
+  geom_line() +
+  geom_ribbon(
+    aes(ymin = cumulative_deaths_025_perpop, 
+        ymax = cumulative_deaths_975_perpop, 
+        fill = counterfactual),
+    alpha = 0.2,
+    color = NA,
+    show.legend = FALSE
+  ) +
+  geom_line(aes(y = baseline_cumulative_deaths_avg_perpop, colour = "baseline")) +
+  facet_wrap( ~ country) +
+  scale_colour_manual(
+    aesthetics = c("fill", "colour"),
+    labels = c('30 days', '60 days', '90 days', 'baseline'),
+    values = c(
+      counterfactual1_color,
+      counterfactual2_color,
+      counterfactual3_color,
+      baseline_color
+    )
+  ) +
+  labs(x = "Date", y = "Cumulative Deaths per 10 000 people", color = "Earlier vaccines by:")
+  
+
+plot(cumulative_deaths_plot)
+```
+
+
+```{r deaths-averted-table-d90, echo=FALSE, results='asis', out.height="40%"}
+dt_d90 %>% deaths_averted_table_single() %>% 
+  kbl(booktabs = TRUE, centering = TRUE, 
+      caption = "How would outcomes change if vaccination demand were 10\\% lower") %>%
+  pack_rows("United Kingdom to April 2021", 1, 3) %>%
+  pack_rows("United Kingdom to July 2021", 4, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
+  pack_rows("United States to April 2021", 10, 12) %>%
+  pack_rows("United States to July 2021", 13, 15) %>%
+  pack_rows("United States to Jan 2022", 16, 18) %>%
+  kable_styling(font_size = 7)
+
+```
+
+```{r deaths-averted-table-d95, echo=FALSE, results='asis', out.height="40%"}
+dt_d95 %>% deaths_averted_table_single() %>% 
+  kbl(booktabs = TRUE, centering = TRUE, 
+      caption = "How would outcomes change if vaccination demand were 5\\% lower?") %>%
+  pack_rows("United Kingdom to April 2021", 1, 3) %>%
+  pack_rows("United Kingdom to July 2021", 4, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
+  pack_rows("United States to April 2021", 10, 12) %>%
+  pack_rows("United States to July 2021", 13, 15) %>%
+  pack_rows("United States to Jan 2022", 16, 18) %>%
+  kable_styling(font_size = 7)
+```
+
+
+```{r deaths-averted-table-doubleboost, echo=FALSE, results='asis', out.height="40%"}
+dt_double %>% 
+  deaths_averted_table_single() %>% 
+  kbl(booktabs = TRUE, centering = TRUE, 
+      caption = "How would US outcomes change if boosters were adopted at twice the actual rate?") %>%
+  pack_rows("United Kingdom to April 2021", 1, 3) %>%
+  pack_rows("United Kingdom to July 2021", 4, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
+  pack_rows("United States to April 2021", 10, 12) %>%
+  pack_rows("United States to July 2021", 13, 15) %>%
+  pack_rows("United States to Jan 2022", 16, 18) %>%
+  kable_styling(font_size = 7)
+
+``` 
+
+```{r reported-deaths-averted-table, echo=FALSE, out.height="40%"}
+dt_excess %>% 
+  deaths_averted_table_single() %>% 
+  kbl(booktabs=TRUE, centering = TRUE, 
+      caption = "Averted deaths calculated on the basis of a model fit to excess deaths") %>%
+  pack_rows("United Kingdom to April 2021", 1, 3) %>%
+  pack_rows("United Kingdom to July 2021", 4, 6) %>%
+  pack_rows("United Kingdom to Jan 2022", 7, 9) %>%
+  pack_rows("United States to April 2021", 10, 12) %>%
+  pack_rows("United States to July 2021", 13, 15) %>%
+  pack_rows("United States to Jan 2022", 16, 18) %>%
+  kable_styling(font_size = 7)
+
+```
+
+
+
+
+\newpage
+
+# Sensitivity To Mis-specified Parameters 
+
+We explored various alternative model configurations in order to assess the sensitivity of our conclusion to modelling assumptions. Compared to a hypothetical ideal model that yields correct counterfactual assessments, the model we employ is likely to differ in a number of ways:
+
+- It may differ structurally. We might anticipate some structural differences - for example, overdispersion in the distribution of contact rates is not captured by our model, but overdispersion in this distribution was typically found to be high [@endoEstimatingOverdispersionCOVID192020]. However, there may be other structural differences that we do not anticipate
+- The assumed distributions of input parameters may differ in our model and in the hypothetical ideal
+
+Both of these differences mean that the fitted values of $R_t$ are also likely to differ between our model and the hypothetical ideal, and hence they may yield substantially different assessments of counterfactual scenarios. If it turns out that counterfactual assessments are very sensitive to input parameter values, then we might conclude that our estimates are likely to differ substantially from the "true" counterfactual. Because of the prospect of structural differences, this is true even if we have done a very good job of estimating parameters. If our results are robust to variation of parameters within a reasonable range, then if we believe that our model is capable of yielding a good approximation to the ideal for some "reasonable" parameter choices, we should also think our counterfactual assessments are a good approximation to ideal counterfactual assessments.
+
+We assess the impact of three different parameter estimates on our overall results. To do this, we examine the average conclusion from the model runs featuring the top and bottom deciles of each of the following parameters:
+
+- The average infection-blocking efficacy of one and two doses of the vaccine
+- The average duration for protection due to one and two doses of the vaccine
+- The average duration of protection due to natural immunity
+
+In both countries, the estimates of deaths averted showed little sensitivity to the estimated duration of natural immunity; see Table \@ref(tab:deaths-averted-table-durR). The estimates of deaths averted in the UK was *also* relatively insensitive to the estimated vaccine efficacy, though the estimate in the US was more sensitive to this value (it is worth noting that in the case of the US the model explored captured a wider range of variation in vaccine efficacy); see Table \@ref(tab:deaths-averted-table-vei). Note that for long-run estimates of deaths averted in the US (up to Jan 2022), higher estimates of vaccine efficacy were associated with much greater uncertainty over the number of deaths averted. This may be due to the fact that, given a more effective vaccine, waning immunity will have a larger impact on the end results.
+
+The estimate of long-run deaths averted in the US was extremely sensitive to the estimated duration of vaccine derived immunity. Notably, short estimates of vaccine duration were also associated with extreme decreases in the uncertainty over the number of deaths averted. Note that the short run estimates of deaths averted (up to July 2021) were robustly positive, but were also substantially more uncertain for longer estimates of the duration of vaccine protection.
+
+Our model is already very uncertain about the effect of earlier vaccinations on the second infection wave in the US. However, the high sensitivity of this figure to the estimated duration of vaccine-derived protection offers an extra reason to be unsure that the model is providing us with an accurate assessment of the counterfactual impacts on this timescale.
+
+```{r deaths-averted-table-vei, echo=FALSE, results='asis', out.height="35%"}
+differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
+differences_tables$veis %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to average vaccine efficacy against infection (VEI)") %>%
+  pack_rows("UK to April 2021", 1, 6) %>%
+  pack_rows("UK to July 2021", 7, 12) %>%
+  pack_rows("UK to Jan 2022", 13, 18) %>%
+  pack_rows("US to April 2021", 19, 24) %>%
+  pack_rows("US to July 2021", 25, 30) %>%
+  pack_rows("US to Jan 2022", 31, 36) %>%
+  kable_styling(font_size = 7)
+```
+```{r deaths-averted-table-durV, echo=FALSE, results='asis', out.height="35%"}
+differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
+differences_tables$dur_Vs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of vaccine acquired immunity (DVI)") %>%
+  pack_rows("UK to April 2021", 1, 6) %>%
+  pack_rows("UK to July 2021", 7, 12) %>%
+  pack_rows("UK to Jan 2022", 13, 18) %>%
+  pack_rows("US to April 2021", 19, 24) %>%
+  pack_rows("US to July 2021", 25, 30) %>%
+  pack_rows("US to Jan 2022", 31, 36) %>%
+  kable_styling(font_size = 7)
+```
+```{r deaths-averted-table-durR, echo=FALSE, results='asis', out.height="35%"}
+differences_tables <- deaths_averted_table_multiple(join_counterfactual_tables(parameter_variants, percentiles, last_dates_to_display))
+differences_tables$dur_Rs %>% kbl(booktabs = TRUE, centering = TRUE, caption = "Sensitivity to duration of naturally acquired immunity (DNI)") %>%
+  pack_rows("UK to April 2021", 1, 6) %>%
+  pack_rows("UK to July 2021", 7, 12) %>%
+  pack_rows("UK to Jan 2022", 13, 18) %>%
+  pack_rows("US to April 2021", 19, 24) %>%
+  pack_rows("US to July 2021", 25, 30) %>%
+  pack_rows("US to Jan 2022", 31, 36) %>%
+  kable_styling(font_size = 7)
+
+```
+```{r deaths-averted-plot-vei, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine efficacy. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
+deaths_averted_plot_veis <- deaths_averted_plot('veis', percentiles, last_dates_to_display)
+plot(deaths_averted_plot_veis)
+```
+```{r deaths-averted-plot-durV, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to vaccine duration. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
+deaths_averted_plot_dur_Vs <- deaths_averted_plot('dur_Vs', percentiles, last_dates_to_display)
+plot(deaths_averted_plot_dur_Vs)
+```
+```{r deaths-averted-plot-durR, fig.align="center", fig.cap=c("Daily averted deaths under counterfactual scenarios, with sensitivity to natural immunity duration. Shaded area indicates 95\\% confidence interval."), echo=FALSE, out.height="35%"}
+deaths_averted_plot_dur_Rs <- deaths_averted_plot('dur_Rs', percentiles, last_dates_to_display)
+plot(deaths_averted_plot_dur_Rs)
+```
+
+```{r prod-assumptions, include=FALSE, fig.align="center", fig.cap=c("Vaccine production assumptions"), echo=FALSE, out.height="40%"}
+detail_prod = readRDS("data/detail_production.Rds")
+pfizer_prod = readRDS("data/pfizer_estimated_production.Rds")
+moderna_prod = readRDS("data/moderna_estimated_production.Rds")
+
+plot1 = ggplot() +
+  geom_line(data = detail_prod,
+            aes(x = date, y = cumulative_available_vaccines)) +
+  xlab("Date") +
+  ylab("Cumulative vaccines available") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot2 = ggplot() +
+  geom_line(data = detail_prod,
+            aes(x = date, y = daily_vaccines)) +
+  xlab("Date") +
+  ylab("Daily vaccines produced") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot3 = ggplot() +
+  geom_line(data = moderna_prod,
+            aes(x = date, y = daily_production)) +
+  xlab("Date") +
+  ylab("Daily vaccines produced\nModerna") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+plot4 = ggplot() +
+  geom_line(data = pfizer_prod,
+            aes(x = date, y = daily_production)) +
+  xlab("Date") +
+  ylab("Daily vaccines produced\nPfizer") +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+
+combined_plot =
+  ggarrange(plot3,
+            plot4,
+            plot2,
+            plot1,
+            nrow = 2,
+            ncol = 2)
+plot(combined_plot)
+```
+
+\newpage
+
+# Bibliography for Supporting Information

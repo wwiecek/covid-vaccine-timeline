@@ -1,0 +1,12 @@
+Vaccine platform,Doses,Strain,Protection against infection
+mRNA,1,Wild,0.63
+mRNA,2,Wild,0.86
+mRNA,1,Delta,0.36
+mRNA,2,Delta,0.88
+mRNA,1,Omicron,0
+mRNA,2,Omicron,0.136
+mRNA,3,Omicron,0.65
+Adenovirus,Partial,Wild,0.64
+Adenovirus,Full,Wild,0.77
+Adenovirus,Partial,Delta,0.3
+Adenovirus,Full,Delta,0.67
